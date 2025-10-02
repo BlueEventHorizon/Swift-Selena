@@ -9,7 +9,7 @@ import Foundation
 
 /// プロジェクトごとの永続化されたメモリ
 class ProjectMemory {
-    private let projectPath: String
+    let projectPath: String
     private let memoryDir: URL
     private let projectName: String
     

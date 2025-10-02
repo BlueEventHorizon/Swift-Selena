@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-**SwiftCodeAnalyzer**は、SourceKit-LSP統合を通じてSwiftコード解析機能を提供するMCP (Model Context Protocol) サーバーです。Swiftプロジェクトのコードインテリジェンスツールを公開します。
+**Swift Selena**は、ファイルシステム検索とSwiftSyntax静的解析を使用してSwiftコード解析機能を提供するMCP (Model Context Protocol) サーバーです。ビルドエラーがある実装中のコードでも動作する実用的なツールセットを提供します。
 
 ## ビルド・実行コマンド
 
@@ -27,21 +27,16 @@ swift package clean
 ### コアコンポーネント
 
 1. **SwiftMCPServer.swift** (メインエントリポイント)
-   - コード解析用の9つのツールを持つMCPサーバーを構成
-   - SourceKitLSPClientとProjectMemoryのライフサイクルを管理
+   - コード解析用の10のツールを持つMCPサーバーを構成
+   - ProjectMemoryのライフサイクルを管理
    - 非同期CallToolハンドラを介してツール実行を処理
    - 通信にstdioトランスポートを使用
+   - **FileSearcher**: ファイルシステムベースの検索（ワイルドカード、grep的検索）
+   - **SwiftSyntaxAnalyzer**: ビルド不要のAST解析によるシンボル抽出
 
-2. **SourceKitLSPClient.swift** (LSP通信レイヤー)
-   - `xcrun`経由で`sourcekit-lsp`サブプロセスを起動・管理
-   - stdin/stdoutパイプ上でJSON-RPCプロトコルを実装
-   - Swift固有の操作を提供：シンボル検索、定義、参照、ドキュメントシンボル
-   - LSP初期化ハンドシェイク (initialize → initialized) を処理
-   - **改善済み**: 非同期ストリーミング応答読み取り、堅牢なContent-Lengthパース、Actorベースのスレッドセーフな応答管理
-
-3. **ProjectMemory.swift** (永続ストレージ)
+2. **ProjectMemory.swift** (永続ストレージ)
    - `~/.swift-mcp-server/projects/{projectName}/memory.json`にプロジェクトメタデータを保存
-   - LSPクエリを減らすためシンボル情報とファイルインデックスをキャッシュ
+   - シンボル情報とファイルインデックスをキャッシュ
    - タグとタイムスタンプ付きのメモ機能を提供
    - ファイルの更新日時を追跡して古いキャッシュを無効化
 
@@ -50,20 +45,23 @@ swift package clean
 全てのツールは以下のパターンに従います：
 1. クライアントがstdio経由でMCPツールを呼び出し
 2. SwiftMCPServerがCallTool内の適切なハンドラにルーティング
-3. ハンドラがパラメータを検証し、LSPClientまたはProjectMemoryを呼び出し
-4. 必要に応じてLSPClientがsourcekit-lspにJSON-RPCを送信
-5. レスポンスをフォーマットしてCallTool.Resultとして返却
+3. ハンドラがパラメータを検証し、FileSearcher/SwiftSyntaxAnalyzer/ProjectMemoryを呼び出し
+4. レスポンスをフォーマットしてCallTool.Resultとして返却
 
-**重要**: `initialize_project`を最初に呼び出す必要があります - これがLSPサブプロセスを起動しProjectMemoryを初期化します。他の全てのツールはこの状態に依存します。
+**重要**: `initialize_project`を最初に呼び出す必要があります - これがProjectMemoryを初期化します。メモリ機能を使う全てのツールはこの状態に依存します。
 
-### LSP統合の詳細
+### 検索・解析の実装詳細
 
-- **プロセスライフサイクル**: sourcekit-lspは`initialize_project`で起動、deinitで終了
-- **ドキュメント処理**: シンボル/定義をクエリする前に`textDocument/didOpen`でファイルを開く
-- **座標系**: LSPは0インデックスの行/列を使用、ツールもLSPに合わせて0インデックスで公開
-- **レスポンスパース**: 堅牢なContent-Lengthヘッダーパース（複数メッセージ対応、バッファリング）
-- **非同期処理**: `ResponseManager` actorによるスレッドセーフな応答管理、CheckedContinuationでリクエスト/レスポンスをマッチング
-- **ストリーミング読み取り**: FileHandleの`readabilityHandler`を使った非同期ストリーミング（100msスリープ不要）
+**FileSearcher** (ファイルシステムベース):
+- **ファイル検索**: ワイルドカードパターン（`*Controller.swift`など）をNSRegularExpressionに変換
+- **コード検索**: 正規表現でファイル内容をgrep的に検索
+- **利点**: ビルド不要、実装中のコードでも動作
+
+**SwiftSyntaxAnalyzer** (静的AST解析):
+- **シンボル抽出**: SwiftParserでソースをパース、SyntaxVisitorでASTを走査
+- **対応シンボル**: Class, Struct, Enum, Protocol, Function, Variable
+- **位置情報**: SourceLocationConverterで行番号を取得
+- **利点**: ビルドエラーがあっても構文が正しければ動作
 
 ### メモリシステム
 
@@ -77,13 +75,15 @@ ProjectMemoryは3つのインデックスを保持：
 ## ツールカテゴリ
 
 ### プロジェクトセットアップ
-- `initialize_project`: 最初に呼び出す必要がある
+- `initialize_project`: 最初に呼び出す必要がある（ProjectMemory初期化）
 
-### コードナビゲーション (LSPバック)
-- `find_symbol`: ワークスペース全体のシンボル検索
-- `get_document_symbols`: ファイル内の全シンボルをリスト
-- `get_definition`: 定義へジャンプ
-- `find_references`: 全ての使用箇所を検索
+### ファイルシステム検索
+- `find_files`: ワイルドカードパターンでファイル検索（例: `*Controller.swift`）
+- `search_code`: 正規表現でコード内容を検索（grep的）
+
+### SwiftSyntax静的解析
+- `list_symbols`: ファイル内の全シンボル抽出（Class, Struct, Function等）
+- `find_symbol_definition`: プロジェクト全体でシンボル定義を検索
 
 ### コンテキスト効率的な読み取り
 - `read_function_body`: 単一関数の実装を抽出（シンプルなブレースカウント）
@@ -97,32 +97,40 @@ ProjectMemoryは3つのインデックスを保持：
 ## 開発メモ
 
 - **Swiftバージョン**: 5.9+、macOS 13+が必要
-- **依存関係**: 公式MCP Swift SDK (0.10.2+) を使用
-- **LSP可用性**: `xcrun sourcekit-lsp`が利用可能であることを前提（Xcodeに標準搭載）
+- **依存関係**:
+  - MCP Swift SDK (0.10.2 exact)
+  - SwiftSyntax (602.0.0 exact) - SwiftParser含む
+- **ビルド不要**: SourceKit-LSPに依存しないため、実装中のコードでも動作
 - **エラーハンドリング**: ツールはMCPError.invalidParamsまたはMCPError.invalidRequestをthrow
-- **ロギング**: .infoレベルでswift-logを使用してstdoutに出力
+- **ロギング**: .infoレベルでswift-logを使用してstderrに出力
 - **サーバーライフタイム**: start後、1000秒のスリープループで無期限に実行
 
 ## コードパターン
 
 ### 新しいツールの追加方法
 
-1. `ListTools`ハンドラにTool定義を追加（31-203行目付近）
-2. `CallTool`のswitch文にcaseを追加（209-389行目付近）
+1. `ListTools`ハンドラにTool定義を追加
+2. `CallTool`のswitch文にcaseを追加
 3. `params.arguments`からパラメータを抽出・検証
-4. LSPClientまたはProjectMemoryのメソッドを呼び出し
-5. レスポンスを.textコンテンツを持つCallTool.Resultとしてフォーマット
+4. FileSearcher/SwiftSyntaxAnalyzer/ProjectMemoryのメソッドを呼び出し
+5. レスポンスを.textコンテンツを持つCallTool.ResultとしてフォーマットExit
 
-### LSPリクエストパターン
+### ファイル検索パターン
 ```swift
-let request = [
-    "jsonrpc": "2.0",
-    "id": nextId(),
-    "method": "lsp/method",
-    "params": [/* ... */]
-] as [String: Any]
-let response = try await sendRequest(request)
+// ワイルドカード検索
+let files = try FileSearcher.findFiles(in: projectPath, pattern: "*.swift")
+
+// コード検索
+let matches = try FileSearcher.searchCode(
+    in: projectPath,
+    pattern: "func.*\\(",  // 正規表現
+    filePattern: "*.swift"  // オプション
+)
 ```
 
-### シンボル種別マッピング
-LSPのkind整数から文字列へのマッピングはSourceKitLSPClient.swift:317-329の`symbolKindName()`を参照（5=Class, 12=Function, など）
+### SwiftSyntax解析パターン
+```swift
+// シンボル抽出
+let symbols = try SwiftSyntaxAnalyzer.listSymbols(filePath: "/path/to/file.swift")
+// 結果: [SymbolInfo(name: "MyClass", kind: "Class", line: 10), ...]
+```
