@@ -37,7 +37,7 @@ swift package clean
    - stdin/stdoutパイプ上でJSON-RPCプロトコルを実装
    - Swift固有の操作を提供：シンボル検索、定義、参照、ドキュメントシンボル
    - LSP初期化ハンドシェイク (initialize → initialized) を処理
-   - **重要**: レスポンス読み取りに100msスリープを使った基本的なバッファリングを使用（本番環境レベルのストリーミングではない）
+   - **改善済み**: 非同期ストリーミング応答読み取り、堅牢なContent-Lengthパース、Actorベースのスレッドセーフな応答管理
 
 3. **ProjectMemory.swift** (永続ストレージ)
    - `~/.swift-mcp-server/projects/{projectName}/memory.json`にプロジェクトメタデータを保存
@@ -61,7 +61,9 @@ swift package clean
 - **プロセスライフサイクル**: sourcekit-lspは`initialize_project`で起動、deinitで終了
 - **ドキュメント処理**: シンボル/定義をクエリする前に`textDocument/didOpen`でファイルを開く
 - **座標系**: LSPは0インデックスの行/列を使用、ツールもLSPに合わせて0インデックスで公開
-- **レスポンスパース**: シンプルなContent-Lengthヘッダーパース（`\r\n\r\n`を検索、JSONを抽出）
+- **レスポンスパース**: 堅牢なContent-Lengthヘッダーパース（複数メッセージ対応、バッファリング）
+- **非同期処理**: `ResponseManager` actorによるスレッドセーフな応答管理、CheckedContinuationでリクエスト/レスポンスをマッチング
+- **ストリーミング読み取り**: FileHandleの`readabilityHandler`を使った非同期ストリーミング（100msスリープ不要）
 
 ### メモリシステム
 

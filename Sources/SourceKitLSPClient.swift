@@ -7,6 +7,38 @@
 
 import Foundation
 
+/// 応答管理用のactor（thread-safe）
+actor ResponseManager {
+    private var pendingResponses: [Int: CheckedContinuation<[String: Any], Error>] = [:]
+    private var responseBuffer = Data()
+
+    func registerResponse(id: Int, continuation: CheckedContinuation<[String: Any], Error>) {
+        pendingResponses[id] = continuation
+    }
+
+    func removeResponse(id: Int) -> CheckedContinuation<[String: Any], Error>? {
+        return pendingResponses.removeValue(forKey: id)
+    }
+
+    func appendToBuffer(_ data: Data) {
+        responseBuffer.append(data)
+    }
+
+    func getBuffer() -> Data {
+        return responseBuffer
+    }
+
+    func removeFromBuffer(range: Range<Int>) {
+        responseBuffer.removeSubrange(range)
+    }
+
+    func clearAllResponses() -> [Int: CheckedContinuation<[String: Any], Error>] {
+        let pending = pendingResponses
+        pendingResponses.removeAll()
+        return pending
+    }
+}
+
 /// SourceKit-LSPとJSON-RPC通信するクライアント
 class SourceKitLSPClient {
     private var process: Process?
@@ -14,6 +46,9 @@ class SourceKitLSPClient {
     private var stdoutPipe: Pipe?
     private var messageId = 0
     private var projectPath: String?
+
+    // 応答管理用
+    private let responseManager = ResponseManager()
     
     /// プロジェクトを初期化
     func initialize(projectPath: String) async throws {
@@ -32,10 +67,13 @@ class SourceKitLSPClient {
         process.standardError = FileHandle.nullDevice
         
         try process.run()
-        
+
         self.process = process
         self.stdinPipe = stdinPipe
         self.stdoutPipe = stdoutPipe
+
+        // バックグラウンドで応答を継続的に読み取る
+        startReadingResponses()
         
         // LSP initialize request
         let initRequest = [
@@ -49,7 +87,7 @@ class SourceKitLSPClient {
             ]
         ] as [String: Any]
         
-        try await sendRequest(initRequest)
+        _ = try await sendRequest(initRequest)
         
         // initialized notification
         let initializedNotification = [
@@ -176,39 +214,34 @@ class SourceKitLSPClient {
     }
     
     private func sendRequest(_ request: [String: Any]) async throws -> [String: Any] {
-        guard let stdinPipe = stdinPipe,
-              let stdoutPipe = stdoutPipe else {
+        guard let stdinPipe = stdinPipe else {
             throw NSError(domain: "LSPClient", code: -1, userInfo: [
                 NSLocalizedDescriptionKey: "LSP not initialized"
             ])
         }
-        
-        let jsonData = try JSONSerialization.data(withJSONObject: request)
-        let message = "Content-Length: \(jsonData.count)\r\n\r\n".data(using: .utf8)! + jsonData
-        
-        stdinPipe.fileHandleForWriting.write(message)
-        
-        // レスポンス読み取り（簡易実装）
-        try await Task.sleep(for: .milliseconds(100))
-        let availableData = stdoutPipe.fileHandleForReading.availableData
-        
-        if availableData.isEmpty {
-            return [:]
+
+        guard let id = request["id"] as? Int else {
+            throw NSError(domain: "LSPClient", code: -2, userInfo: [
+                NSLocalizedDescriptionKey: "Request must have an ID"
+            ])
         }
-        
-        // Content-Lengthヘッダーをパース
-        guard let responseString = String(data: availableData, encoding: .utf8),
-              let jsonStart = responseString.range(of: "\r\n\r\n") else {
-            return [:]
+
+        // 応答を待つためのContinuationを登録
+        return try await withCheckedThrowingContinuation { continuation in
+            Task {
+                await responseManager.registerResponse(id: id, continuation: continuation)
+
+                do {
+                    let jsonData = try JSONSerialization.data(withJSONObject: request)
+                    let message = "Content-Length: \(jsonData.count)\r\n\r\n".data(using: .utf8)! + jsonData
+                    stdinPipe.fileHandleForWriting.write(message)
+                } catch {
+                    if let cont = await responseManager.removeResponse(id: id) {
+                        cont.resume(throwing: error)
+                    }
+                }
+            }
         }
-        
-        let jsonString = String(responseString[jsonStart.upperBound...])
-        guard let jsonData = jsonString.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
-            return [:]
-        }
-        
-        return json
     }
     
     private func sendNotification(_ notification: [String: Any]) throws {
@@ -317,18 +350,144 @@ class SourceKitLSPClient {
     private func symbolKindName(_ kind: Int) -> String {
         switch kind {
         case 5: return "Class"
+        case 10: return "Enum"
+        case 11: return "Interface"  // Protocol/Interface
         case 12: return "Function"
-        case 11: return "Method"
         case 13: return "Variable"
         case 14: return "Constant"
         case 23: return "Struct"
-        case 10: return "Enum"
-        case 11: return "Protocol"
         default: return "Symbol(\(kind))"
         }
     }
     
+    // MARK: - Response Reading
+
+    private func startReadingResponses() {
+        guard let stdoutPipe = stdoutPipe else { return }
+
+        Task {
+            let fileHandle = stdoutPipe.fileHandleForReading
+
+            // 非同期でデータを読み続ける
+            while true {
+                do {
+                    // 利用可能なデータを読み取る
+                    let data = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data, Error>) in
+                        fileHandle.readabilityHandler = { handle in
+                            let data = handle.availableData
+                            fileHandle.readabilityHandler = nil
+                            continuation.resume(returning: data)
+                        }
+                    }
+
+                    if data.isEmpty {
+                        // プロセスが終了した
+                        break
+                    }
+
+                    // バッファに追加
+                    await responseManager.appendToBuffer(data)
+
+                    // バッファからメッセージを抽出
+                    await processResponseBuffer()
+
+                } catch {
+                    print("Error reading LSP response: \(error)")
+                    break
+                }
+            }
+        }
+    }
+
+    private func processResponseBuffer() async {
+        while true {
+            let buffer = await responseManager.getBuffer()
+
+            // Content-Lengthヘッダーを探す
+            guard let headerEndRange = buffer.range(of: "\r\n\r\n".data(using: .utf8)!) else {
+                // ヘッダーが完全に受信されていない
+                return
+            }
+
+            let headerData = buffer.subdata(in: 0..<headerEndRange.lowerBound)
+            guard let headerString = String(data: headerData, encoding: .utf8) else {
+                // 無効なヘッダー、バッファをクリア
+                await responseManager.removeFromBuffer(range: 0..<buffer.count)
+                return
+            }
+
+            // Content-Lengthを抽出
+            var contentLength = 0
+            for line in headerString.components(separatedBy: "\r\n") {
+                if line.hasPrefix("Content-Length:") {
+                    let lengthString = line.replacingOccurrences(of: "Content-Length:", with: "").trimmingCharacters(in: .whitespaces)
+                    contentLength = Int(lengthString) ?? 0
+                    break
+                }
+            }
+
+            if contentLength == 0 {
+                // 無効なContent-Length
+                await responseManager.removeFromBuffer(range: 0..<buffer.count)
+                return
+            }
+
+            let jsonStartIndex = headerEndRange.upperBound
+            let jsonEndIndex = jsonStartIndex + contentLength
+
+            // JSONデータが完全に受信されているか確認
+            if buffer.count < jsonEndIndex {
+                // まだ全データが受信されていない
+                return
+            }
+
+            // JSONを抽出
+            let jsonData = buffer.subdata(in: jsonStartIndex..<jsonEndIndex)
+
+            // バッファから処理済みデータを削除
+            await responseManager.removeFromBuffer(range: 0..<jsonEndIndex)
+
+            // JSONをパース
+            do {
+                if let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+                    await handleResponse(json)
+                }
+            } catch {
+                print("Failed to parse JSON: \(error)")
+            }
+        }
+    }
+
+    private func handleResponse(_ json: [String: Any]) async {
+        // IDがあればリクエストへの応答
+        if let id = json["id"] as? Int {
+            if let continuation = await responseManager.removeResponse(id: id) {
+                if let error = json["error"] as? [String: Any] {
+                    let errorMessage = error["message"] as? String ?? "Unknown error"
+                    let nsError = NSError(domain: "LSPClient", code: -3, userInfo: [
+                        NSLocalizedDescriptionKey: errorMessage
+                    ])
+                    continuation.resume(throwing: nsError)
+                } else {
+                    continuation.resume(returning: json)
+                }
+            }
+        }
+        // IDがない場合は通知（現在は無視）
+    }
+
     deinit {
+        // 残っているContinuationをキャンセル
+        Task {
+            let pending = await responseManager.clearAllResponses()
+
+            for (_, continuation) in pending {
+                continuation.resume(throwing: NSError(domain: "LSPClient", code: -4, userInfo: [
+                    NSLocalizedDescriptionKey: "LSP client deinitialized"
+                ]))
+            }
+        }
+
         process?.terminate()
     }
 }

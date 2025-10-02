@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Swift MCP ServerをClaude Desktopに登録するスクリプト
+# Swift Selena MCP ServerをClaude Desktopに登録するスクリプト
 
 set -e
 
@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 CURRENT_DIR="$(pwd)"
 EXECUTABLE_PATH="${CURRENT_DIR}/.build/debug/SwiftMCPServer"
 
-echo -e "${YELLOW}Swift MCP Server 登録スクリプト${NC}"
+echo -e "${YELLOW}Swift Selena MCP Server 登録スクリプト${NC}"
 echo "================================"
 
 # 実行ファイルの存在確認
@@ -46,9 +46,9 @@ if [ -f "$CONFIG_FILE" ]; then
     
     # jqがインストールされているか確認
     if command -v jq &> /dev/null; then
-        # jqで既存の設定を保持しつつswift-analyzerを追加/更新
+        # jqで既存の設定を保持しつつswift-selenaを追加/更新
         jq --arg path "$EXECUTABLE_PATH" \
-            '.mcpServers."swift-analyzer" = {"command": $path}' \
+            '.mcpServers."swift-selena" = {"command": $path}' \
             "$CONFIG_FILE" > "${CONFIG_FILE}.tmp"
         mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
         echo -e "${GREEN}✓${NC} 設定ファイルを更新しました（既存設定を保持）"
@@ -60,7 +60,7 @@ if [ -f "$CONFIG_FILE" ]; then
         echo ""
         echo "以下を追加してください："
         echo ""
-        echo '  "swift-analyzer": {'
+        echo '  "swift-selena": {'
         echo "    \"command\": \"$EXECUTABLE_PATH\""
         echo '  }'
         exit 1
@@ -72,7 +72,7 @@ else
     cat > "$CONFIG_FILE" <<EOF
 {
   "mcpServers": {
-    "swift-analyzer": {
+    "swift-selena": {
       "command": "$EXECUTABLE_PATH"
     }
   }
@@ -90,4 +90,3 @@ echo "2. Claude Desktop で以下を試してください:"
 echo "   'Swift MCPサーバーに接続できていますか？'"
 echo ""
 echo "設定ファイル: $CONFIG_FILE"
-
