@@ -7,7 +7,7 @@ struct SwiftMCPServer {
     static func main() async throws {
         // ロギング設定
         LoggingSystem.bootstrap { label in
-            var handler = StreamLogHandler.standardOutput(label: label)
+            var handler = StreamLogHandler.standardError(label: label)
             handler.logLevel = .info
             return handler
         }
@@ -208,12 +208,13 @@ struct SwiftMCPServer {
             
             switch params.name {
             case "initialize_project":
-                guard let projectPath = params.arguments?["project_path"] as? String else {
+                guard let args = params.arguments,
+                      let projectPathValue = args["project_path"] else {
                     throw MCPError.invalidParams("Missing project_path")
                 }
+                let projectPath = String(describing: projectPathValue)
                 try await lspClient.initialize(projectPath: projectPath)
                 
-                // プロジェクトメモリを初期化
                 projectMemory = try ProjectMemory(projectPath: projectPath)
                 
                 return CallTool.Result(content: [
@@ -221,25 +222,34 @@ struct SwiftMCPServer {
                 ])
                 
             case "find_symbol":
-                guard let query = params.arguments?["query"] as? String else {
+                guard let args = params.arguments,
+                      let queryValue = args["query"] else {
                     throw MCPError.invalidParams("Missing query")
                 }
+                let query = String(describing: queryValue)
                 let result = try await lspClient.findSymbol(query: query)
                 return CallTool.Result(content: [.text(result)])
                 
             case "get_document_symbols":
-                guard let filePath = params.arguments?["file_path"] as? String else {
+                guard let args = params.arguments,
+                      let filePathValue = args["file_path"] else {
                     throw MCPError.invalidParams("Missing file_path")
                 }
+                let filePath = String(describing: filePathValue)
                 let result = try await lspClient.getDocumentSymbols(filePath: filePath)
                 return CallTool.Result(content: [.text(result)])
                 
             case "get_definition":
-                guard let filePath = params.arguments?["file_path"] as? String,
-                      let line = params.arguments?["line"] as? Int,
-                      let column = params.arguments?["column"] as? Int else {
+                guard let args = params.arguments,
+                      let filePathValue = args["file_path"],
+                      let lineValue = args["line"],
+                      let columnValue = args["column"] else {
                     throw MCPError.invalidParams("Missing required parameters")
                 }
+                let filePath = String(describing: filePathValue)
+                let line = Int(String(describing: lineValue)) ?? 0
+                let column = Int(String(describing: columnValue)) ?? 0
+                
                 let result = try await lspClient.getDefinition(
                     filePath: filePath,
                     line: line,
@@ -248,11 +258,16 @@ struct SwiftMCPServer {
                 return CallTool.Result(content: [.text(result)])
                 
             case "find_references":
-                guard let filePath = params.arguments?["file_path"] as? String,
-                      let line = params.arguments?["line"] as? Int,
-                      let column = params.arguments?["column"] as? Int else {
+                guard let args = params.arguments,
+                      let filePathValue = args["file_path"],
+                      let lineValue = args["line"],
+                      let columnValue = args["column"] else {
                     throw MCPError.invalidParams("Missing required parameters")
                 }
+                let filePath = String(describing: filePathValue)
+                let line = Int(String(describing: lineValue)) ?? 0
+                let column = Int(String(describing: columnValue)) ?? 0
+                
                 let result = try await lspClient.findReferences(
                     filePath: filePath,
                     line: line,
@@ -264,10 +279,18 @@ struct SwiftMCPServer {
                 guard let memory = projectMemory else {
                     throw MCPError.invalidRequest("Project not initialized")
                 }
-                guard let content = params.arguments?["content"] as? String else {
+                guard let args = params.arguments,
+                      let contentValue = args["content"] else {
                     throw MCPError.invalidParams("Missing content")
                 }
-                let tags = params.arguments?["tags"] as? [String] ?? []
+                let content = String(describing: contentValue)
+                
+                var tags: [String] = []
+                if let tagsValue = args["tags"] {
+                    let tagsStr = String(describing: tagsValue)
+                    // 簡易的な配列パース（実際にはもっと堅牢な実装が必要）
+                    tags = tagsStr.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+                }
                 
                 memory.addNote(content: content, tags: tags)
                 try memory.save()
@@ -280,9 +303,11 @@ struct SwiftMCPServer {
                 guard let memory = projectMemory else {
                     throw MCPError.invalidRequest("Project not initialized")
                 }
-                guard let query = params.arguments?["query"] as? String else {
+                guard let args = params.arguments,
+                      let queryValue = args["query"] else {
                     throw MCPError.invalidParams("Missing query")
                 }
+                let query = String(describing: queryValue)
                 
                 let notes = memory.searchNotes(query: query)
                 let formatter = DateFormatter()
@@ -310,15 +335,17 @@ struct SwiftMCPServer {
                 ])
                 
             case "read_function_body":
-                guard let filePath = params.arguments?["file_path"] as? String,
-                      let functionName = params.arguments?["function_name"] as? String else {
+                guard let args = params.arguments,
+                      let filePathValue = args["file_path"],
+                      let functionNameValue = args["function_name"] else {
                     throw MCPError.invalidParams("Missing required parameters")
                 }
+                let filePath = String(describing: filePathValue)
+                let functionName = String(describing: functionNameValue)
                 
                 let content = try String(contentsOfFile: filePath)
                 let lines = content.components(separatedBy: .newlines)
                 
-                // 関数の開始・終了を探す（簡易実装）
                 var functionLines: [String] = []
                 var capturing = false
                 var braceCount = 0
@@ -358,11 +385,15 @@ struct SwiftMCPServer {
                 return CallTool.Result(content: [.text(result)])
                 
             case "read_lines":
-                guard let filePath = params.arguments?["file_path"] as? String,
-                      let startLine = params.arguments?["start_line"] as? Int,
-                      let endLine = params.arguments?["end_line"] as? Int else {
+                guard let args = params.arguments,
+                      let filePathValue = args["file_path"],
+                      let startLineValue = args["start_line"],
+                      let endLineValue = args["end_line"] else {
                     throw MCPError.invalidParams("Missing required parameters")
                 }
+                let filePath = String(describing: filePathValue)
+                let startLine = Int(String(describing: startLineValue)) ?? 1
+                let endLine = Int(String(describing: endLineValue)) ?? 1
                 
                 let content = try String(contentsOfFile: filePath)
                 let lines = content.components(separatedBy: .newlines)
@@ -394,7 +425,7 @@ struct SwiftMCPServer {
         
         // サーバーを永続的に実行
         while true {
-            try await Task.sleep(nanoseconds: 1_000_000_000_000) // 1000秒スリープ
+            try await Task.sleep(nanoseconds: 1_000_000_000_000)
         }
     }
 }
