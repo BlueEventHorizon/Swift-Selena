@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(swift build)"
+      "Bash(swift build)",
+      "mcp__swift-selena__list_protocol_conformances",
+      "mcp__swift-selena__initialize_project",
+      "mcp__swift-selena__list_extensions",
+      "mcp__swift-selena__list_property_wrappers"
     ],
     "deny": [],
     "ask": []
