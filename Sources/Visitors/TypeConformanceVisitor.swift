@@ -77,6 +77,26 @@ class TypeConformanceVisitor: SyntaxVisitor {
         return .visitChildren
     }
 
+    override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
+        let location = node.startLocation(converter: converter)
+
+        // Protocolが継承している他のProtocol
+        var protocols: [String] = []
+        if let inheritanceClause = node.inheritanceClause {
+            protocols = inheritanceClause.inheritedTypes.map { $0.type.trimmedDescription }
+        }
+
+        typeConformances.append(SwiftSyntaxAnalyzer.TypeConformanceInfo(
+            typeName: node.name.text,
+            typeKind: "Protocol",
+            protocols: protocols,
+            superclass: nil,
+            line: location.line
+        ))
+
+        return .visitChildren
+    }
+
     private func extractInheritance(from clause: InheritanceClauseSyntax?) -> (protocols: [String], superclass: String?) {
         guard let clause = clause else {
             return ([], nil)
