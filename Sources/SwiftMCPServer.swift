@@ -236,6 +236,20 @@ struct SwiftMCPServer {
                         "type": .string("object"),
                         "properties": .object([:])
                     ])
+                ),
+                Tool(
+                    name: "get_type_hierarchy",
+                    description: "Get the inheritance hierarchy for a specific type",
+                    inputSchema: .object([
+                        "type": .string("object"),
+                        "properties": .object([
+                            "type_name": .object([
+                                "type": .string("string"),
+                                "description": .string("Name of the type to analyze")
+                            ])
+                        ]),
+                        "required": .array([.string("type_name")])
+                    ])
                 )
             ])
         }
@@ -618,6 +632,59 @@ struct SwiftMCPServer {
 
                 if fileImports.count > 20 {
                     result += "... and \(fileImports.count - 20) more files\n"
+                }
+
+                return CallTool.Result(content: [.text(result)])
+
+            case "get_type_hierarchy":
+                guard let memory = projectMemory else {
+                    throw MCPError.invalidRequest("Project not initialized")
+                }
+                guard let args = params.arguments,
+                      let typeNameValue = args["type_name"] else {
+                    throw MCPError.invalidParams("Missing type_name")
+                }
+                let typeName = String(describing: typeNameValue)
+
+                guard let hierarchy = try SwiftSyntaxAnalyzer.getTypeHierarchy(
+                    typeName: typeName,
+                    projectPath: memory.projectPath,
+                    projectMemory: memory
+                ) else {
+                    return CallTool.Result(content: [.text("Type '\(typeName)' not found in project")])
+                }
+
+                var result = "Type Hierarchy for '\(typeName)':\n\n"
+                result += "[\(hierarchy.typeKind)] \(hierarchy.typeName)\n"
+                result += "  Location: \(hierarchy.filePath):\(hierarchy.line)\n\n"
+
+                if let superclass = hierarchy.superclass {
+                    result += "Inherits from:\n"
+                    result += "  └─ \(superclass)\n\n"
+                }
+
+                if !hierarchy.protocols.isEmpty {
+                    result += "Conforms to:\n"
+                    for proto in hierarchy.protocols {
+                        result += "  └─ \(proto)\n"
+                    }
+                    result += "\n"
+                }
+
+                if !hierarchy.subclasses.isEmpty {
+                    result += "Subclasses:\n"
+                    for subclass in hierarchy.subclasses {
+                        result += "  └─ \(subclass)\n"
+                    }
+                    result += "\n"
+                }
+
+                if !hierarchy.conformingTypes.isEmpty {
+                    result += "Types conforming to this protocol:\n"
+                    for type in hierarchy.conformingTypes {
+                        result += "  └─ \(type)\n"
+                    }
+                    result += "\n"
                 }
 
                 return CallTool.Result(content: [.text(result)])

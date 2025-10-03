@@ -101,6 +101,7 @@ ProjectMemoryは3つのインデックスを保持：
 - `list_protocol_conformances`: Protocol準拠と継承関係の解析（UITableViewDelegate, ObservableObject等）
 - `list_extensions`: Extension解析（拡張対象の型、メンバー一覧）
 - `analyze_imports`: プロジェクト全体のImport依存関係を解析（キャッシュ利用）
+- `get_type_hierarchy`: 型の継承階層を取得（スーパークラス、サブクラス、Protocol準拠型、キャッシュ利用）
 
 ### コンテキスト効率的な読み取り
 - `read_function_body`: 単一関数の実装を抽出（シンプルなブレースカウント）

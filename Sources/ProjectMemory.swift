@@ -19,6 +19,7 @@ class ProjectMemory {
         var fileIndex: [String: FileInfo]
         var symbolCache: [String: [SymbolInfo]]
         var importCache: [String: [ImportInfo]]
+        var typeConformanceCache: [String: TypeConformanceInfo]
         var notes: [Note]
 
         struct FileInfo: Codable {
@@ -38,6 +39,15 @@ class ProjectMemory {
             let module: String
             let kind: String?
             let line: Int
+        }
+
+        struct TypeConformanceInfo: Codable {
+            let typeName: String
+            let typeKind: String
+            let filePath: String
+            let line: Int
+            let superclass: String?
+            let protocols: [String]
         }
 
         struct Note: Codable {
@@ -85,6 +95,7 @@ class ProjectMemory {
                 fileIndex: [:],
                 symbolCache: [:],
                 importCache: [:],
+                typeConformanceCache: [:],
                 notes: []
             )
             try save()
@@ -153,7 +164,22 @@ class ProjectMemory {
     func getAllImports() -> [String: [Memory.ImportInfo]] {
         return memory.importCache
     }
-    
+
+    /// 型情報をキャッシュ
+    func cacheTypeConformance(typeName: String, typeInfo: Memory.TypeConformanceInfo) {
+        memory.typeConformanceCache[typeName] = typeInfo
+    }
+
+    /// キャッシュから型情報を取得
+    func getCachedTypeConformance(typeName: String) -> Memory.TypeConformanceInfo? {
+        return memory.typeConformanceCache[typeName]
+    }
+
+    /// 全型情報を取得
+    func getAllTypeConformances() -> [String: Memory.TypeConformanceInfo] {
+        return memory.typeConformanceCache
+    }
+
     /// メモを追加
     func addNote(content: String, tags: [String] = []) {
         let note = Memory.Note(

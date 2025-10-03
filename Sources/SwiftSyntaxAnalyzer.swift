@@ -54,6 +54,17 @@ enum SwiftSyntaxAnalyzer {
         let line: Int
     }
 
+    struct TypeHierarchy {
+        let typeName: String
+        let typeKind: String
+        let filePath: String
+        let line: Int
+        let superclass: String?
+        let protocols: [String]
+        let subclasses: [String]
+        let conformingTypes: [String]  // Protocol conforming types (if this is a Protocol)
+    }
+
     // MARK: - Public Methods
 
     /// ファイル内の全シンボルを抽出
@@ -145,5 +156,77 @@ enum SwiftSyntaxAnalyzer {
         try? projectMemory.save()
 
         return fileImports
+    }
+
+    /// 型の継承階層を取得（キャッシュ利用）
+    static func getTypeHierarchy(typeName: String, projectPath: String, projectMemory: ProjectMemory) throws -> TypeHierarchy? {
+        // キャッシュを構築（必要な場合のみ）
+        if projectMemory.getAllTypeConformances().isEmpty {
+            try buildTypeConformanceCache(projectPath: projectPath, projectMemory: projectMemory)
+        }
+
+        // キャッシュから型情報を取得
+        guard let cachedType = projectMemory.getCachedTypeConformance(typeName: typeName) else {
+            return nil
+        }
+
+        let allTypes = projectMemory.getAllTypeConformances()
+
+        // サブクラスを検索
+        var subclasses: [String] = []
+        for (name, typeInfo) in allTypes {
+            if typeInfo.superclass == typeName {
+                subclasses.append(name)
+            }
+        }
+
+        // Protocol準拠型を検索
+        var conformingTypes: [String] = []
+        if cachedType.typeKind == "Protocol" {
+            for (name, typeInfo) in allTypes {
+                if typeInfo.protocols.contains(typeName) {
+                    conformingTypes.append(name)
+                }
+            }
+        }
+
+        return TypeHierarchy(
+            typeName: typeName,
+            typeKind: cachedType.typeKind,
+            filePath: cachedType.filePath,
+            line: cachedType.line,
+            superclass: cachedType.superclass,
+            protocols: cachedType.protocols,
+            subclasses: subclasses.sorted(),
+            conformingTypes: conformingTypes.sorted()
+        )
+    }
+
+    /// 型情報キャッシュを構築
+    private static func buildTypeConformanceCache(projectPath: String, projectMemory: ProjectMemory) throws {
+        let swiftFiles = try FileSearcher.findFiles(in: projectPath, pattern: "*.swift")
+
+        for file in swiftFiles {
+            do {
+                let conformances = try listTypeConformances(filePath: file)
+                for conformance in conformances {
+                    let cacheData = ProjectMemory.Memory.TypeConformanceInfo(
+                        typeName: conformance.typeName,
+                        typeKind: conformance.typeKind,
+                        filePath: file,
+                        line: conformance.line,
+                        superclass: conformance.superclass,
+                        protocols: conformance.protocols
+                    )
+                    projectMemory.cacheTypeConformance(typeName: conformance.typeName, typeInfo: cacheData)
+                }
+            } catch {
+                // ファイル読み込みエラーをスキップ
+                continue
+            }
+        }
+
+        // メモリを保存
+        try? projectMemory.save()
     }
 }

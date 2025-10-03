@@ -32,6 +32,7 @@
 - **`list_protocol_conformances`** - Protocol準拠と継承関係を解析（UITableViewDelegate, ObservableObject等）
 - **`list_extensions`** - Extension解析（拡張対象の型、プロトコル準拠、メンバー一覧）
 - **`analyze_imports`** - プロジェクト全体のImport依存関係を解析（モジュール使用統計、キャッシュ利用）
+- **`get_type_hierarchy`** - 型の継承階層を取得（スーパークラス、サブクラス、Protocol準拠型、キャッシュ利用）
 
 ### 効率的な読み取り
 - **`read_function_body`** - 特定の関数実装のみを抽出
