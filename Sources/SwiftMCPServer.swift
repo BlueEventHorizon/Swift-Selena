@@ -250,6 +250,14 @@ struct SwiftMCPServer {
                         ]),
                         "required": .array([.string("type_name")])
                     ])
+                ),
+                Tool(
+                    name: "find_test_cases",
+                    description: "Find XCTest test cases and methods in the project",
+                    inputSchema: .object([
+                        "type": .string("object"),
+                        "properties": .object([:])
+                    ])
                 )
             ])
         }
@@ -684,6 +692,38 @@ struct SwiftMCPServer {
                     for type in hierarchy.conformingTypes {
                         result += "  └─ \(type)\n"
                     }
+                    result += "\n"
+                }
+
+                return CallTool.Result(content: [.text(result)])
+
+            case "find_test_cases":
+                guard let memory = projectMemory else {
+                    throw MCPError.invalidRequest("Project not initialized")
+                }
+
+                let testCases = try SwiftSyntaxAnalyzer.findTestCases(projectPath: memory.projectPath)
+
+                if testCases.isEmpty {
+                    return CallTool.Result(content: [.text("No XCTest cases found in project")])
+                }
+
+                var result = "XCTest Cases (\(testCases.count) classes):\n\n"
+
+                for testClass in testCases {
+                    let fileName = (testClass.filePath as NSString).lastPathComponent
+                    result += "[TestClass] \(testClass.className)\n"
+                    result += "  File: \(fileName):\(testClass.line)\n"
+
+                    if !testClass.testMethods.isEmpty {
+                        result += "  Test methods (\(testClass.testMethods.count)):\n"
+                        for method in testClass.testMethods {
+                            result += "    └─ \(method.name) (line \(method.line))\n"
+                        }
+                    } else {
+                        result += "  No test methods found\n"
+                    }
+
                     result += "\n"
                 }
 

@@ -65,6 +65,18 @@ enum SwiftSyntaxAnalyzer {
         let conformingTypes: [String]  // Protocol conforming types (if this is a Protocol)
     }
 
+    struct XCTestInfo {
+        let className: String
+        let filePath: String
+        let line: Int
+        let testMethods: [TestMethod]
+
+        struct TestMethod {
+            let name: String
+            let line: Int
+        }
+    }
+
     // MARK: - Public Methods
 
     /// ファイル内の全シンボルを抽出
@@ -228,5 +240,32 @@ enum SwiftSyntaxAnalyzer {
 
         // メモリを保存
         try? projectMemory.save()
+    }
+
+    /// XCTestケースを検出
+    static func findTestCases(projectPath: String) throws -> [XCTestInfo] {
+        let swiftFiles = try FileSearcher.findFiles(in: projectPath, pattern: "*.swift")
+
+        var testCases: [XCTestInfo] = []
+
+        for file in swiftFiles {
+            do {
+                let content = try String(contentsOfFile: file)
+                let sourceFile = Parser.parse(source: content)
+
+                let visitor = XCTestVisitor(
+                    converter: SourceLocationConverter(fileName: file, tree: sourceFile),
+                    filePath: file
+                )
+                visitor.walk(sourceFile)
+
+                testCases.append(contentsOf: visitor.testClasses)
+            } catch {
+                // ファイル読み込みエラーをスキップ
+                continue
+            }
+        }
+
+        return testCases
     }
 }
