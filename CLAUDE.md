@@ -12,7 +12,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # プロジェクトのビルド
 swift build
 
-# サーバーの実行
+# セットアップスクリプトに実行権限を付与
+chmod +x register-mcp-to-claude-desktop.sh
+chmod +x register-mcp-to-claude-code.sh
+
+# Claude Desktopに登録（自動）
+./register-mcp-to-claude-desktop.sh
+
+# Claude Codeに登録（自動）
+./register-mcp-to-claude-code.sh
+
+# サーバーの実行（開発用）
 swift run
 
 # Xcodeで開く

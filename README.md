@@ -52,11 +52,15 @@
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/yourusername/Swift-Selena.git
+git clone https://github.com/BlueEventHorizon/Swift-Selena.git
 cd Swift-Selena
 
 # ビルド
 swift build
+
+# セットアップスクリプトに実行権限を付与
+chmod +x register-mcp-to-claude-desktop.sh
+chmod +x register-mcp-to-claude-code.sh
 
 # 実行可能ファイルのパスを確認
 pwd
@@ -67,7 +71,36 @@ pwd
 
 ## セットアップ
 
-### Claude Desktop の設定
+### 簡単セットアップ（推奨）
+
+プロジェクトルートで以下のスクリプトを実行すると、自動的に設定が完了します。
+
+#### Claude Desktopの場合
+```bash
+./register-mcp-to-claude-desktop.sh
+```
+
+このスクリプトは以下を自動実行します：
+- 実行ファイルの存在確認
+- 既存設定のバックアップ
+- `claude_desktop_config.json`に設定を追加
+- 既存の設定を保持（jqがインストールされている場合）
+
+#### Claude Codeの場合
+```bash
+./register-mcp-to-claude-code.sh
+```
+
+このスクリプトは以下を自動実行します：
+- 実行ファイルの存在確認
+- claude CLIへの登録（`claude mcp add`）
+- 既存登録の上書き確認
+
+### 手動セットアップ
+
+スクリプトを使わず手動で設定する場合：
+
+#### Claude Desktop の設定
 
 1. 設定ファイルを開く（存在しない場合は作成）:
 ```bash
