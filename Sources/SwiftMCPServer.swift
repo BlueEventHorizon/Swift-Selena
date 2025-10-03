@@ -186,6 +186,20 @@ struct SwiftMCPServer {
                         ]),
                         "required": .array([.string("file_path"), .string("start_line"), .string("end_line")])
                     ])
+                ),
+                Tool(
+                    name: "list_property_wrappers",
+                    description: "List SwiftUI property wrappers (@State, @Binding, etc.) in a file",
+                    inputSchema: .object([
+                        "type": .string("object"),
+                        "properties": .object([
+                            "file_path": .object([
+                                "type": .string("string"),
+                                "description": .string("Path to Swift file")
+                            ])
+                        ]),
+                        "required": .array([.string("file_path")])
+                    ])
                 )
             ])
         }
@@ -445,6 +459,29 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
+            case "list_property_wrappers":
+                guard let args = params.arguments,
+                      let filePathValue = args["file_path"] else {
+                    throw MCPError.invalidParams("Missing file_path")
+                }
+                let filePath = String(describing: filePathValue)
+                let wrappers = try SwiftSyntaxAnalyzer.listPropertyWrappers(filePath: filePath)
+
+                if wrappers.isEmpty {
+                    return CallTool.Result(content: [.text("No property wrappers found in \(filePath)")])
+                }
+
+                var result = "Property Wrappers in \(filePath):\n\n"
+                for wrapper in wrappers {
+                    result += "[@\(wrapper.wrapperType)] \(wrapper.propertyName)"
+                    if let typeName = wrapper.typeName {
+                        result += ": \(typeName)"
+                    }
+                    result += " (line \(wrapper.line))\n"
+                }
+
+                return CallTool.Result(content: [.text(result)])
+
             default:
                 throw MCPError.invalidParams("Unknown tool: \(params.name)")
             }
@@ -561,6 +598,13 @@ enum SwiftSyntaxAnalyzer {
         let line: Int
     }
 
+    struct PropertyWrapperInfo {
+        let propertyName: String
+        let wrapperType: String
+        let typeName: String?
+        let line: Int
+    }
+
     static func listSymbols(filePath: String) throws -> [SymbolInfo] {
         let content = try String(contentsOfFile: filePath)
         let sourceFile = Parser.parse(source: content)
@@ -569,6 +613,16 @@ enum SwiftSyntaxAnalyzer {
         visitor.walk(sourceFile)
 
         return visitor.symbols
+    }
+
+    static func listPropertyWrappers(filePath: String) throws -> [PropertyWrapperInfo] {
+        let content = try String(contentsOfFile: filePath)
+        let sourceFile = Parser.parse(source: content)
+
+        let visitor = PropertyWrapperVisitor(converter: SourceLocationConverter(fileName: filePath, tree: sourceFile))
+        visitor.walk(sourceFile)
+
+        return visitor.propertyWrappers
     }
 
     private class SymbolVisitor: SyntaxVisitor {
@@ -641,6 +695,49 @@ enum SwiftSyntaxAnalyzer {
                     ))
                 }
             }
+            return .visitChildren
+        }
+    }
+
+    private class PropertyWrapperVisitor: SyntaxVisitor {
+        var propertyWrappers: [PropertyWrapperInfo] = []
+        let converter: SourceLocationConverter
+
+        init(converter: SourceLocationConverter) {
+            self.converter = converter
+            super.init(viewMode: .sourceAccurate)
+        }
+
+        override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
+            let location = node.startLocation(converter: converter)
+
+            // Check for attributes (like @State, @Binding, etc.)
+            for attribute in node.attributes {
+                if let customAttribute = attribute.as(AttributeSyntax.self) {
+                    let wrapperType = customAttribute.attributeName.trimmedDescription
+
+                    // Only process known SwiftUI property wrappers
+                    let knownWrappers = ["State", "Binding", "ObservedObject", "StateObject",
+                                        "EnvironmentObject", "Environment", "Published",
+                                        "FetchRequest", "AppStorage", "SceneStorage",
+                                        "ObservationTracked", "ObservationIgnored"]
+
+                    if knownWrappers.contains(wrapperType) {
+                        for binding in node.bindings {
+                            if let identifier = binding.pattern.as(IdentifierPatternSyntax.self) {
+                                let typeName = binding.typeAnnotation?.type.trimmedDescription
+                                propertyWrappers.append(PropertyWrapperInfo(
+                                    propertyName: identifier.identifier.text,
+                                    wrapperType: wrapperType,
+                                    typeName: typeName,
+                                    line: location.line
+                                ))
+                            }
+                        }
+                    }
+                }
+            }
+
             return .visitChildren
         }
     }
