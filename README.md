@@ -92,9 +92,26 @@ open ~/Library/Application\ Support/Claude/claude_desktop_config.json
 
 ### Claude Code の設定
 
-Claude Codeでは`MCP_CLIENT_ID`の設定は不要です（デフォルトで動作します）。
+Claude Codeでは`MCP_CLIENT_ID`の設定は不要です（デフォルトで`default`が使用されます）。
 
 MCPサーバーの設定方法は[Claude Codeドキュメント](https://docs.claude.com/claude-code)を参照してください。
+
+**複数のClaude Codeで同じプロジェクトを開く場合**: `mcp_config.json`に以下のように`MCP_CLIENT_ID`を設定してください。
+
+```json
+{
+  "mcpServers": {
+    "swift-selena": {
+      "command": "/path/to/Swift-Selena/.build/debug/SwiftMCPServer",
+      "env": {
+        "MCP_CLIENT_ID": "claude-code-window1"
+      }
+    }
+  }
+}
+```
+
+別のウィンドウでは`claude-code-window2`など、異なるIDを使用してください。
 
 ## 使い方
 
@@ -172,7 +189,9 @@ Claude: search_code を実行（正規表現: do\s*\{）
 
 - プロジェクトパスのSHA256ハッシュで同一プロジェクトを識別
 - 異なるプロジェクトは自動的に分離
-- Claude CodeとClaude Desktopでデータを共有したくない場合は`MCP_CLIENT_ID`で分離
+- Claude Code（`default`）とClaude Desktop（`claude-desktop`）は`MCP_CLIENT_ID`により自動的にデータが分離される
+
+**注意**: 同じ`MCP_CLIENT_ID`（例: 複数のClaude Codeウィンドウ）で同じプロジェクトを同時に開くと、メモリファイルへの書き込み競合が発生する可能性があります。同じプロジェクトを複数のウィンドウで作業する場合は、異なる`MCP_CLIENT_ID`を設定してください。
 
 ## トラブルシューティング
 
