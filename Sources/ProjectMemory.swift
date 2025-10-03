@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import CryptoKit
 
 /// プロジェクトごとの永続化されたメモリ
 class ProjectMemory {
-    private let projectPath: String
+    let projectPath: String
     private let memoryDir: URL
     private let projectName: String
     
@@ -44,13 +45,21 @@ class ProjectMemory {
     init(projectPath: String) throws {
         self.projectPath = projectPath
         self.projectName = URL(fileURLWithPath: projectPath).lastPathComponent
-        
-        // メモリディレクトリ作成
+
+        // クライアント識別子を環境変数から取得（デフォルトは"default"）
+        let clientId = ProcessInfo.processInfo.environment["MCP_CLIENT_ID"] ?? "default"
+
+        // プロジェクトパスのハッシュを生成（同じプロジェクトなら同じハッシュ）
+        let projectPathHash = Self.hashProjectPath(projectPath)
+
+        // メモリディレクトリ作成（クライアント＋プロジェクトパスで分離）
         let homeDir = FileManager.default.homeDirectoryForCurrentUser
         self.memoryDir = homeDir
             .appendingPathComponent(".swift-mcp-server")
+            .appendingPathComponent("clients")
+            .appendingPathComponent(clientId)
             .appendingPathComponent("projects")
-            .appendingPathComponent(projectName)
+            .appendingPathComponent("\(projectName)-\(projectPathHash)")
         
         try FileManager.default.createDirectory(
             at: memoryDir,
@@ -142,21 +151,29 @@ class ProjectMemory {
         let totalFiles = memory.fileIndex.count
         let totalSymbols = memory.symbolCache.values.reduce(0) { $0 + $1.count }
         let totalNotes = memory.notes.count
-        
+
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        
+
         return """
         📊 プロジェクト統計
-        
+
         プロジェクト名: \(projectName)
         最終解析: \(formatter.string(from: memory.lastAnalyzed))
-        
+
         インデックス済みファイル: \(totalFiles)
         キャッシュ済みシンボル: \(totalSymbols)
         保存されたメモ: \(totalNotes)
         """
+    }
+
+    /// プロジェクトパスをハッシュ化（短い一意な識別子を生成）
+    private static func hashProjectPath(_ path: String) -> String {
+        let data = Data(path.utf8)
+        let hash = SHA256.hash(data: data)
+        // 最初の8文字を使用（衝突の可能性は極めて低い）
+        return hash.compactMap { String(format: "%02x", $0) }.joined().prefix(8).description
     }
     
     /// メモリを保存
