@@ -88,6 +88,7 @@ ProjectMemoryは3つのインデックスを保持：
 - `list_symbols`: ファイル内の全シンボル抽出（Class, Struct, Function等）
 - `find_symbol_definition`: プロジェクト全体でシンボル定義を検索
 - `list_property_wrappers`: SwiftUI Property Wrapper解析（@State, @Binding, @ObservedObject等）
+- `list_protocol_conformances`: Protocol準拠と継承関係の解析（UITableViewDelegate, ObservableObject等）
 
 ### コンテキスト効率的な読み取り
 - `read_function_body`: 単一関数の実装を抽出（シンプルなブレースカウント）
@@ -177,4 +178,10 @@ let symbols = try SwiftSyntaxAnalyzer.listSymbols(filePath: "/path/to/file.swift
 // Property Wrapper解析
 let wrappers = try SwiftSyntaxAnalyzer.listPropertyWrappers(filePath: "/path/to/view.swift")
 // 結果: [PropertyWrapperInfo(propertyName: "counter", wrapperType: "State", typeName: "Int", line: 4), ...]
+
+// Protocol Conformance解析
+let conformances = try SwiftSyntaxAnalyzer.listTypeConformances(filePath: "/path/to/file.swift")
+// 結果: [TypeConformanceInfo(typeName: "ViewController", typeKind: "Class",
+//        protocols: ["UITableViewDelegate", "UITableViewDataSource"],
+//        superclass: "UIViewController", line: 5), ...]
 ```

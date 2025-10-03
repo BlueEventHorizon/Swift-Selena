@@ -1,5 +1,7 @@
 # Swift Selena
 
+<img width="400" src="selena.png">
+
 **Swift Selena**は、Swiftプロジェクトのコード解析をClaude（AI）に提供するMCP (Model Context Protocol) サーバーです。ビルドエラーがあるコードでも動作し、SwiftUIアプリ開発を強力にサポートします。
 
 [![Swift 5.9+](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
@@ -27,6 +29,7 @@
 - **`list_symbols`** - Class, Struct, Function等のシンボル一覧
 - **`find_symbol_definition`** - プロジェクト全体でシンボル定義を検索
 - **`list_property_wrappers`** - SwiftUI Property Wrapper（@State, @Binding等）を検出
+- **`list_protocol_conformances`** - Protocol準拠と継承関係を解析（UITableViewDelegate, ObservableObject等）
 
 ### 効率的な読み取り
 - **`read_function_body`** - 特定の関数実装のみを抽出
@@ -160,6 +163,17 @@ Claude: find_symbol_definition を実行
 [Function] fetchData
   File: /path/to/NetworkManager.swift
   Line: 45
+```
+
+#### Protocol準拠を確認
+```
+あなた: ViewControllerがどのプロトコルに準拠しているか教えて
+
+Claude: list_protocol_conformances を実行
+結果:
+[Class] ViewController (line 25)
+  Inherits from: UIViewController
+  Conforms to: UITableViewDelegate, UITableViewDataSource
 ```
 
 #### プロジェクト全体でエラーハンドリングを検索
