@@ -26,6 +26,12 @@ enum FileSearcher {
         }
 
         for case let file as String in enumerator {
+            // 除外ディレクトリをスキップ
+            let excludePrefixes = [".build/", ".git/", ".swiftpm/", "Pods/", "Carthage/", "DerivedData/", "Build/"]
+            if excludePrefixes.contains(where: { file.hasPrefix($0) }) {
+                continue
+            }
+
             if file.hasSuffix(".swift") {
                 let range = NSRange(file.startIndex..., in: file)
                 if regex.firstMatch(in: file, range: range) != nil {
@@ -51,6 +57,12 @@ enum FileSearcher {
         }
 
         for case let file as String in enumerator {
+            // 除外ディレクトリをスキップ
+            let excludePrefixes = [".build/", ".git/", ".swiftpm/", "Pods/", "Carthage/", "DerivedData/", "Build/"]
+            if excludePrefixes.contains(where: { file.hasPrefix($0) }) {
+                continue
+            }
+
             let shouldSearch: Bool
             if let filePattern = filePattern {
                 let fileRegex = try NSRegularExpression(

@@ -18,21 +18,28 @@ class ProjectMemory {
         var lastAnalyzed: Date
         var fileIndex: [String: FileInfo]
         var symbolCache: [String: [SymbolInfo]]
+        var importCache: [String: [ImportInfo]]
         var notes: [Note]
-        
+
         struct FileInfo: Codable {
             let path: String
             let lastModified: Date
             let symbolCount: Int
         }
-        
+
         struct SymbolInfo: Codable {
             let name: String
             let kind: String
             let filePath: String
             let line: Int
         }
-        
+
+        struct ImportInfo: Codable {
+            let module: String
+            let kind: String?
+            let line: Int
+        }
+
         struct Note: Codable {
             let timestamp: Date
             let content: String
@@ -77,6 +84,7 @@ class ProjectMemory {
                 lastAnalyzed: Date(),
                 fileIndex: [:],
                 symbolCache: [:],
+                importCache: [:],
                 notes: []
             )
             try save()
@@ -124,8 +132,26 @@ class ProjectMemory {
               let modificationDate = attributes[.modificationDate] as? Date else {
             return true
         }
-        
+
         return modificationDate > cachedInfo.lastModified
+    }
+
+    /// Import情報をキャッシュ
+    func cacheImports(filePath: String, imports: [Memory.ImportInfo]) {
+        memory.importCache[filePath] = imports
+    }
+
+    /// キャッシュからImport情報を取得
+    func getCachedImports(filePath: String) -> [Memory.ImportInfo]? {
+        guard !isFileModified(path: filePath) else {
+            return nil
+        }
+        return memory.importCache[filePath]
+    }
+
+    /// 全Import情報を取得
+    func getAllImports() -> [String: [Memory.ImportInfo]] {
+        return memory.importCache
     }
     
     /// メモを追加
