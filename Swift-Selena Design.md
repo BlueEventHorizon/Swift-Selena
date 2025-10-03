@@ -48,15 +48,18 @@
 ┌──────────────▼──────────────────────┐
 │      Swift-Selena MCP Server        │
 │  ┌─────────────────────────────┐   │
-│  │  Tool Handlers              │   │
+│  │  Tool Handlers (16 tools)   │   │
 │  │  - initialize_project       │   │
 │  │  - find_files               │   │
 │  │  - search_code              │   │
 │  │  - list_symbols             │   │
 │  │  - find_symbol_definition   │   │
 │  │  - list_property_wrappers   │   │
-│  │  - list_extensions          │   │
 │  │  - list_protocol_conformances│  │
+│  │  - list_extensions          │   │
+│  │  - analyze_imports          │   │
+│  │  - get_type_hierarchy       │   │
+│  │  - find_test_cases          │   │
 │  │  - read_function_body       │   │
 │  │  - read_lines               │   │
 │  │  - add_note / search_notes  │   │
@@ -72,7 +75,10 @@
 │  │  Project Memory             │   │
 │  │  - 永続化ストレージ         │   │
 │  │  - ノート管理               │   │
-│  │  - キャッシュ               │   │
+│  │  - キャッシュシステム       │   │
+│  │    - symbolCache            │   │
+│  │    - importCache            │   │
+│  │    - typeConformanceCache   │   │
 │  └─────────────────────────────┘   │
 └──────────────┬──────────────────────┘
                │
@@ -83,11 +89,12 @@
 
 ### 技術スタック
 
-- **言語**: Swift 6.2
+- **言語**: Swift 5.9+
 - **MCP SDK**: swift-sdk 0.10.2
-- **構文解析**: SwiftSyntax 510.0+
+- **構文解析**: SwiftSyntax 602.0.0
 - **ストレージ**: JSON (FileManager)
 - **通信**: Stdio Transport
+- **暗号化**: CryptoKit (プロジェクトパスハッシュ)
 
 ## 設計原則
 
@@ -139,7 +146,7 @@
 
 ## 機能設計
 
-### Tier 1: 基本機能（実装済み）
+### Tier 1: 基本機能（実装完了 - v0.3.0）
 
 #### ファイルシステム操作
 
@@ -157,6 +164,12 @@
 - `list_property_wrappers`: @State, @Binding等の検出
 - `list_protocol_conformances`: プロトコル適合の検出
 - `list_extensions`: Extension宣言の一覧
+
+#### 依存関係・階層解析
+
+- `analyze_imports`: Import依存関係解析（モジュール使用統計、キャッシュ利用）
+- `get_type_hierarchy`: 型の継承階層取得（スーパークラス、サブクラス、Protocol準拠型、キャッシュ利用）
+- `find_test_cases`: XCTestケースとテストメソッド検出
 
 #### ユーティリティ
 
@@ -225,6 +238,8 @@ struct Memory: Codable {
     var lastAnalyzed: Date
     var fileIndex: [String: FileInfo]
     var symbolCache: [String: [SymbolInfo]]
+    var importCache: [String: [ImportInfo]]
+    var typeConformanceCache: [String: TypeConformanceInfo]
     var notes: [Note]
 }
 
@@ -240,9 +255,24 @@ struct SymbolInfo: Codable {
     let filePath: String
     let line: Int
 }
+
+struct ImportInfo: Codable {
+    let module: String
+    let kind: String?
+    let line: Int
+}
+
+struct TypeConformanceInfo: Codable {
+    let typeName: String
+    let typeKind: String
+    let filePath: String
+    let line: Int
+    let superclass: String?
+    let protocols: [String]
+}
 ```
 
-保存場所: `~/.swift-mcp-server/projects/{projectName}/memory.json`
+保存場所: `~/.swift-mcp-server/clients/{clientId}/projects/{projectName}-{hash}/memory.json`
 
 ## パフォーマンス考慮事項
 
@@ -251,12 +281,17 @@ struct SymbolInfo: Codable {
 1. **インクリメンタル解析**
    - ファイル単位でのキャッシュ
    - 変更されたファイルのみ再解析
+   - ファイル更新日時による自動無効化
 2. **遅延評価**
    - 必要な情報のみを解析
    - プロジェクト全体のスキャンは最小限
-3. **並列処理**
-   - 複数ファイルの同時解析
-   - I/O待機時間の最小化
+   - キャッシュがあれば即座に返却
+3. **除外ディレクトリ**
+   - `.build/`, `.git/`, `.swiftpm/`, `Pods/`, `Carthage/`, `DerivedData/`を自動除外
+   - 依存ライブラリの解析をスキップして高速化
+4. **エラーハンドリング**
+   - ファイル読み込みエラー時のスキップ
+   - 構文エラーがあっても処理継続
 
 ## セキュリティとプライバシー
 
@@ -281,7 +316,12 @@ struct SymbolInfo: Codable {
 - ファイル/コード検索
 - シンボル一覧の抽出
 - 構造的な情報の取得
-- 呼び出し関係の追跡（計画中）
+- SwiftUI Property Wrapper解析
+- Protocol準拠と継承関係の解析
+- Extension解析
+- Import依存関係の可視化
+- 型の継承階層追跡
+- XCTestケース検出
 
 ### できないこと ❌
 
@@ -306,30 +346,39 @@ struct SymbolInfo: Codable {
 
 ## 開発ロードマップ
 
-### v0.2.0（現在）
+### v0.3.0（完了 - 2025/10/03）
 
 - ✅ 基本的なSwiftSyntax解析
-- ✅ SwiftUI特化機能
-- ✅ ファイル/コード検索
+- ✅ SwiftUI特化機能（Property Wrapper、Protocol準拠、Extension）
+- ✅ ファイル/コード検索（除外ディレクトリ対応）
+- ✅ Import依存関係解析
+- ✅ 型の継承階層解析
+- ✅ XCTestケース検出
+- ✅ キャッシュシステム（import、type情報）
+- ✅ コードベースリファクタリング（ファイル分割）
+- ✅ 複数クライアント対応（プロジェクトパスハッシュ方式）
 
-### v0.3.0（次期）
+**提供ツール数**: 16
+
+### v0.4.0（次期）
 
 - 呼び出しグラフの構築
-- 依存関係解析
 - 型使用箇所の追跡
-- パフォーマンス最適化
+- スコープ解析
+- パフォーマンス最適化（並列処理）
 
-### v0.4.0（将来）
+### v0.5.0（将来）
 
 - 限定的な型推論
-- スコープ解析
 - リファクタリング支援機能
+- コード品質メトリクス
 
 ### v1.0.0（長期）
 
 - 安定版リリース
 - ドキュメント完備
 - パフォーマンスチューニング完了
+- エコシステム統合
 
 ## コントリビューション
 
