@@ -214,6 +214,20 @@ struct SwiftMCPServer {
                         ]),
                         "required": .array([.string("file_path")])
                     ])
+                ),
+                Tool(
+                    name: "list_extensions",
+                    description: "List extensions and their members in a file",
+                    inputSchema: .object([
+                        "type": .string("object"),
+                        "properties": .object([
+                            "file_path": .object([
+                                "type": .string("string"),
+                                "description": .string("Path to Swift file")
+                            ])
+                        ]),
+                        "required": .array([.string("file_path")])
+                    ])
                 )
             ])
         }
@@ -525,6 +539,38 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
+            case "list_extensions":
+                guard let args = params.arguments,
+                      let filePathValue = args["file_path"] else {
+                    throw MCPError.invalidParams("Missing file_path")
+                }
+                let filePath = String(describing: filePathValue)
+                let extensions = try SwiftSyntaxAnalyzer.listExtensions(filePath: filePath)
+
+                if extensions.isEmpty {
+                    return CallTool.Result(content: [.text("No extensions found in \(filePath)")])
+                }
+
+                var result = "Extensions in \(filePath):\n\n"
+                for ext in extensions {
+                    result += "[Extension] \(ext.extendedType) (line \(ext.line))\n"
+
+                    if !ext.protocols.isEmpty {
+                        result += "  Conforms to: \(ext.protocols.joined(separator: ", "))\n"
+                    }
+
+                    if !ext.members.isEmpty {
+                        result += "  Members:\n"
+                        for member in ext.members {
+                            result += "    [\(member.kind)] \(member.name) (line \(member.line))\n"
+                        }
+                    }
+
+                    result += "\n"
+                }
+
+                return CallTool.Result(content: [.text(result)])
+
             default:
                 throw MCPError.invalidParams("Unknown tool: \(params.name)")
             }
@@ -656,6 +702,19 @@ enum SwiftSyntaxAnalyzer {
         let line: Int
     }
 
+    struct ExtensionInfo {
+        let extendedType: String
+        let protocols: [String]
+        let line: Int
+        let members: [MemberInfo]
+
+        struct MemberInfo {
+            let name: String
+            let kind: String  // Function, Variable, etc.
+            let line: Int
+        }
+    }
+
     static func listSymbols(filePath: String) throws -> [SymbolInfo] {
         let content = try String(contentsOfFile: filePath)
         let sourceFile = Parser.parse(source: content)
@@ -684,6 +743,16 @@ enum SwiftSyntaxAnalyzer {
         visitor.walk(sourceFile)
 
         return visitor.typeConformances
+    }
+
+    static func listExtensions(filePath: String) throws -> [ExtensionInfo] {
+        let content = try String(contentsOfFile: filePath)
+        let sourceFile = Parser.parse(source: content)
+
+        let visitor = ExtensionVisitor(converter: SourceLocationConverter(fileName: filePath, tree: sourceFile))
+        visitor.walk(sourceFile)
+
+        return visitor.extensions
     }
 
     private class SymbolVisitor: SyntaxVisitor {
@@ -900,6 +969,67 @@ enum SwiftSyntaxAnalyzer {
             }
 
             return (protocols, superclass)
+        }
+    }
+
+    private class ExtensionVisitor: SyntaxVisitor {
+        var extensions: [ExtensionInfo] = []
+        let converter: SourceLocationConverter
+
+        init(converter: SourceLocationConverter) {
+            self.converter = converter
+            super.init(viewMode: .sourceAccurate)
+        }
+
+        override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
+            let location = node.startLocation(converter: converter)
+            let extendedType = node.extendedType.trimmedDescription
+
+            // プロトコル準拠を取得
+            var protocols: [String] = []
+            if let inheritanceClause = node.inheritanceClause {
+                protocols = inheritanceClause.inheritedTypes.map { $0.type.trimmedDescription }
+            }
+
+            // Extension内のメンバーを取得
+            var members: [ExtensionInfo.MemberInfo] = []
+            for member in node.memberBlock.members {
+                if let funcDecl = member.decl.as(FunctionDeclSyntax.self) {
+                    let memberLocation = funcDecl.startLocation(converter: converter)
+                    members.append(ExtensionInfo.MemberInfo(
+                        name: funcDecl.name.text,
+                        kind: "Function",
+                        line: memberLocation.line
+                    ))
+                } else if let varDecl = member.decl.as(VariableDeclSyntax.self) {
+                    let memberLocation = varDecl.startLocation(converter: converter)
+                    for binding in varDecl.bindings {
+                        if let identifier = binding.pattern.as(IdentifierPatternSyntax.self) {
+                            members.append(ExtensionInfo.MemberInfo(
+                                name: identifier.identifier.text,
+                                kind: "Variable",
+                                line: memberLocation.line
+                            ))
+                        }
+                    }
+                } else if let initDecl = member.decl.as(InitializerDeclSyntax.self) {
+                    let memberLocation = initDecl.startLocation(converter: converter)
+                    members.append(ExtensionInfo.MemberInfo(
+                        name: "init",
+                        kind: "Initializer",
+                        line: memberLocation.line
+                    ))
+                }
+            }
+
+            extensions.append(ExtensionInfo(
+                extendedType: extendedType,
+                protocols: protocols,
+                line: location.line,
+                members: members
+            ))
+
+            return .visitChildren
         }
     }
 }
