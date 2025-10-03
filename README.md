@@ -30,6 +30,7 @@
 - **`find_symbol_definition`** - プロジェクト全体でシンボル定義を検索
 - **`list_property_wrappers`** - SwiftUI Property Wrapper（@State, @Binding等）を検出
 - **`list_protocol_conformances`** - Protocol準拠と継承関係を解析（UITableViewDelegate, ObservableObject等）
+- **`list_extensions`** - Extension解析（拡張対象の型、プロトコル準拠、メンバー一覧）
 
 ### 効率的な読み取り
 - **`read_function_body`** - 特定の関数実装のみを抽出

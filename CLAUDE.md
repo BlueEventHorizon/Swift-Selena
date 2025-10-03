@@ -99,6 +99,7 @@ ProjectMemoryは3つのインデックスを保持：
 - `find_symbol_definition`: プロジェクト全体でシンボル定義を検索
 - `list_property_wrappers`: SwiftUI Property Wrapper解析（@State, @Binding, @ObservedObject等）
 - `list_protocol_conformances`: Protocol準拠と継承関係の解析（UITableViewDelegate, ObservableObject等）
+- `list_extensions`: Extension解析（拡張対象の型、メンバー一覧）
 
 ### コンテキスト効率的な読み取り
 - `read_function_body`: 単一関数の実装を抽出（シンプルなブレースカウント）
