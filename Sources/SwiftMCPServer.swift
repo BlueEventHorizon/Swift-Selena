@@ -200,6 +200,20 @@ struct SwiftMCPServer {
                         ]),
                         "required": .array([.string("file_path")])
                     ])
+                ),
+                Tool(
+                    name: "list_protocol_conformances",
+                    description: "List protocol conformances and inheritance for types in a file",
+                    inputSchema: .object([
+                        "type": .string("object"),
+                        "properties": .object([
+                            "file_path": .object([
+                                "type": .string("string"),
+                                "description": .string("Path to Swift file")
+                            ])
+                        ]),
+                        "required": .array([.string("file_path")])
+                    ])
                 )
             ])
         }
@@ -482,6 +496,35 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
+            case "list_protocol_conformances":
+                guard let args = params.arguments,
+                      let filePathValue = args["file_path"] else {
+                    throw MCPError.invalidParams("Missing file_path")
+                }
+                let filePath = String(describing: filePathValue)
+                let conformances = try SwiftSyntaxAnalyzer.listTypeConformances(filePath: filePath)
+
+                if conformances.isEmpty {
+                    return CallTool.Result(content: [.text("No type conformances found in \(filePath)")])
+                }
+
+                var result = "Protocol Conformances in \(filePath):\n\n"
+                for conformance in conformances {
+                    result += "[\(conformance.typeKind)] \(conformance.typeName) (line \(conformance.line))\n"
+
+                    if let superclass = conformance.superclass {
+                        result += "  Inherits from: \(superclass)\n"
+                    }
+
+                    if !conformance.protocols.isEmpty {
+                        result += "  Conforms to: \(conformance.protocols.joined(separator: ", "))\n"
+                    }
+
+                    result += "\n"
+                }
+
+                return CallTool.Result(content: [.text(result)])
+
             default:
                 throw MCPError.invalidParams("Unknown tool: \(params.name)")
             }
@@ -605,6 +648,14 @@ enum SwiftSyntaxAnalyzer {
         let line: Int
     }
 
+    struct TypeConformanceInfo {
+        let typeName: String
+        let typeKind: String  // Class, Struct, Enum, Actor
+        let protocols: [String]
+        let superclass: String?
+        let line: Int
+    }
+
     static func listSymbols(filePath: String) throws -> [SymbolInfo] {
         let content = try String(contentsOfFile: filePath)
         let sourceFile = Parser.parse(source: content)
@@ -623,6 +674,16 @@ enum SwiftSyntaxAnalyzer {
         visitor.walk(sourceFile)
 
         return visitor.propertyWrappers
+    }
+
+    static func listTypeConformances(filePath: String) throws -> [TypeConformanceInfo] {
+        let content = try String(contentsOfFile: filePath)
+        let sourceFile = Parser.parse(source: content)
+
+        let visitor = TypeConformanceVisitor(converter: SourceLocationConverter(fileName: filePath, tree: sourceFile))
+        visitor.walk(sourceFile)
+
+        return visitor.typeConformances
     }
 
     private class SymbolVisitor: SyntaxVisitor {
@@ -739,6 +800,106 @@ enum SwiftSyntaxAnalyzer {
             }
 
             return .visitChildren
+        }
+    }
+
+    private class TypeConformanceVisitor: SyntaxVisitor {
+        var typeConformances: [TypeConformanceInfo] = []
+        let converter: SourceLocationConverter
+
+        init(converter: SourceLocationConverter) {
+            self.converter = converter
+            super.init(viewMode: .sourceAccurate)
+        }
+
+        override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
+            let location = node.startLocation(converter: converter)
+            let (protocols, superclass) = extractInheritance(from: node.inheritanceClause)
+
+            typeConformances.append(TypeConformanceInfo(
+                typeName: node.name.text,
+                typeKind: "Class",
+                protocols: protocols,
+                superclass: superclass,
+                line: location.line
+            ))
+
+            return .visitChildren
+        }
+
+        override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
+            let location = node.startLocation(converter: converter)
+            let (protocols, _) = extractInheritance(from: node.inheritanceClause)
+
+            typeConformances.append(TypeConformanceInfo(
+                typeName: node.name.text,
+                typeKind: "Struct",
+                protocols: protocols,
+                superclass: nil,
+                line: location.line
+            ))
+
+            return .visitChildren
+        }
+
+        override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
+            let location = node.startLocation(converter: converter)
+            let (protocols, _) = extractInheritance(from: node.inheritanceClause)
+
+            typeConformances.append(TypeConformanceInfo(
+                typeName: node.name.text,
+                typeKind: "Enum",
+                protocols: protocols,
+                superclass: nil,
+                line: location.line
+            ))
+
+            return .visitChildren
+        }
+
+        override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
+            let location = node.startLocation(converter: converter)
+            let (protocols, superclass) = extractInheritance(from: node.inheritanceClause)
+
+            typeConformances.append(TypeConformanceInfo(
+                typeName: node.name.text,
+                typeKind: "Actor",
+                protocols: protocols,
+                superclass: superclass,
+                line: location.line
+            ))
+
+            return .visitChildren
+        }
+
+        private func extractInheritance(from clause: InheritanceClauseSyntax?) -> (protocols: [String], superclass: String?) {
+            guard let clause = clause else {
+                return ([], nil)
+            }
+
+            var protocols: [String] = []
+            var superclass: String? = nil
+
+            // 最初の要素がクラス名（大文字始まり）の場合はスーパークラスの可能性
+            let inheritedTypes = clause.inheritedTypes.map { $0.type.trimmedDescription }
+
+            for (index, type) in inheritedTypes.enumerated() {
+                // 最初の要素で大文字始まりの場合、スーパークラスの可能性
+                // ただし、プロトコルも大文字始まりなので、正確な判別は難しい
+                // ここでは全てプロトコルとして扱い、必要に応じてスーパークラスを分離
+                if index == 0 && type.first?.isUppercase == true {
+                    // 一般的なプロトコル名でなければスーパークラスとして扱う
+                    let commonProtocols = ["View", "ObservableObject", "Identifiable", "Codable",
+                                         "Equatable", "Hashable", "Comparable", "CustomStringConvertible"]
+                    if !commonProtocols.contains(type) && !type.contains("Delegate") && !type.contains("Protocol") {
+                        superclass = type
+                        continue
+                    }
+                }
+                protocols.append(type)
+            }
+
+            return (protocols, superclass)
         }
     }
 }
