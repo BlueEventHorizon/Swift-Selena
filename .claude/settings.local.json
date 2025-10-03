@@ -11,7 +11,13 @@
       "Bash(pkill:*)",
       "mcp__swift-selena__get_type_hierarchy",
       "mcp__swift-selena__find_files",
-      "mcp__swift-selena__search_code"
+      "mcp__swift-selena__search_code",
+      "mcp__swift-selena__find_symbol_definition",
+      "mcp__swift-selena__read_function_body",
+      "mcp__swift-selena__read_lines",
+      "mcp__swift-selena__add_note",
+      "mcp__swift-selena__search_notes",
+      "mcp__swift-selena__get_project_stats"
     ],
     "deny": [],
     "ask": []
