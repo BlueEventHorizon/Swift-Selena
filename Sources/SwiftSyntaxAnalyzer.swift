@@ -77,6 +77,14 @@ enum SwiftSyntaxAnalyzer {
         }
     }
 
+    struct TypeUsageInfo {
+        let typeName: String
+        let usageKind: String  // Variable, Parameter, ReturnType, PropertyType
+        let context: String    // 使用されているコンテキスト（関数名、変数名等）
+        let filePath: String
+        let line: Int
+    }
+
     // MARK: - Public Methods
 
     /// ファイル内の全シンボルを抽出
@@ -267,5 +275,33 @@ enum SwiftSyntaxAnalyzer {
         }
 
         return testCases
+    }
+
+    /// 特定の型の使用箇所を検出
+    static func findTypeUsages(typeName: String, projectPath: String) throws -> [TypeUsageInfo] {
+        let swiftFiles = try FileSearcher.findFiles(in: projectPath, pattern: "*.swift")
+
+        var typeUsages: [TypeUsageInfo] = []
+
+        for file in swiftFiles {
+            do {
+                let content = try String(contentsOfFile: file)
+                let sourceFile = Parser.parse(source: content)
+
+                let visitor = TypeUsageVisitor(
+                    converter: SourceLocationConverter(fileName: file, tree: sourceFile),
+                    filePath: file,
+                    targetTypeName: typeName
+                )
+                visitor.walk(sourceFile)
+
+                typeUsages.append(contentsOf: visitor.typeUsages)
+            } catch {
+                // ファイル読み込みエラーをスキップ
+                continue
+            }
+        }
+
+        return typeUsages
     }
 }
