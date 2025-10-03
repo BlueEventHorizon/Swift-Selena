@@ -226,7 +226,7 @@ Claude: search_code を実行（正規表現: do\s*\{）
 解析結果とメモは以下のディレクトリに保存されます:
 
 ```
-~/.swift-mcp-server/
+~/.swift-selena/
 └── clients/
     ├── default/              # Claude Code（デフォルト）
     │   └── projects/
@@ -270,7 +270,7 @@ tail -f ~/Library/Logs/Claude/mcp*.log
 ### 古いキャッシュをクリア
 
 ```bash
-rm -rf ~/.swift-mcp-server/
+rm -rf ~/.swift-selena/
 ```
 
 次回`initialize_project`実行時に再構築されます。

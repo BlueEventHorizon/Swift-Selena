@@ -14,12 +14,12 @@ struct SwiftMCPServer {
             return handler
         }
 
-        let logger = Logger(label: "swift-mcp-server")
-        logger.info("Starting Swift MCP Server (Filesystem + SwiftSyntax)...")
+        let logger = Logger(label: AppConstants.loggerLabel)
+        logger.info("Starting \(AppConstants.name) v\(AppConstants.version) (Filesystem + SwiftSyntax)...")
 
         let server = Server(
-            name: "SwiftCodeAnalyzer",
-            version: "0.2.0",
+            name: AppConstants.name,
+            version: AppConstants.version,
             capabilities: .init(
                 tools: .init()
             )
@@ -31,7 +31,7 @@ struct SwiftMCPServer {
         await server.withMethodHandler(ListTools.self) { _ in
             ListTools.Result(tools: [
                 Tool(
-                    name: "initialize_project",
+                    name: ToolNames.initializeProject,
                     description: "Initialize a Swift project for analysis. Must be called first.",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -45,7 +45,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "find_files",
+                    name: ToolNames.findFiles,
                     description: "Find Swift files in the project by pattern (glob-like search)",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -59,7 +59,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "search_code",
+                    name: ToolNames.searchCode,
                     description: "Search code content using regex pattern (grep-like search)",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -77,7 +77,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "list_symbols",
+                    name: ToolNames.listSymbols,
                     description: "List all symbols (classes, structs, functions, etc.) in a file using SwiftSyntax",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -91,7 +91,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "find_symbol_definition",
+                    name: ToolNames.findSymbolDefinition,
                     description: "Find where a symbol is defined in the project",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -105,7 +105,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "add_note",
+                    name: ToolNames.addNote,
                     description: "Add a note about the project (persisted across sessions)",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -126,7 +126,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "search_notes",
+                    name: ToolNames.searchNotes,
                     description: "Search through saved notes",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -140,7 +140,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "get_project_stats",
+                    name: ToolNames.getProjectStats,
                     description: "Get project statistics and memory information",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -148,7 +148,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "read_function_body",
+                    name: ToolNames.readFunctionBody,
                     description: "Read only the implementation of a specific function (context-efficient)",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -166,7 +166,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "read_lines",
+                    name: ToolNames.readLines,
                     description: "Read specific lines from a file (context-efficient)",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -188,7 +188,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "list_property_wrappers",
+                    name: ToolNames.listPropertyWrappers,
                     description: "List SwiftUI property wrappers (@State, @Binding, etc.) in a file",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -202,7 +202,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "list_protocol_conformances",
+                    name: ToolNames.listProtocolConformances,
                     description: "List protocol conformances and inheritance for types in a file",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -216,7 +216,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "list_extensions",
+                    name: ToolNames.listExtensions,
                     description: "List extensions and their members in a file",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -230,7 +230,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "analyze_imports",
+                    name: ToolNames.analyzeImports,
                     description: "Analyze import dependencies across the project",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -238,7 +238,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "get_type_hierarchy",
+                    name: ToolNames.getTypeHierarchy,
                     description: "Get the inheritance hierarchy for a specific type",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -252,7 +252,7 @@ struct SwiftMCPServer {
                     ])
                 ),
                 Tool(
-                    name: "find_test_cases",
+                    name: ToolNames.findTestCases,
                     description: "Find XCTest test cases and methods in the project",
                     inputSchema: .object([
                         "type": .string("object"),
@@ -267,7 +267,7 @@ struct SwiftMCPServer {
             logger.info("Tool called: \(params.name)")
 
             switch params.name {
-            case "initialize_project":
+            case ToolNames.initializeProject:
                 guard let args = params.arguments,
                       let projectPathValue = args["project_path"] else {
                     throw MCPError.invalidParams("Missing project_path")
@@ -287,7 +287,7 @@ struct SwiftMCPServer {
                     .text("✅ Project initialized: \(projectPath)\n\n\(projectMemory?.getStats() ?? "")")
                 ])
 
-            case "find_files":
+            case ToolNames.findFiles:
                 guard let memory = projectMemory else {
                     throw MCPError.invalidRequest("Project not initialized")
                 }
@@ -306,7 +306,7 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
-            case "search_code":
+            case ToolNames.searchCode:
                 guard let memory = projectMemory else {
                     throw MCPError.invalidRequest("Project not initialized")
                 }
@@ -330,7 +330,7 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
-            case "list_symbols":
+            case ToolNames.listSymbols:
                 guard let args = params.arguments,
                       let filePathValue = args["file_path"] else {
                     throw MCPError.invalidParams("Missing file_path")
@@ -345,7 +345,7 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
-            case "find_symbol_definition":
+            case ToolNames.findSymbolDefinition:
                 guard let memory = projectMemory else {
                     throw MCPError.invalidRequest("Project not initialized")
                 }
@@ -379,7 +379,7 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
-            case "add_note":
+            case ToolNames.addNote:
                 guard let memory = projectMemory else {
                     throw MCPError.invalidRequest("Project not initialized")
                 }
@@ -402,7 +402,7 @@ struct SwiftMCPServer {
                     .text("✅ Note saved: \(content)")
                 ])
 
-            case "search_notes":
+            case ToolNames.searchNotes:
                 guard let memory = projectMemory else {
                     throw MCPError.invalidRequest("Project not initialized")
                 }
@@ -428,7 +428,7 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
-            case "get_project_stats":
+            case ToolNames.getProjectStats:
                 guard let memory = projectMemory else {
                     throw MCPError.invalidRequest("Project not initialized")
                 }
@@ -437,7 +437,7 @@ struct SwiftMCPServer {
                     .text(memory.getStats())
                 ])
 
-            case "read_function_body":
+            case ToolNames.readFunctionBody:
                 guard let args = params.arguments,
                       let filePathValue = args["file_path"],
                       let functionNameValue = args["function_name"] else {
@@ -487,7 +487,7 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
-            case "read_lines":
+            case ToolNames.readLines:
                 guard let args = params.arguments,
                       let filePathValue = args["file_path"],
                       let startLineValue = args["start_line"],
@@ -517,7 +517,7 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
-            case "list_property_wrappers":
+            case ToolNames.listPropertyWrappers:
                 guard let args = params.arguments,
                       let filePathValue = args["file_path"] else {
                     throw MCPError.invalidParams("Missing file_path")
@@ -540,7 +540,7 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
-            case "list_protocol_conformances":
+            case ToolNames.listProtocolConformances:
                 guard let args = params.arguments,
                       let filePathValue = args["file_path"] else {
                     throw MCPError.invalidParams("Missing file_path")
@@ -569,7 +569,7 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
-            case "list_extensions":
+            case ToolNames.listExtensions:
                 guard let args = params.arguments,
                       let filePathValue = args["file_path"] else {
                     throw MCPError.invalidParams("Missing file_path")
@@ -601,7 +601,7 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
-            case "analyze_imports":
+            case ToolNames.analyzeImports:
                 guard let memory = projectMemory else {
                     throw MCPError.invalidRequest("Project not initialized")
                 }
@@ -644,7 +644,7 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
-            case "get_type_hierarchy":
+            case ToolNames.getTypeHierarchy:
                 guard let memory = projectMemory else {
                     throw MCPError.invalidRequest("Project not initialized")
                 }
@@ -697,7 +697,7 @@ struct SwiftMCPServer {
 
                 return CallTool.Result(content: [.text(result)])
 
-            case "find_test_cases":
+            case ToolNames.findTestCases:
                 guard let memory = projectMemory else {
                     throw MCPError.invalidRequest("Project not initialized")
                 }
