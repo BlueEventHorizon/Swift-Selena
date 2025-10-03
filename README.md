@@ -6,15 +6,15 @@
 [![Platform macOS](https://img.shields.io/badge/platform-macOS%2013+-lightgrey.svg)](https://www.apple.com/macos/)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## ✨ 主な特徴
+## 主な特徴
 
-- **🚀 ビルド不要**: SwiftSyntaxベースの静的解析により、ビルドエラーがあっても動作
-- **📱 SwiftUI対応**: Property Wrapper（@State, @Binding等）を自動検出
-- **🔍 高速検索**: ファイルシステムベースの検索で大規模プロジェクトでも高速
-- **💾 プロジェクト記憶**: 解析結果とメモを永続化し、セッション間で共有
-- **🔄 複数クライアント対応**: Claude CodeとClaude Desktopを同時使用可能
+- **ビルド不要**: SwiftSyntaxベースの静的解析により、ビルドエラーがあっても動作
+- **SwiftUI対応**: Property Wrapper（@State, @Binding等）を自動検出
+- **高速検索**: ファイルシステムベースの検索で大規模プロジェクトでも高速
+- **プロジェクト記憶**: 解析結果とメモを永続化し、セッション間で共有
+- **複数クライアント対応**: Claude CodeとClaude Desktopを同時使用可能
 
-## 📋 提供ツール
+## 提供ツール
 
 ### プロジェクト管理
 - **`initialize_project`** - プロジェクトを初期化（最初に必ず実行）
@@ -37,7 +37,7 @@
 - **`search_notes`** - 保存したメモを検索
 - **`get_project_stats`** - プロジェクト統計とキャッシュ情報を表示
 
-## 🛠️ インストール
+## インストール
 
 ### 必要要件
 
@@ -62,7 +62,7 @@ pwd
 
 ビルド成果物は `.build/debug/SwiftMCPServer` に生成されます。
 
-## ⚙️ セットアップ
+## セットアップ
 
 ### Claude Desktop の設定
 
@@ -96,7 +96,7 @@ Claude Codeでは`MCP_CLIENT_ID`の設定は不要です（デフォルトで動
 
 MCPサーバーの設定方法は[Claude Codeドキュメント](https://docs.claude.com/claude-code)を参照してください。
 
-## 📖 使い方
+## 使い方
 
 ### 基本的なワークフロー
 
@@ -153,7 +153,7 @@ Claude: search_code を実行（正規表現: do\s*\{）
 結果: 15箇所のdo-catchブロックを発見
 ```
 
-## 🗂️ データ保存場所
+## データ保存場所
 
 解析結果とメモは以下のディレクトリに保存されます:
 
@@ -174,7 +174,7 @@ Claude: search_code を実行（正規表現: do\s*\{）
 - 異なるプロジェクトは自動的に分離
 - Claude CodeとClaude Desktopでデータを共有したくない場合は`MCP_CLIENT_ID`で分離
 
-## 🔧 トラブルシューティング
+## トラブルシューティング
 
 ### MCPサーバーが起動しない
 
@@ -205,7 +205,7 @@ rm -rf ~/.swift-mcp-server/
 
 次回`initialize_project`実行時に再構築されます。
 
-## 🏗️ アーキテクチャ
+## アーキテクチャ
 
 ### コアコンポーネント
 
@@ -220,26 +220,26 @@ rm -rf ~/.swift-mcp-server/
 - **CryptoKit** - プロジェクトパスのハッシュ化
 - **swift-log** - ロギング
 
-## 🤝 コントリビューション
+## コントリビューション
 
 Issue、Pull Requestを歓迎します！
 
 開発者向けの詳細な情報は[CLAUDE.md](CLAUDE.md)を参照してください。
 
-## 📝 ライセンス
+## ライセンス
 
 MIT License - 詳細は[LICENSE](LICENSE)ファイルを参照
 
-## 🙏 謝辞
+## 謝辞
 
 - [Model Context Protocol](https://modelcontextprotocol.io/) - MCPプロトコル仕様
 - [SwiftSyntax](https://github.com/apple/swift-syntax) - Swift構文解析ライブラリ
 - [Anthropic](https://www.anthropic.com/) - Claude AI
 
-## 📮 お問い合わせ
+## お問い合わせ
 
 質問や提案は[Issues](https://github.com/yourusername/Swift-Selena/issues)でお願いします。
 
 ---
 
-**Swift Selena** - SwiftプロジェクトをClaudeがもっと深く理解できるように 🚀
+**Swift Selena** - SwiftプロジェクトをClaudeがもっと深く理解できるように
