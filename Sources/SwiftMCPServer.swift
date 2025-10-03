@@ -228,6 +228,14 @@ struct SwiftMCPServer {
                         ]),
                         "required": .array([.string("file_path")])
                     ])
+                ),
+                Tool(
+                    name: "analyze_imports",
+                    description: "Analyze import dependencies across the project",
+                    inputSchema: .object([
+                        "type": .string("object"),
+                        "properties": .object([:])
+                    ])
                 )
             ])
         }
@@ -567,6 +575,49 @@ struct SwiftMCPServer {
                     }
 
                     result += "\n"
+                }
+
+                return CallTool.Result(content: [.text(result)])
+
+            case "analyze_imports":
+                guard let memory = projectMemory else {
+                    throw MCPError.invalidRequest("Project not initialized")
+                }
+
+                let fileImports = try SwiftSyntaxAnalyzer.analyzeImports(projectPath: memory.projectPath, projectMemory: memory)
+
+                if fileImports.isEmpty {
+                    return CallTool.Result(content: [.text("No imports found in project")])
+                }
+
+                var result = "Import Dependencies Analysis:\n\n"
+
+                // モジュールごとに集計
+                var moduleUsage: [String: Int] = [:]
+                for (_, imports) in fileImports {
+                    for imp in imports {
+                        moduleUsage[imp.module, default: 0] += 1
+                    }
+                }
+
+                result += "Most used modules:\n"
+                for (module, count) in moduleUsage.sorted(by: { $0.value > $1.value }).prefix(10) {
+                    result += "  \(module): \(count) files\n"
+                }
+                result += "\n"
+
+                result += "Files and their imports (\(fileImports.count) files):\n\n"
+                for (file, imports) in fileImports.sorted(by: { $0.key < $1.key }).prefix(20) {
+                    let fileName = (file as NSString).lastPathComponent
+                    result += "\(fileName):\n"
+                    for imp in imports {
+                        result += "  └─ \(imp.module) (line \(imp.line))\n"
+                    }
+                    result += "\n"
+                }
+
+                if fileImports.count > 20 {
+                    result += "... and \(fileImports.count - 20) more files\n"
                 }
 
                 return CallTool.Result(content: [.text(result)])
