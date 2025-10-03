@@ -258,6 +258,20 @@ struct SwiftMCPServer {
                         "type": .string("object"),
                         "properties": .object([:])
                     ])
+                ),
+                Tool(
+                    name: ToolNames.findTypeUsages,
+                    description: "Find where a specific type is used in the project",
+                    inputSchema: .object([
+                        "type": .string("object"),
+                        "properties": .object([
+                            "type_name": .object([
+                                "type": .string("string"),
+                                "description": .string("Name of the type to find usages for")
+                            ])
+                        ]),
+                        "required": .array([.string("type_name")])
+                    ])
                 )
             ])
         }
@@ -722,6 +736,46 @@ struct SwiftMCPServer {
                         }
                     } else {
                         result += "  No test methods found\n"
+                    }
+
+                    result += "\n"
+                }
+
+                return CallTool.Result(content: [.text(result)])
+
+            case ToolNames.findTypeUsages:
+                guard let memory = projectMemory else {
+                    throw MCPError.invalidRequest("Project not initialized")
+                }
+                guard let args = params.arguments,
+                      let typeNameValue = args["type_name"] else {
+                    throw MCPError.invalidParams("Missing type_name")
+                }
+                let typeName = String(describing: typeNameValue)
+
+                let usages = try SwiftSyntaxAnalyzer.findTypeUsages(
+                    typeName: typeName,
+                    projectPath: memory.projectPath
+                )
+
+                if usages.isEmpty {
+                    return CallTool.Result(content: [.text("Type '\(typeName)' not found in project")])
+                }
+
+                var result = "Type '\(typeName)' Usages (\(usages.count) occurrences):\n\n"
+
+                // 使用箇所をファイルごとにグループ化
+                var usagesByFile: [String: [SwiftSyntaxAnalyzer.TypeUsageInfo]] = [:]
+                for usage in usages {
+                    usagesByFile[usage.filePath, default: []].append(usage)
+                }
+
+                for (file, fileUsages) in usagesByFile.sorted(by: { $0.key < $1.key }) {
+                    let fileName = (file as NSString).lastPathComponent
+                    result += "\(fileName) (\(fileUsages.count) usages):\n"
+
+                    for usage in fileUsages.sorted(by: { $0.line < $1.line }) {
+                        result += "  [\(usage.usageKind)] \(usage.context) (line \(usage.line))\n"
                     }
 
                     result += "\n"

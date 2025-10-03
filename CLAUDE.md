@@ -103,6 +103,7 @@ ProjectMemoryは3つのインデックスを保持：
 - `analyze_imports`: プロジェクト全体のImport依存関係を解析（キャッシュ利用）
 - `get_type_hierarchy`: 型の継承階層を取得（スーパークラス、サブクラス、Protocol準拠型、キャッシュ利用）
 - `find_test_cases`: XCTestケースとテストメソッドを検出
+- `find_type_usages`: 型の使用箇所を検出（変数宣言、関数パラメータ、戻り値型）
 
 ### コンテキスト効率的な読み取り
 - `read_function_body`: 単一関数の実装を抽出（シンプルなブレースカウント）
