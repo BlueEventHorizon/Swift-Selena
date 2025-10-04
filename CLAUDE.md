@@ -45,7 +45,7 @@ swift package clean
    - **SwiftSyntaxAnalyzer**: ビルド不要のAST解析によるシンボル抽出
 
 2. **ProjectMemory.swift** (永続ストレージ)
-   - `~/.swift-selena/clients/{clientId}/projects/{projectName}-{hash}/memory.json`にプロジェクトメタデータを保存
+   - `~/.swift-mcp-server/clients/{clientId}/projects/{projectName}-{hash}/memory.json`にプロジェクトメタデータを保存
    - クライアント識別子（環境変数`MCP_CLIENT_ID`）で複数クライアント対応（デフォルト: "default"）
    - プロジェクトパスのSHA256ハッシュ（8文字）で同一プロジェクトを識別
    - 再起動後も同じプロジェクトのデータを永続化、異なるプロジェクトは自動的に分離
@@ -103,7 +103,6 @@ ProjectMemoryは3つのインデックスを保持：
 - `analyze_imports`: プロジェクト全体のImport依存関係を解析（キャッシュ利用）
 - `get_type_hierarchy`: 型の継承階層を取得（スーパークラス、サブクラス、Protocol準拠型、キャッシュ利用）
 - `find_test_cases`: XCTestケースとテストメソッドを検出
-- `find_type_usages`: 型の使用箇所を検出（変数宣言、関数パラメータ、戻り値型）
 
 ### コンテキスト効率的な読み取り
 - `read_function_body`: 単一関数の実装を抽出（シンプルなブレースカウント）
@@ -157,7 +156,7 @@ ProjectMemoryは3つのインデックスを保持：
 }
 ```
 
-設定しない場合は`default`が使用されます。各クライアントのデータは`~/.swift-selena/clients/{clientId}/`に分離されます。
+設定しない場合は`default`が使用されます。各クライアントのデータは`~/.swift-mcp-server/clients/{clientId}/`に分離されます。
 
 **重要**: プロジェクトパスのハッシュにより、同じプロジェクトは同じデータを共有し、異なるプロジェクトは自動的に分離されます。複数のClaude Codeウィンドウで異なるプロジェクトを開いても問題ありません。
 
