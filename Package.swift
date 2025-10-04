@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftMCPServer",
+    name: "Swift-Selena",
     platforms: [
         .macOS(.v13)
     ],
@@ -13,7 +13,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "SwiftMCPServer",
+            name: "Swift-Selena",
             dependencies: [
                 .product(name: "MCP", package: "swift-sdk"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
