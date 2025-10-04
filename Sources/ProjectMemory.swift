@@ -72,7 +72,7 @@ class ProjectMemory {
         // メモリディレクトリ作成（クライアント＋プロジェクトパスで分離）
         let homeDir = FileManager.default.homeDirectoryForCurrentUser
         self.memoryDir = homeDir
-            .appendingPathComponent(AppConstants.storageDirectory)
+            .appendingPathComponent(".swift-mcp-server")
             .appendingPathComponent("clients")
             .appendingPathComponent(clientId)
             .appendingPathComponent("projects")

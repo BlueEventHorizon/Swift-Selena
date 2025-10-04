@@ -18,7 +18,8 @@
       "mcp__swift-selena__add_note",
       "mcp__swift-selena__search_notes",
       "mcp__swift-selena__get_project_stats",
-      "mcp__swift-selena__find_test_cases"
+      "mcp__swift-selena__find_test_cases",
+      "mcp__swift-selena__find_type_usages"
     ],
     "deny": [],
     "ask": []

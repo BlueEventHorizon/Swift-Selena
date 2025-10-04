@@ -12,14 +12,14 @@ NC='\033[0m' # No Color
 
 # 現在のディレクトリを取得
 CURRENT_DIR="$(pwd)"
-EXECUTABLE_PATH="${CURRENT_DIR}/.build/debug/SwiftMCPServer"
+EXECUTABLE_PATH="${CURRENT_DIR}/.build/debug/Swift-Selena"
 
 echo -e "${YELLOW}Swift Selena MCP Server 登録スクリプト${NC}"
 echo "================================"
 
 # 実行ファイルの存在確認
 if [ ! -f "$EXECUTABLE_PATH" ]; then
-    echo -e "${RED}エラー: SwiftMCPServer が見つかりません${NC}"
+    echo -e "${RED}エラー: Swift-Selena が見つかりません${NC}"
     echo "パス: $EXECUTABLE_PATH"
     echo ""
     echo "まず 'swift build' を実行してください"
