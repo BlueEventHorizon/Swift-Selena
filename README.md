@@ -34,6 +34,7 @@
 - **`analyze_imports`** - プロジェクト全体のImport依存関係を解析（モジュール使用統計、キャッシュ利用）
 - **`get_type_hierarchy`** - 型の継承階層を取得（スーパークラス、サブクラス、Protocol準拠型、キャッシュ利用）
 - **`find_test_cases`** - XCTestケースとテストメソッドを検出
+- **`find_type_usages`** - 型の使用箇所を検出（変数宣言、関数パラメータ、戻り値型）
 
 ### 効率的な読み取り
 - **`read_function_body`** - 特定の関数実装のみを抽出
@@ -226,7 +227,7 @@ Claude: search_code を実行（正規表現: do\s*\{）
 解析結果とメモは以下のディレクトリに保存されます:
 
 ```
-~/.swift-mcp-server/
+~/.swift-selena/
 └── clients/
     ├── default/              # Claude Code（デフォルト）
     │   └── projects/
@@ -270,7 +271,7 @@ tail -f ~/Library/Logs/Claude/mcp*.log
 ### 古いキャッシュをクリア
 
 ```bash
-rm -rf ~/.swift-mcp-server/
+rm -rf ~/.swift-selena/
 ```
 
 次回`initialize_project`実行時に再構築されます。

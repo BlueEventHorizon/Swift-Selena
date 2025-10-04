@@ -272,7 +272,7 @@ struct TypeConformanceInfo: Codable {
 }
 ```
 
-保存場所: `~/.swift-mcp-server/clients/{clientId}/projects/{projectName}-{hash}/memory.json`
+保存場所: `~/.swift-selena/clients/{clientId}/projects/{projectName}-{hash}/memory.json`
 
 ## パフォーマンス考慮事項
 
@@ -305,7 +305,7 @@ struct TypeConformanceInfo: Codable {
 ### ファイルアクセス
 
 - プロジェクトディレクトリ配下のみアクセス
-- `~/.swift-mcp-server/`にメタデータ保存
+- `~/.swift-selena/`にメタデータ保存
 - 他のディレクトリへのアクセスなし
 
 ## 制限事項
