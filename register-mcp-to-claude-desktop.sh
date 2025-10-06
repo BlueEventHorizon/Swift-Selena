@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 
 # 現在のディレクトリを取得
 CURRENT_DIR="$(pwd)"
-EXECUTABLE_PATH="${CURRENT_DIR}/.build/debug/Swift-Selena"
+EXECUTABLE_PATH="${CURRENT_DIR}/.build/release/Swift-Selena"
 
 echo -e "${YELLOW}Swift Selena MCP Server 登録スクリプト${NC}"
 echo "================================"
