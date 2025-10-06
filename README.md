@@ -2,122 +2,124 @@
 
 <img width="400" src="selena.png">
 
-**Swift Selena**は、Swiftプロジェクトのコード解析をClaude（AI）に提供するMCP (Model Context Protocol) サーバーです。ビルドエラーがあるコードでも動作し、SwiftUIアプリ開発を強力にサポートします。
+**Swift Selena** is an MCP (Model Context Protocol) server that provides Swift code analysis capabilities to Claude AI. It works even with build errors and strongly supports SwiftUI app development.
 
 [![Swift 5.9+](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
 [![Platform macOS](https://img.shields.io/badge/platform-macOS%2013+-lightgrey.svg)](https://www.apple.com/macos/)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## 主な特徴
+[日本語版はこちら / Japanese version](README.ja.md)
 
-- **ビルド不要**: SwiftSyntaxベースの静的解析により、ビルドエラーがあっても動作
-- **SwiftUI対応**: Property Wrapper（@State, @Binding等）を自動検出
-- **高速検索**: ファイルシステムベースの検索で大規模プロジェクトでも高速
-- **プロジェクト記憶**: 解析結果とメモを永続化し、セッション間で共有
-- **複数クライアント対応**: Claude CodeとClaude Desktopを同時使用可能
+## Key Features
 
-## 提供ツール
+- **Build-Free**: Works even with build errors through SwiftSyntax-based static analysis
+- **SwiftUI Support**: Automatically detects Property Wrappers (@State, @Binding, etc.)
+- **Fast Search**: Filesystem-based search for fast performance even on large projects
+- **Project Memory**: Persists analysis results and notes across sessions
+- **Multi-Client Support**: Use with Claude Code and Claude Desktop simultaneously
 
-### プロジェクト管理
-- **`initialize_project`** - プロジェクトを初期化（最初に必ず実行）
+## Provided Tools
 
-### ファイル検索
-- **`find_files`** - ワイルドカードパターンでファイル検索（例: `*ViewModel.swift`）
-- **`search_code`** - 正規表現でコード内容を検索
+### Project Management
+- **`initialize_project`** - Initialize a project (must be called first)
 
-### SwiftSyntax解析
-- **`list_symbols`** - Class, Struct, Function等のシンボル一覧
-- **`find_symbol_definition`** - プロジェクト全体でシンボル定義を検索
-- **`list_property_wrappers`** - SwiftUI Property Wrapper（@State, @Binding等）を検出
-- **`list_protocol_conformances`** - Protocol準拠と継承関係を解析（UITableViewDelegate, ObservableObject等）
-- **`list_extensions`** - Extension解析（拡張対象の型、プロトコル準拠、メンバー一覧）
-- **`analyze_imports`** - プロジェクト全体のImport依存関係を解析（モジュール使用統計、キャッシュ利用）
-- **`get_type_hierarchy`** - 型の継承階層を取得（スーパークラス、サブクラス、Protocol準拠型、キャッシュ利用）
-- **`find_test_cases`** - XCTestケースとテストメソッドを検出
-- **`find_type_usages`** - 型の使用箇所を検出（変数宣言、関数パラメータ、戻り値型）
+### File Search
+- **`find_files`** - Search files by wildcard pattern (e.g., `*ViewModel.swift`)
+- **`search_code`** - Search code content using regex
 
-### 効率的な読み取り
-- **`read_function_body`** - 特定の関数実装のみを抽出
-- **`read_lines`** - ファイルの指定行範囲を読み取り
+### SwiftSyntax Analysis
+- **`list_symbols`** - List all symbols (Class, Struct, Function, etc.)
+- **`find_symbol_definition`** - Find symbol definitions across the project
+- **`list_property_wrappers`** - Detect SwiftUI Property Wrappers (@State, @Binding, etc.)
+- **`list_protocol_conformances`** - Analyze protocol conformances and inheritance (UITableViewDelegate, ObservableObject, etc.)
+- **`list_extensions`** - Analyze extensions (extended type, protocol conformance, members)
+- **`analyze_imports`** - Analyze import dependencies across the project (module usage statistics, cached)
+- **`get_type_hierarchy`** - Get type inheritance hierarchy (superclass, subclasses, conforming types, cached)
+- **`find_test_cases`** - Detect XCTest test cases and test methods
+- **`find_type_usages`** - Find where a type is used (variable declarations, function parameters, return types)
 
-### プロジェクトメモ
-- **`add_note`** - 設計決定や重要事項をメモとして保存
-- **`search_notes`** - 保存したメモを検索
-- **`get_project_stats`** - プロジェクト統計とキャッシュ情報を表示
+### Efficient Reading
+- **`read_function_body`** - Extract only a specific function implementation
+- **`read_lines`** - Read specific line ranges from a file
 
-## インストール
+### Project Notes
+- **`add_note`** - Save design decisions and important notes
+- **`search_notes`** - Search saved notes
+- **`get_project_stats`** - Display project statistics and cache information
 
-### 必要要件
+## Installation
 
-- macOS 13.0以上
-- Swift 5.9以上
-- [Claude Desktop](https://claude.ai/download) または [Claude Code](https://docs.claude.com/claude-code)
+### Requirements
 
-### ビルド手順
+- macOS 13.0 or later
+- Swift 5.9 or later
+- [Claude Desktop](https://claude.ai/download) or [Claude Code](https://docs.claude.com/claude-code)
+
+### Build Steps
 
 ```bash
-# リポジトリをクローン
+# Clone the repository
 git clone https://github.com/BlueEventHorizon/Swift-Selena.git
 cd Swift-Selena
 
-# ビルド
+# Build
 swift build
 
-# セットアップスクリプトに実行権限を付与
+# Grant execute permission to setup scripts
 chmod +x register-mcp-to-claude-desktop.sh
 chmod +x register-mcp-to-claude-code.sh
 
-# 実行可能ファイルのパスを確認
+# Verify executable path
 pwd
-# 出力例: /Users/yourname/Swift-Selena
+# Example output: /Users/yourname/Swift-Selena
 ```
 
-ビルド成果物は `.build/debug/SwiftMCPServer` に生成されます。
+The build artifact is generated at `.build/debug/Swift-Selena`.
 
-## セットアップ
+## Setup
 
-### 簡単セットアップ（推奨）
+### Easy Setup (Recommended)
 
-プロジェクトルートで以下のスクリプトを実行すると、自動的に設定が完了します。
+Run the following scripts from the project root for automatic setup:
 
-#### Claude Desktopの場合
+#### For Claude Desktop
 ```bash
 ./register-mcp-to-claude-desktop.sh
 ```
 
-このスクリプトは以下を自動実行します：
-- 実行ファイルの存在確認
-- 既存設定のバックアップ
-- `claude_desktop_config.json`に設定を追加
-- 既存の設定を保持（jqがインストールされている場合）
+This script automatically:
+- Verifies executable existence
+- Backs up existing configuration
+- Adds settings to `claude_desktop_config.json`
+- Preserves existing settings (if jq is installed)
 
-#### Claude Codeの場合
+#### For Claude Code
 ```bash
 ./register-mcp-to-claude-code.sh
 ```
 
-このスクリプトは以下を自動実行します：
-- 実行ファイルの存在確認
-- claude CLIへの登録（`claude mcp add`）
-- 既存登録の上書き確認
+This script automatically:
+- Verifies executable existence
+- Registers with claude CLI (`claude mcp add`)
+- Confirms overwrite of existing registration
 
-### 手動セットアップ
+### Manual Setup
 
-スクリプトを使わず手動で設定する場合：
+If you prefer manual configuration:
 
-#### Claude Desktop の設定
+#### Claude Desktop Setup
 
-1. 設定ファイルを開く（存在しない場合は作成）:
+1. Open the config file (create if it doesn't exist):
 ```bash
 open ~/Library/Application\ Support/Claude/claude_desktop_config.json
 ```
 
-2. 以下の内容を追加:
+2. Add the following content:
 ```json
 {
   "mcpServers": {
     "swift-selena": {
-      "command": "/path/to/Swift-Selena/.build/debug/SwiftMCPServer",
+      "command": "/path/to/Swift-Selena/.build/debug/Swift-Selena",
       "env": {
         "MCP_CLIENT_ID": "claude-desktop"
       }
@@ -127,23 +129,23 @@ open ~/Library/Application\ Support/Claude/claude_desktop_config.json
 }
 ```
 
-**重要**: `/path/to/Swift-Selena` を実際のパスに置き換えてください。
+**Important**: Replace `/path/to/Swift-Selena` with the actual path.
 
-3. Claude Desktopを再起動
+3. Restart Claude Desktop
 
-### Claude Code の設定
+#### Claude Code Setup
 
-Claude Codeでは`MCP_CLIENT_ID`の設定は不要です（デフォルトで`default`が使用されます）。
+Claude Code uses `default` as the `MCP_CLIENT_ID` by default (no configuration needed).
 
-MCPサーバーの設定方法は[Claude Codeドキュメント](https://docs.claude.com/claude-code)を参照してください。
+Refer to [Claude Code documentation](https://docs.claude.com/claude-code) for MCP server configuration.
 
-**複数のClaude Codeで同じプロジェクトを開く場合**: `mcp_config.json`に以下のように`MCP_CLIENT_ID`を設定してください。
+**For multiple Claude Code windows on the same project**: Configure `MCP_CLIENT_ID` in `mcp_config.json`:
 
 ```json
 {
   "mcpServers": {
     "swift-selena": {
-      "command": "/path/to/Swift-Selena/.build/debug/SwiftMCPServer",
+      "command": "/path/to/Swift-Selena/.build/debug/Swift-Selena",
       "env": {
         "MCP_CLIENT_ID": "claude-code-window1"
       }
@@ -152,84 +154,84 @@ MCPサーバーの設定方法は[Claude Codeドキュメント](https://docs.cl
 }
 ```
 
-別のウィンドウでは`claude-code-window2`など、異なるIDを使用してください。
+Use different IDs like `claude-code-window2` for other windows.
 
-## 使い方
+## Usage
 
-### 基本的なワークフロー
+### Basic Workflow
 
-1. **プロジェクトを初期化**
+1. **Initialize project**
 ```
-Claudeに「このSwiftプロジェクトを解析して」と依頼
-→ initialize_project が自動実行される
-```
-
-2. **コードを検索・解析**
-```
-「ViewModelを探して」
-→ find_files で *ViewModel.swift を検索
-
-「@Stateを使っているファイルは？」
-→ list_property_wrappers で検出
+Ask Claude: "Analyze this Swift project"
+→ initialize_project is automatically executed
 ```
 
-3. **メモを保存**
+2. **Search and analyze code**
 ```
-「このViewControllerはログイン画面専用とメモして」
-→ add_note で保存
+"Find ViewModels"
+→ find_files searches for *ViewModel.swift
+
+"Which files use @State?"
+→ list_property_wrappers detects them
 ```
 
-### 実践例
-
-#### SwiftUIのProperty Wrapperを確認
+3. **Save notes**
 ```
-あなた: ContentView.swiftで使われているProperty Wrapperを教えて
+"Note that this ViewController is for the login screen"
+→ add_note saves it
+```
 
-Claude: list_property_wrappers を実行
-結果:
+### Practical Examples
+
+#### Check SwiftUI Property Wrappers
+```
+You: Tell me what Property Wrappers are used in ContentView.swift
+
+Claude: Executes list_property_wrappers
+Result:
 [@State] counter: Int (line 12)
 [@ObservedObject] viewModel: ViewModel (line 13)
 [@EnvironmentObject] appState: AppState (line 14)
 ```
 
-#### 特定の関数を探す
+#### Find a specific function
 ```
-あなた: fetchDataという関数がどこにあるか探して
+You: Find where the fetchData function is defined
 
-Claude: find_symbol_definition を実行
-結果:
+Claude: Executes find_symbol_definition
+Result:
 [Function] fetchData
   File: /path/to/NetworkManager.swift
   Line: 45
 ```
 
-#### Protocol準拠を確認
+#### Check protocol conformance
 ```
-あなた: ViewControllerがどのプロトコルに準拠しているか教えて
+You: Tell me what protocols ViewController conforms to
 
-Claude: list_protocol_conformances を実行
-結果:
+Claude: Executes list_protocol_conformances
+Result:
 [Class] ViewController (line 25)
   Inherits from: UIViewController
   Conforms to: UITableViewDelegate, UITableViewDataSource
 ```
 
-#### プロジェクト全体でエラーハンドリングを検索
+#### Search for error handling across the project
 ```
-あなた: do-catchブロックを全部探して
+You: Find all do-catch blocks
 
-Claude: search_code を実行（正規表現: do\s*\{）
-結果: 15箇所のdo-catchブロックを発見
+Claude: Executes search_code (regex: do\s*\{)
+Result: Found 15 do-catch blocks
 ```
 
-## データ保存場所
+## Data Storage
 
-解析結果とメモは以下のディレクトリに保存されます:
+Analysis results and notes are stored in the following directory:
 
 ```
 ~/.swift-selena/
 └── clients/
-    ├── default/              # Claude Code（デフォルト）
+    ├── default/              # Claude Code (default)
     │   └── projects/
     │       └── YourProject-abc12345/
     │           └── memory.json
@@ -239,78 +241,78 @@ Claude: search_code を実行（正規表現: do\s*\{）
                 └── memory.json
 ```
 
-- プロジェクトパスのSHA256ハッシュで同一プロジェクトを識別
-- 異なるプロジェクトは自動的に分離
-- Claude Code（`default`）とClaude Desktop（`claude-desktop`）は`MCP_CLIENT_ID`により自動的にデータが分離される
+- Projects are identified by SHA256 hash of project path
+- Different projects are automatically separated
+- Claude Code (`default`) and Claude Desktop (`claude-desktop`) data is automatically separated by `MCP_CLIENT_ID`
 
-**注意**: 同じ`MCP_CLIENT_ID`（例: 複数のClaude Codeウィンドウ）で同じプロジェクトを同時に開くと、メモリファイルへの書き込み競合が発生する可能性があります。同じプロジェクトを複数のウィンドウで作業する場合は、異なる`MCP_CLIENT_ID`を設定してください。
+**Note**: When the same `MCP_CLIENT_ID` (e.g., multiple Claude Code windows) opens the same project simultaneously, memory file write conflicts may occur. If working on the same project in multiple windows, set different `MCP_CLIENT_ID` values.
 
-## トラブルシューティング
+## Troubleshooting
 
-### MCPサーバーが起動しない
+### MCP server won't start
 
 ```bash
-# ビルドを確認
+# Verify build
 swift build
 
-# 実行テスト
-.build/debug/SwiftMCPServer
-# "Starting Swift MCP Server..." が表示されればOK
-# Ctrl+Cで終了
+# Test execution
+.build/debug/Swift-Selena
+# "Starting Swift MCP Server..." should appear
+# Press Ctrl+C to exit
 ```
 
-### ツールが見つからない
+### Tools not found
 
-1. Claude Desktop/Codeを再起動
-2. 設定ファイルのパスが正しいか確認
-3. ログを確認:
+1. Restart Claude Desktop/Code
+2. Verify config file paths are correct
+3. Check logs:
 ```bash
 tail -f ~/Library/Logs/Claude/mcp*.log
 ```
 
-### 古いキャッシュをクリア
+### Clear old cache
 
 ```bash
 rm -rf ~/.swift-selena/
 ```
 
-次回`initialize_project`実行時に再構築されます。
+Will be rebuilt on next `initialize_project` execution.
 
-## アーキテクチャ
+## Architecture
 
-### コアコンポーネント
+### Core Components
 
-- **FileSearcher**: ファイルシステムベースの高速検索
-- **SwiftSyntaxAnalyzer**: AST解析によるシンボル抽出
-- **ProjectMemory**: 解析結果の永続化とキャッシュ管理
+- **FileSearcher**: Fast filesystem-based search
+- **SwiftSyntaxAnalyzer**: Symbol extraction via AST analysis
+- **ProjectMemory**: Persists analysis results and manages cache
 
-### 技術スタック
+### Technology Stack
 
-- **[MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)** (0.10.2) - MCPプロトコル実装
-- **[SwiftSyntax](https://github.com/apple/swift-syntax)** (602.0.0) - 構文解析
-- **CryptoKit** - プロジェクトパスのハッシュ化
-- **swift-log** - ロギング
+- **[MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)** (0.10.2) - MCP protocol implementation
+- **[SwiftSyntax](https://github.com/apple/swift-syntax)** (602.0.0) - Syntax parsing
+- **CryptoKit** - Project path hashing
+- **swift-log** - Logging
 
-## コントリビューション
+## Contributing
 
-Issue、Pull Requestを歓迎します！
+Issues and Pull Requests are welcome!
 
-開発者向けの詳細な情報は[CLAUDE.md](CLAUDE.md)を参照してください。
+For detailed developer information, see [CLAUDE.md](CLAUDE.md).
 
-## ライセンス
+## License
 
-MIT License - 詳細は[LICENSE](LICENSE)ファイルを参照
+MIT License - See [LICENSE](LICENSE) file for details
 
-## 謝辞
+## Acknowledgments
 
-- [Model Context Protocol](https://modelcontextprotocol.io/) - MCPプロトコル仕様
-- [SwiftSyntax](https://github.com/apple/swift-syntax) - Swift構文解析ライブラリ
+- [Model Context Protocol](https://modelcontextprotocol.io/) - MCP protocol specification
+- [SwiftSyntax](https://github.com/apple/swift-syntax) - Swift syntax parsing library
 - [Anthropic](https://www.anthropic.com/) - Claude AI
 
-## お問い合わせ
+## Contact
 
-質問や提案は[Issues](https://github.com/yourusername/Swift-Selena/issues)でお願いします。
+For questions or suggestions, please use [Issues](https://github.com/BlueEventHorizon/Swift-Selena/issues).
 
 ---
 
-**Swift Selena** - SwiftプロジェクトをClaudeがもっと深く理解できるように
+**Swift Selena** - Helping Claude understand your Swift projects better
