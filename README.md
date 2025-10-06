@@ -62,19 +62,19 @@
 git clone https://github.com/BlueEventHorizon/Swift-Selena.git
 cd Swift-Selena
 
-# Build
-swift build
+# Build (release mode for production)
+swift build -c release -Xswiftc -Osize
 
 # Grant execute permission to setup scripts
 chmod +x register-mcp-to-claude-desktop.sh
-chmod +x register-mcp-to-claude-code.sh
+chmod +x register-selena-to-claude-code.sh
 
 # Verify executable path
 pwd
 # Example output: /Users/yourname/Swift-Selena
 ```
 
-The build artifact is generated at `.build/debug/Swift-Selena`.
+The build artifact is generated at `.build/release/Swift-Selena`.
 
 ## Setup
 
@@ -119,7 +119,7 @@ open ~/Library/Application\ Support/Claude/claude_desktop_config.json
 {
   "mcpServers": {
     "swift-selena": {
-      "command": "/path/to/Swift-Selena/.build/debug/Swift-Selena",
+      "command": "/path/to/Swift-Selena/.build/release/Swift-Selena",
       "env": {
         "MCP_CLIENT_ID": "claude-desktop"
       }
@@ -145,7 +145,7 @@ Refer to [Claude Code documentation](https://docs.claude.com/claude-code) for MC
 {
   "mcpServers": {
     "swift-selena": {
-      "command": "/path/to/Swift-Selena/.build/debug/Swift-Selena",
+      "command": "/path/to/Swift-Selena/.build/release/Swift-Selena",
       "env": {
         "MCP_CLIENT_ID": "claude-code-window1"
       }
@@ -256,7 +256,7 @@ Analysis results and notes are stored in the following directory:
 swift build
 
 # Test execution
-.build/debug/Swift-Selena
+.build/release/Swift-Selena
 # "Starting Swift MCP Server..." should appear
 # Press Ctrl+C to exit
 ```

@@ -62,19 +62,19 @@
 git clone https://github.com/BlueEventHorizon/Swift-Selena.git
 cd Swift-Selena
 
-# ビルド
-swift build
+# ビルド（本番用リリースモード）
+swift build -c release -Xswiftc -Osize
 
 # セットアップスクリプトに実行権限を付与
 chmod +x register-mcp-to-claude-desktop.sh
-chmod +x register-mcp-to-claude-code.sh
+chmod +x register-selena-to-claude-code.sh
 
 # 実行可能ファイルのパスを確認
 pwd
 # 出力例: /Users/yourname/Swift-Selena
 ```
 
-ビルド成果物は `.build/debug/SwiftMCPServer` に生成されます。
+ビルド成果物は `.build/release/Swift-Selena` に生成されます。
 
 ## セットアップ
 
@@ -119,7 +119,7 @@ open ~/Library/Application\ Support/Claude/claude_desktop_config.json
 {
   "mcpServers": {
     "swift-selena": {
-      "command": "/path/to/Swift-Selena/.build/debug/SwiftMCPServer",
+      "command": "/path/to/Swift-Selena/.build/release/Swift-Selena",
       "env": {
         "MCP_CLIENT_ID": "claude-desktop"
       }
@@ -145,7 +145,7 @@ MCPサーバーの設定方法は[Claude Codeドキュメント](https://docs.cl
 {
   "mcpServers": {
     "swift-selena": {
-      "command": "/path/to/Swift-Selena/.build/debug/SwiftMCPServer",
+      "command": "/path/to/Swift-Selena/.build/release/Swift-Selena",
       "env": {
         "MCP_CLIENT_ID": "claude-code-window1"
       }
@@ -256,7 +256,7 @@ Claude: search_code を実行（正規表現: do\s*\{）
 swift build
 
 # 実行テスト
-.build/debug/SwiftMCPServer
+.build/release/Swift-Selena
 # "Starting Swift MCP Server..." が表示されればOK
 # Ctrl+Cで終了
 ```

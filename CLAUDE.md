@@ -9,8 +9,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## ビルド・実行コマンド
 
 ```bash
-# プロジェクトのビルド
+# プロジェクトのビルド（開発用）
 swift build
+
+# 本番用リリースビルド
+swift build -c release -Xswiftc -Osize
 
 # セットアップスクリプトに実行権限を付与
 chmod +x register-mcp-to-claude-desktop.sh
