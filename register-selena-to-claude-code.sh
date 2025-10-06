@@ -34,7 +34,7 @@ if [ ! -f "$EXECUTABLE_PATH" ]; then
     echo -e "${RED}エラー: Swift-Selena が見つかりません${NC}"
     echo "パス: $EXECUTABLE_PATH"
     echo ""
-    echo "まず 'swift build -c release' を実行してください"
+    echo "まず 'swift build -c release -Xswiftc -Osize' を実行してください"
     exit 1
 fi
 
@@ -51,69 +51,34 @@ if [ ! -d "$TARGET_PROJECT" ]; then
     exit 1
 fi
 
+TARGET_PROJECT_ABS="$( cd "$TARGET_PROJECT" && pwd )"
 echo -e "${GREEN}✓${NC} ターゲットプロジェクト確認"
-echo "  パス: $TARGET_PROJECT"
+echo "  パス: $TARGET_PROJECT_ABS"
 
-# .claudeディレクトリ作成
-CONFIG_DIR="${TARGET_PROJECT}/.claude"
-CONFIG_FILE="${CONFIG_DIR}/mcp_config.json"
+# ターゲットプロジェクトに移動してclaude mcp addを実行
+echo ""
+echo "Claude Code MCP設定に登録中..."
 
-mkdir -p "$CONFIG_DIR"
+pushd "$TARGET_PROJECT_ABS" > /dev/null
+claude mcp add swift-selena -- "$EXECUTABLE_PATH"
+RESULT=$?
+popd > /dev/null
 
-# 既存の設定ファイルを読み込むか、新規作成
-if [ -f "$CONFIG_FILE" ]; then
-    echo -e "${GREEN}✓${NC} 既存の設定ファイルが見つかりました"
-
-    # jqがインストールされているか確認
-    if command -v jq &> /dev/null; then
-        # jqで既存の設定を保持しつつswift-selenaを追加/更新
-        jq --arg path "$EXECUTABLE_PATH" \
-            '.mcpServers["swift-selena"] = {"command": $path}' \
-            "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && \
-            mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-        echo -e "${GREEN}✓${NC} 既存設定を保持してswift-selenaを更新"
-    else
-        echo -e "${YELLOW}警告: jqがインストールされていません${NC}"
-        echo "既存の設定を上書きします。バックアップを作成中..."
-        cp "$CONFIG_FILE" "${CONFIG_FILE}.backup"
-        echo -e "${GREEN}✓${NC} バックアップ作成: ${CONFIG_FILE}.backup"
-
-        # 新しい設定で上書き
-        cat > "$CONFIG_FILE" <<EOF
-{
-  "mcpServers": {
-    "swift-selena": {
-      "command": "$EXECUTABLE_PATH"
-    }
-  }
-}
-EOF
-    fi
+if [ $RESULT -eq 0 ]; then
+    echo ""
+    echo -e "${GREEN}登録完了！${NC}"
+    echo ""
+    echo "ターゲットプロジェクト: $TARGET_PROJECT_ABS"
+    echo ""
+    echo "次のステップ:"
+    echo "1. ターゲットプロジェクトでClaude Codeを開く (または再起動)"
+    echo "   cd $TARGET_PROJECT_ABS"
+    echo "2. Claude Codeでswift-selenaツールが利用可能になります"
+    echo ""
+    echo "使い方:"
+    echo "  まず initialize_project ツールでプロジェクトを初期化してください"
 else
-    # 新規作成
-    cat > "$CONFIG_FILE" <<EOF
-{
-  "mcpServers": {
-    "swift-selena": {
-      "command": "$EXECUTABLE_PATH"
-    }
-  }
-}
-EOF
-    echo -e "${GREEN}✓${NC} 設定ファイルを作成"
+    echo ""
+    echo -e "${RED}登録に失敗しました${NC}"
+    exit 1
 fi
-
-echo ""
-echo -e "${GREEN}登録完了！${NC}"
-echo ""
-echo "ターゲットプロジェクト: $TARGET_PROJECT"
-echo "設定ファイル: $CONFIG_FILE"
-echo ""
-echo "次のステップ:"
-echo "1. ターゲットプロジェクトでClaude Codeを開く"
-echo "   cd $TARGET_PROJECT"
-echo "   code ."
-echo "2. Claude Codeでswift-selenaツールが利用可能になります"
-echo ""
-echo "使い方:"
-echo "  まず initialize_project ツールでプロジェクトを初期化してください"
