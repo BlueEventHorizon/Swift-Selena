@@ -93,15 +93,37 @@ This script automatically:
 - Adds settings to `claude_desktop_config.json`
 - Preserves existing settings (if jq is installed)
 
-#### For Claude Code
+#### For Claude Code (Connect to Specific Project)
+
+To connect Swift-Selena to a specific project:
+
 ```bash
-./register-mcp-to-claude-code.sh
+# From Swift-Selena directory
+./register-selena-to-claude-code.sh /path/to/your/project
 ```
 
 This script automatically:
 - Verifies executable existence
-- Registers with claude CLI (`claude mcp add`)
-- Confirms overwrite of existing registration
+- Moves to target project directory
+- Registers with `claude mcp add` (local to that project)
+
+**Alternative: Using makefile** (if your project has one)
+
+Add to your project's makefile:
+```make
+connect_swift-selena:
+	@if [ -n "$$SWIFT_SELENA_PATH" ]; then \
+		claude mcp add swift-selena -- $$SWIFT_SELENA_PATH/.build/release/Swift-Selena; \
+	else \
+		echo "Set SWIFT_SELENA_PATH first"; \
+	fi
+```
+
+Then:
+```bash
+export SWIFT_SELENA_PATH=/path/to/Swift-Selena
+make connect_swift-selena
+```
 
 ### Manual Setup
 
@@ -133,28 +155,24 @@ open ~/Library/Application\ Support/Claude/claude_desktop_config.json
 
 3. Restart Claude Desktop
 
-#### Claude Code Setup
+#### Claude Code Manual Setup
 
-Claude Code uses `default` as the `MCP_CLIENT_ID` by default (no configuration needed).
+In your target project directory:
 
-Refer to [Claude Code documentation](https://docs.claude.com/claude-code) for MCP server configuration.
-
-**For multiple Claude Code windows on the same project**: Configure `MCP_CLIENT_ID` in `mcp_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "swift-selena": {
-      "command": "/path/to/Swift-Selena/.build/release/Swift-Selena",
-      "env": {
-        "MCP_CLIENT_ID": "claude-code-window1"
-      }
-    }
-  }
-}
+```bash
+cd /path/to/your/project
+claude mcp add swift-selena -- /path/to/Swift-Selena/.build/release/Swift-Selena
 ```
 
-Use different IDs like `claude-code-window2` for other windows.
+This creates a local configuration for that project only.
+
+**To use globally** (all projects):
+```bash
+cd ~
+claude mcp add -s user swift-selena -- /path/to/Swift-Selena/.build/release/Swift-Selena
+```
+
+Refer to [Claude Code documentation](https://docs.claude.com/claude-code) for more MCP server configuration options.
 
 ## Usage
 
