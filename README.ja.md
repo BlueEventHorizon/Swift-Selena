@@ -93,15 +93,37 @@ pwd
 - `claude_desktop_config.json`に設定を追加
 - 既存の設定を保持（jqがインストールされている場合）
 
-#### Claude Codeの場合
+#### Claude Codeの場合（特定プロジェクトに接続）
+
+Swift-Selenaを特定のプロジェクトに接続するには：
+
 ```bash
-./register-mcp-to-claude-code.sh
+# Swift-Selenaディレクトリから実行
+./register-selena-to-claude-code.sh /path/to/your/project
 ```
 
 このスクリプトは以下を自動実行します：
 - 実行ファイルの存在確認
-- claude CLIへの登録（`claude mcp add`）
-- 既存登録の上書き確認
+- ターゲットプロジェクトディレクトリに移動
+- `claude mcp add`で登録（そのプロジェクトのみ有効）
+
+**別の方法：makefileを使用**（プロジェクトにmakefileがある場合）
+
+プロジェクトのmakefileに追加：
+```make
+connect_swift-selena:
+	@if [ -n "$$SWIFT_SELENA_PATH" ]; then \
+		claude mcp add swift-selena -- $$SWIFT_SELENA_PATH/.build/release/Swift-Selena; \
+	else \
+		echo "SWIFT_SELENA_PATHを設定してください"; \
+	fi
+```
+
+使用方法：
+```bash
+export SWIFT_SELENA_PATH=/path/to/Swift-Selena
+make connect_swift-selena
+```
 
 ### 手動セットアップ
 
@@ -133,28 +155,24 @@ open ~/Library/Application\ Support/Claude/claude_desktop_config.json
 
 3. Claude Desktopを再起動
 
-### Claude Code の設定
+#### Claude Code 手動設定
 
-Claude Codeでは`MCP_CLIENT_ID`の設定は不要です（デフォルトで`default`が使用されます）。
+ターゲットプロジェクトのディレクトリで：
 
-MCPサーバーの設定方法は[Claude Codeドキュメント](https://docs.claude.com/claude-code)を参照してください。
-
-**複数のClaude Codeで同じプロジェクトを開く場合**: `mcp_config.json`に以下のように`MCP_CLIENT_ID`を設定してください。
-
-```json
-{
-  "mcpServers": {
-    "swift-selena": {
-      "command": "/path/to/Swift-Selena/.build/release/Swift-Selena",
-      "env": {
-        "MCP_CLIENT_ID": "claude-code-window1"
-      }
-    }
-  }
-}
+```bash
+cd /path/to/your/project
+claude mcp add swift-selena -- /path/to/Swift-Selena/.build/release/Swift-Selena
 ```
 
-別のウィンドウでは`claude-code-window2`など、異なるIDを使用してください。
+これでそのプロジェクトのみで有効なローカル設定が作成されます。
+
+**グローバルに使用する場合**（全プロジェクトで有効）：
+```bash
+cd ~
+claude mcp add -s user swift-selena -- /path/to/Swift-Selena/.build/release/Swift-Selena
+```
+
+詳細は[Claude Codeドキュメント](https://docs.claude.com/claude-code)を参照してください。
 
 ## 使い方
 
