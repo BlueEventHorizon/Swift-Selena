@@ -321,16 +321,8 @@ Issue、Pull Requestを歓迎します！
 
 MIT License - 詳細は[LICENSE](LICENSE)ファイルを参照
 
-## 謝辞
+## 参考
 
 - [Model Context Protocol](https://modelcontextprotocol.io/) - MCPプロトコル仕様
 - [SwiftSyntax](https://github.com/apple/swift-syntax) - Swift構文解析ライブラリ
 - [Anthropic](https://www.anthropic.com/) - Claude AI
-
-## お問い合わせ
-
-質問や提案は[Issues](https://github.com/yourusername/Swift-Selena/issues)でお願いします。
-
----
-
-**Swift Selena** - SwiftプロジェクトをClaudeがもっと深く理解できるように

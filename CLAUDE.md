@@ -17,13 +17,13 @@ swift build -c release -Xswiftc -Osize
 
 # セットアップスクリプトに実行権限を付与
 chmod +x register-mcp-to-claude-desktop.sh
-chmod +x register-mcp-to-claude-code.sh
+chmod +x register-selena-to-claude-code.sh
 
 # Claude Desktopに登録（自動）
 ./register-mcp-to-claude-desktop.sh
 
 # Claude Codeに登録（自動）
-./register-mcp-to-claude-code.sh
+./register-selena-to-claude-code.sh
 
 # サーバーの実行（開発用）
 swift run

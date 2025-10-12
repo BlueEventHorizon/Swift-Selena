@@ -48,7 +48,7 @@
 ┌──────────────▼──────────────────────┐
 │      Swift-Selena MCP Server        │
 │  ┌─────────────────────────────┐   │
-│  │  Tool Handlers (16 tools)   │   │
+│  │  Tool Handlers (17 tools)   │   │
 │  │  - initialize_project       │   │
 │  │  - find_files               │   │
 │  │  - search_code              │   │
@@ -60,6 +60,7 @@
 │  │  - analyze_imports          │   │
 │  │  - get_type_hierarchy       │   │
 │  │  - find_test_cases          │   │
+│  │  - find_type_usages         │   │
 │  │  - read_function_body       │   │
 │  │  - read_lines               │   │
 │  │  - add_note / search_notes  │   │
@@ -75,10 +76,14 @@
 │  │  Project Memory             │   │
 │  │  - 永続化ストレージ         │   │
 │  │  - ノート管理               │   │
-│  │  - キャッシュシステム       │   │
-│  │    - symbolCache            │   │
-│  │    - importCache            │   │
-│  │    - typeConformanceCache   │   │
+│  └─────────────────────────────┘   │
+│  ┌─────────────────────────────┐   │
+│  │  Cache System (v0.4.0+)     │   │
+│  │  - CacheManager             │   │
+│  │  - FileCacheEntry           │   │
+│  │  - CacheGarbageCollector    │   │
+│  │  - ファイル単位キャッシュ   │   │
+│  │  - 自動GC                   │   │
 │  └─────────────────────────────┘   │
 └──────────────┬──────────────────────┘
                │
@@ -146,7 +151,7 @@
 
 ## 機能設計
 
-### Tier 1: 基本機能（実装完了 - v0.3.0）
+### Tier 1: 基本機能（実装完了 - v0.4.2）
 
 #### ファイルシステム操作
 
@@ -170,6 +175,7 @@
 - `analyze_imports`: Import依存関係解析（モジュール使用統計、キャッシュ利用）
 - `get_type_hierarchy`: 型の継承階層取得（スーパークラス、サブクラス、Protocol準拠型、キャッシュ利用）
 - `find_test_cases`: XCTestケースとテストメソッド検出
+- `find_type_usages`: 型の使用箇所を検出（変数宣言、関数パラメータ、戻り値型）
 
 #### ユーティリティ
 
@@ -184,8 +190,8 @@
 
 - **呼び出しグラフ**: 関数/メソッドの呼び出し関係を追跡
 - **依存関係解析**: 型間の依存関係グラフ
-- **型使用箇所**: 特定の型がどこで使われているか
 - **スコープ解析**: 変数のスコープと有効範囲
+- **変数使用箇所**: 特定の変数がどこで使われているか
 
 実装方法:
 
@@ -354,24 +360,31 @@ struct TypeConformanceInfo: Codable {
 - ✅ Import依存関係解析
 - ✅ 型の継承階層解析
 - ✅ XCTestケース検出
-- ✅ キャッシュシステム（import、type情報）
+- ✅ 型使用箇所の追跡（find_type_usages）
 - ✅ コードベースリファクタリング（ファイル分割）
 - ✅ 複数クライアント対応（プロジェクトパスハッシュ方式）
 
-**提供ツール数**: 16
+**提供ツール数**: 17
 
-### v0.4.0（次期）
+### v0.4.0（完了 - 2025/10/06）
+
+- ✅ ファイル単位キャッシュシステム（Cache/ディレクトリ）
+- ✅ 自動ガベージコレクション
+- ✅ ファイル変更検知による自動キャッシュ無効化
+- ✅ CacheManager, FileCacheEntry, CacheGarbageCollector実装
+
+### v0.5.0（次期）
 
 - 呼び出しグラフの構築
-- 型使用箇所の追跡
 - スコープ解析
 - パフォーマンス最適化（並列処理）
-
-### v0.5.0（将来）
-
 - 限定的な型推論
+
+### v0.6.0（将来）
+
 - リファクタリング支援機能
 - コード品質メトリクス
+- 変数の使用箇所追跡
 
 ### v1.0.0（長期）
 
@@ -410,6 +423,6 @@ struct TypeConformanceInfo: Codable {
 
 ------
 
-**Document Version**: 1.0
- **Last Updated**: 2025-10-03
- **Maintainer**: Swift-Selena Development Team
+**Document Version**: 1.1
+**Last Updated**: 2025-10-11
+**Maintainer**: Swift-Selena Development Team
