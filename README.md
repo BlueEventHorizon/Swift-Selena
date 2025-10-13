@@ -1,4 +1,4 @@
-# Swift Selena
+# Swift Selena - Swift Analyzer MCP Server with respect to Serena
 
 <img width="400" src="selena.png">
 
@@ -310,6 +310,16 @@ Will be rebuilt on next `initialize_project` execution.
 - **[SwiftSyntax](https://github.com/apple/swift-syntax)** (602.0.0) - Syntax parsing
 - **CryptoKit** - Project path hashing
 - **swift-log** - Logging
+
+## Documentation
+
+### For Users
+- [README (English)](README.md) - This file
+- [README (Japanese)](README.ja.md) - 日本語版
+
+### For Developers
+- **[CLAUDE.md](CLAUDE.md)** - Project overview and commands for Claude Code
+- **[Swift-Selena Design](docs/Swift-Selena%20Design.md)** - Architecture and design principles
 
 ## Contributing
 

@@ -10,7 +10,7 @@ import Foundation
 /// アプリケーション全体の定数
 enum AppConstants {
     static let name = "Swift-Selena"
-    static let version = "0.4.2"
+    static let version = "0.5.0"
     static let loggerLabel = "swift-selena"
     static let storageDirectory = ".swift-selena"
 }
@@ -34,6 +34,13 @@ enum ToolNames {
     static let getTypeHierarchy = "get_type_hierarchy"
     static let findTestCases = "find_test_cases"
     static let findTypeUsages = "find_type_usages"
+
+    // v0.5.0 新規ツール
+    static let setAnalysisMode = "set_analysis_mode"
+    static let readSymbol = "read_symbol"
+    static let listDirectory = "list_directory"
+    static let readFile = "read_file"
+    static let thinkAboutAnalysis = "think_about_analysis"
 }
 
 /// パラメータキーの定数
@@ -50,6 +57,13 @@ enum ParameterKeys {
     static let startLine = "start_line"
     static let endLine = "end_line"
     static let typeName = "type_name"
+
+    // v0.5.0 新規パラメータ
+    static let mode = "mode"
+    static let symbolPath = "symbol_path"
+    static let path = "path"
+    static let recursive = "recursive"
+    static let includeChildren = "include_children"
 }
 
 /// エラーメッセージの定数
@@ -61,7 +75,16 @@ enum ErrorMessages {
     static let missingSymbolName = "Missing symbol_name"
     static let missingContent = "Missing content"
     static let missingQuery = "Missing query"
+    static let missingFunctionName = "Missing function_name"
     static let missingRequiredParameters = "Missing required parameters"
     static let missingTypeName = "Missing type_name"
     static let projectPathNotDirectory = "Project path does not exist or is not a directory"
+
+    // v0.5.0 新規エラーメッセージ
+    static let missingMode = "Missing mode parameter"
+    static let missingPath = "Missing path parameter"
+    static let missingSymbolPath = "Missing symbol_path parameter"
+    static let invalidMode = "Invalid mode. Valid modes: general, swiftui, architecture, testing, refactoring"
+    static let symbolNotFound = "Symbol not found"
+    static let pathNotFound = "Path not found"
 }

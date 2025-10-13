@@ -30,249 +30,31 @@ struct SwiftMCPServer {
         // ツールリスト
         await server.withMethodHandler(ListTools.self) { _ in
             ListTools.Result(tools: [
-                Tool(
-                    name: ToolNames.initializeProject,
-                    description: "Initialize a Swift project for analysis. Must be called first.",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            ParameterKeys.projectPath: .object([
-                                "type": .string("string"),
-                                "description": .string("Absolute path to Swift project root")
-                            ])
-                        ]),
-                        "required": .array([.string(ParameterKeys.projectPath)])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.findFiles,
-                    description: "Find Swift files in the project by pattern (glob-like search)",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            ParameterKeys.pattern: .object([
-                                "type": .string("string"),
-                                "description": .string("File name pattern (e.g., '*Controller.swift', 'User*')")
-                            ])
-                        ]),
-                        "required": .array([.string(ParameterKeys.pattern)])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.searchCode,
-                    description: "Search code content using regex pattern (grep-like search)",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            ParameterKeys.pattern: .object([
-                                "type": .string("string"),
-                                "description": .string("Regex pattern to search for")
-                            ]),
-                            ParameterKeys.filePattern: .object([
-                                "type": .string("string"),
-                                "description": .string("Optional file pattern to limit search (e.g., '*.swift')")
-                            ])
-                        ]),
-                        "required": .array([.string(ParameterKeys.pattern)])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.listSymbols,
-                    description: "List all symbols (classes, structs, functions, etc.) in a file using SwiftSyntax",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            "file_path": .object([
-                                "type": .string("string"),
-                                "description": .string("Path to Swift file")
-                            ])
-                        ]),
-                        "required": .array([.string("file_path")])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.findSymbolDefinition,
-                    description: "Find where a symbol is defined in the project",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            "symbol_name": .object([
-                                "type": .string("string"),
-                                "description": .string("Symbol name to find (class, struct, function, etc.)")
-                            ])
-                        ]),
-                        "required": .array([.string("symbol_name")])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.addNote,
-                    description: "Add a note about the project (persisted across sessions)",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            "content": .object([
-                                "type": .string("string"),
-                                "description": .string("Note content")
-                            ]),
-                            "tags": .object([
-                                "type": .string("array"),
-                                "items": .object([
-                                    "type": .string("string")
-                                ]),
-                                "description": .string("Optional tags for categorization")
-                            ])
-                        ]),
-                        "required": .array([.string("content")])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.searchNotes,
-                    description: "Search through saved notes",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            "query": .object([
-                                "type": .string("string"),
-                                "description": .string("Search query")
-                            ])
-                        ]),
-                        "required": .array([.string("query")])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.getProjectStats,
-                    description: "Get project statistics and memory information",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([:])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.readFunctionBody,
-                    description: "Read only the implementation of a specific function (context-efficient)",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            "file_path": .object([
-                                "type": .string("string"),
-                                "description": .string("File containing the function")
-                            ]),
-                            "function_name": .object([
-                                "type": .string("string"),
-                                "description": .string("Name of the function to read")
-                            ])
-                        ]),
-                        "required": .array([.string("file_path"), .string("function_name")])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.readLines,
-                    description: "Read specific lines from a file (context-efficient)",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            "file_path": .object([
-                                "type": .string("string"),
-                                "description": .string("File to read")
-                            ]),
-                            "start_line": .object([
-                                "type": .string("integer"),
-                                "description": .string("Start line (1-indexed)")
-                            ]),
-                            "end_line": .object([
-                                "type": .string("integer"),
-                                "description": .string("End line (1-indexed)")
-                            ])
-                        ]),
-                        "required": .array([.string("file_path"), .string("start_line"), .string("end_line")])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.listPropertyWrappers,
-                    description: "List SwiftUI property wrappers (@State, @Binding, etc.) in a file",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            "file_path": .object([
-                                "type": .string("string"),
-                                "description": .string("Path to Swift file")
-                            ])
-                        ]),
-                        "required": .array([.string("file_path")])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.listProtocolConformances,
-                    description: "List protocol conformances and inheritance for types in a file",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            "file_path": .object([
-                                "type": .string("string"),
-                                "description": .string("Path to Swift file")
-                            ])
-                        ]),
-                        "required": .array([.string("file_path")])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.listExtensions,
-                    description: "List extensions and their members in a file",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            "file_path": .object([
-                                "type": .string("string"),
-                                "description": .string("Path to Swift file")
-                            ])
-                        ]),
-                        "required": .array([.string("file_path")])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.analyzeImports,
-                    description: "Analyze import dependencies across the project",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([:])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.getTypeHierarchy,
-                    description: "Get the inheritance hierarchy for a specific type",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            "type_name": .object([
-                                "type": .string("string"),
-                                "description": .string("Name of the type to analyze")
-                            ])
-                        ]),
-                        "required": .array([.string("type_name")])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.findTestCases,
-                    description: "Find XCTest test cases and methods in the project",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([:])
-                    ])
-                ),
-                Tool(
-                    name: ToolNames.findTypeUsages,
-                    description: "Find where a specific type is used in the project",
-                    inputSchema: .object([
-                        "type": .string("object"),
-                        "properties": .object([
-                            "type_name": .object([
-                                "type": .string("string"),
-                                "description": .string("Name of the type to find usages for")
-                            ])
-                        ]),
-                        "required": .array([.string("type_name")])
-                    ])
-                )
+                // v0.5.0: 新しい構造のツール
+                InitializeProjectTool.toolDefinition,
+                FindFilesTool.toolDefinition,
+                SearchCodeTool.toolDefinition,
+                ListSymbolsTool.toolDefinition,
+                FindSymbolDefinitionTool.toolDefinition,
+                AddNoteTool.toolDefinition,
+                SearchNotesTool.toolDefinition,
+                GetProjectStatsTool.toolDefinition,
+                ReadFunctionBodyTool.toolDefinition,
+                ReadLinesTool.toolDefinition,
+                ListPropertyWrappersTool.toolDefinition,
+                ListProtocolConformancesTool.toolDefinition,
+                ListExtensionsTool.toolDefinition,
+                AnalyzeImportsTool.toolDefinition,
+                GetTypeHierarchyTool.toolDefinition,
+                FindTestCasesTool.toolDefinition,
+                FindTypeUsagesTool.toolDefinition,
+                // v0.5.0 新規ツール
+                SetAnalysisModeTool.toolDefinition,
+                ReadSymbolTool.toolDefinition,
+                ListDirectoryTool.toolDefinition,
+                ReadFileTool.toolDefinition,
+                // v0.5.0 新規ツール
+                ThinkAboutAnalysisTool.toolDefinition
             ])
         }
 
@@ -302,472 +84,153 @@ struct SwiftMCPServer {
                 ])
 
             case ToolNames.findFiles:
-                guard let memory = projectMemory else {
-                    throw MCPError.invalidRequest(ErrorMessages.projectNotInitialized)
-                }
-                guard let args = params.arguments,
-                      let patternValue = args[ParameterKeys.pattern] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingPattern)
-                }
-                let pattern = String(describing: patternValue)
-                let files = try FileSearcher.findFiles(in: memory.projectPath, pattern: pattern)
-
-                let result = """
-                Found \(files.count) files matching '\(pattern)':
-
-                \(files.map { "  \($0)" }.joined(separator: "\n"))
-                """
-
-                return CallTool.Result(content: [.text(result)])
-
-            case ToolNames.searchCode:
-                guard let memory = projectMemory else {
-                    throw MCPError.invalidRequest(ErrorMessages.projectNotInitialized)
-                }
-                guard let args = params.arguments,
-                      let patternValue = args[ParameterKeys.pattern] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingPattern)
-                }
-                let pattern = String(describing: patternValue)
-                let filePattern = args[ParameterKeys.filePattern].map { String(describing: $0) }
-
-                let matches = try FileSearcher.searchCode(
-                    in: memory.projectPath,
-                    pattern: pattern,
-                    filePattern: filePattern
+                return try await FindFilesTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
                 )
 
-                var result = "Found \(matches.count) matches:\n\n"
-                for match in matches {
-                    result += "\(match.file):\(match.line): \(match.content.trimmingCharacters(in: .whitespaces))\n"
-                }
-
-                return CallTool.Result(content: [.text(result)])
+            case ToolNames.searchCode:
+                return try await SearchCodeTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.listSymbols:
-                guard let args = params.arguments,
-                      let filePathValue = args[ParameterKeys.filePath] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingFilePath)
-                }
-                let filePath = String(describing: filePathValue)
-                let symbols = try SwiftSyntaxAnalyzer.listSymbols(filePath: filePath)
-
-                var result = "Symbols in \(filePath):\n\n"
-                for symbol in symbols {
-                    result += "[\(symbol.kind)] \(symbol.name) (line \(symbol.line))\n"
-                }
-
-                return CallTool.Result(content: [.text(result)])
+                return try await ListSymbolsTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.findSymbolDefinition:
-                guard let memory = projectMemory else {
-                    throw MCPError.invalidRequest(ErrorMessages.projectNotInitialized)
-                }
-                guard let args = params.arguments,
-                      let symbolNameValue = args[ParameterKeys.symbolName] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingSymbolName)
-                }
-                let symbolName = String(describing: symbolNameValue)
-
-                // プロジェクト内の全Swiftファイルを検索
-                let swiftFiles = try FileSearcher.findFiles(in: memory.projectPath, pattern: "*.swift")
-                var foundSymbols: [(file: String, symbol: SwiftSyntaxAnalyzer.SymbolInfo)] = []
-
-                for file in swiftFiles {
-                    let symbols = try SwiftSyntaxAnalyzer.listSymbols(filePath: file)
-                    for symbol in symbols where symbol.name == symbolName {
-                        foundSymbols.append((file: file, symbol: symbol))
-                    }
-                }
-
-                if foundSymbols.isEmpty {
-                    return CallTool.Result(content: [.text("Symbol '\(symbolName)' not found in project")])
-                }
-
-                var result = "Found \(foundSymbols.count) definition(s) for '\(symbolName)':\n\n"
-                for (file, symbol) in foundSymbols {
-                    result += "[\(symbol.kind)] \(symbol.name)\n"
-                    result += "  File: \(file)\n"
-                    result += "  Line: \(symbol.line)\n\n"
-                }
-
-                return CallTool.Result(content: [.text(result)])
+                return try await FindSymbolDefinitionTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.addNote:
-                guard let memory = projectMemory else {
-                    throw MCPError.invalidRequest(ErrorMessages.projectNotInitialized)
-                }
-                guard let args = params.arguments,
-                      let contentValue = args[ParameterKeys.content] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingContent)
-                }
-                let content = String(describing: contentValue)
-
-                var tags: [String] = []
-                if let tagsValue = args[ParameterKeys.tags] {
-                    let tagsStr = String(describing: tagsValue)
-                    tags = tagsStr.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-                }
-
-                memory.addNote(content: content, tags: tags)
-                try memory.save()
-
-                return CallTool.Result(content: [
-                    .text("✅ Note saved: \(content)")
-                ])
+                return try await AddNoteTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.searchNotes:
-                guard let memory = projectMemory else {
-                    throw MCPError.invalidRequest(ErrorMessages.projectNotInitialized)
-                }
-                guard let args = params.arguments,
-                      let queryValue = args[ParameterKeys.query] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingQuery)
-                }
-                let query = String(describing: queryValue)
-
-                let notes = memory.searchNotes(query: query)
-                let formatter = DateFormatter()
-                formatter.dateStyle = .short
-                formatter.timeStyle = .short
-
-                var result = "Found \(notes.count) notes:\n\n"
-                for note in notes {
-                    result += "[\(formatter.string(from: note.timestamp))] \(note.content)\n"
-                    if !note.tags.isEmpty {
-                        result += "  Tags: \(note.tags.joined(separator: ", "))\n"
-                    }
-                    result += "\n"
-                }
-
-                return CallTool.Result(content: [.text(result)])
+                return try await SearchNotesTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.getProjectStats:
-                guard let memory = projectMemory else {
-                    throw MCPError.invalidRequest(ErrorMessages.projectNotInitialized)
-                }
-
-                return CallTool.Result(content: [
-                    .text(memory.getStats())
-                ])
+                return try await GetProjectStatsTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.readFunctionBody:
-                guard let args = params.arguments,
-                      let filePathValue = args[ParameterKeys.filePath],
-                      let functionNameValue = args[ParameterKeys.functionName] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingRequiredParameters)
-                }
-                let filePath = String(describing: filePathValue)
-                let functionName = String(describing: functionNameValue)
-
-                let content = try String(contentsOfFile: filePath)
-                let lines = content.components(separatedBy: .newlines)
-
-                var functionLines: [String] = []
-                var capturing = false
-                var braceCount = 0
-
-                for line in lines {
-                    if !capturing && line.contains("func \(functionName)") {
-                        capturing = true
-                    }
-
-                    if capturing {
-                        functionLines.append(line)
-                        braceCount += line.filter { $0 == "{" }.count
-                        braceCount -= line.filter { $0 == "}" }.count
-
-                        if braceCount == 0 && functionLines.count > 1 {
-                            break
-                        }
-                    }
-                }
-
-                if functionLines.isEmpty {
-                    return CallTool.Result(content: [
-                        .text("Function '\(functionName)' not found in \(filePath)")
-                    ])
-                }
-
-                let result = """
-                Function: \(functionName)
-                Location: \(filePath)
-                Lines: \(functionLines.count)
-
-                ```swift
-                \(functionLines.joined(separator: "\n"))
-                ```
-                """
-
-                return CallTool.Result(content: [.text(result)])
+                return try await ReadFunctionBodyTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.readLines:
-                guard let args = params.arguments,
-                      let filePathValue = args[ParameterKeys.filePath],
-                      let startLineValue = args[ParameterKeys.startLine],
-                      let endLineValue = args[ParameterKeys.endLine] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingRequiredParameters)
-                }
-                let filePath = String(describing: filePathValue)
-                let startLine = Int(String(describing: startLineValue)) ?? 1
-                let endLine = Int(String(describing: endLineValue)) ?? 1
-
-                let content = try String(contentsOfFile: filePath)
-                let lines = content.components(separatedBy: .newlines)
-
-                guard startLine > 0, endLine <= lines.count, startLine <= endLine else {
-                    throw MCPError.invalidParams("Invalid line range")
-                }
-
-                let selectedLines = lines[(startLine - 1)..<endLine]
-                let result = """
-                File: \(filePath)
-                Lines: \(startLine)-\(endLine)
-
-                ```swift
-                \(selectedLines.joined(separator: "\n"))
-                ```
-                """
-
-                return CallTool.Result(content: [.text(result)])
+                return try await ReadLinesTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.listPropertyWrappers:
-                guard let args = params.arguments,
-                      let filePathValue = args[ParameterKeys.filePath] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingFilePath)
-                }
-                let filePath = String(describing: filePathValue)
-                let wrappers = try SwiftSyntaxAnalyzer.listPropertyWrappers(filePath: filePath)
-
-                if wrappers.isEmpty {
-                    return CallTool.Result(content: [.text("No property wrappers found in \(filePath)")])
-                }
-
-                var result = "Property Wrappers in \(filePath):\n\n"
-                for wrapper in wrappers {
-                    result += "[@\(wrapper.wrapperType)] \(wrapper.propertyName)"
-                    if let typeName = wrapper.typeName {
-                        result += ": \(typeName)"
-                    }
-                    result += " (line \(wrapper.line))\n"
-                }
-
-                return CallTool.Result(content: [.text(result)])
+                return try await ListPropertyWrappersTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.listProtocolConformances:
-                guard let args = params.arguments,
-                      let filePathValue = args[ParameterKeys.filePath] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingFilePath)
-                }
-                let filePath = String(describing: filePathValue)
-                let conformances = try SwiftSyntaxAnalyzer.listTypeConformances(filePath: filePath)
-
-                if conformances.isEmpty {
-                    return CallTool.Result(content: [.text("No type conformances found in \(filePath)")])
-                }
-
-                var result = "Protocol Conformances in \(filePath):\n\n"
-                for conformance in conformances {
-                    result += "[\(conformance.typeKind)] \(conformance.typeName) (line \(conformance.line))\n"
-
-                    if let superclass = conformance.superclass {
-                        result += "  Inherits from: \(superclass)\n"
-                    }
-
-                    if !conformance.protocols.isEmpty {
-                        result += "  Conforms to: \(conformance.protocols.joined(separator: ", "))\n"
-                    }
-
-                    result += "\n"
-                }
-
-                return CallTool.Result(content: [.text(result)])
+                return try await ListProtocolConformancesTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.listExtensions:
-                guard let args = params.arguments,
-                      let filePathValue = args[ParameterKeys.filePath] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingFilePath)
-                }
-                let filePath = String(describing: filePathValue)
-                let extensions = try SwiftSyntaxAnalyzer.listExtensions(filePath: filePath)
-
-                if extensions.isEmpty {
-                    return CallTool.Result(content: [.text("No extensions found in \(filePath)")])
-                }
-
-                var result = "Extensions in \(filePath):\n\n"
-                for ext in extensions {
-                    result += "[Extension] \(ext.extendedType) (line \(ext.line))\n"
-
-                    if !ext.protocols.isEmpty {
-                        result += "  Conforms to: \(ext.protocols.joined(separator: ", "))\n"
-                    }
-
-                    if !ext.members.isEmpty {
-                        result += "  Members:\n"
-                        for member in ext.members {
-                            result += "    [\(member.kind)] \(member.name) (line \(member.line))\n"
-                        }
-                    }
-
-                    result += "\n"
-                }
-
-                return CallTool.Result(content: [.text(result)])
+                return try await ListExtensionsTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.analyzeImports:
-                guard let memory = projectMemory else {
-                    throw MCPError.invalidRequest(ErrorMessages.projectNotInitialized)
-                }
-
-                let fileImports = try SwiftSyntaxAnalyzer.analyzeImports(projectPath: memory.projectPath, projectMemory: memory)
-
-                if fileImports.isEmpty {
-                    return CallTool.Result(content: [.text("No imports found in project")])
-                }
-
-                var result = "Import Dependencies Analysis:\n\n"
-
-                // モジュールごとに集計
-                var moduleUsage: [String: Int] = [:]
-                for (_, imports) in fileImports {
-                    for imp in imports {
-                        moduleUsage[imp.module, default: 0] += 1
-                    }
-                }
-
-                result += "Most used modules:\n"
-                for (module, count) in moduleUsage.sorted(by: { $0.value > $1.value }).prefix(10) {
-                    result += "  \(module): \(count) files\n"
-                }
-                result += "\n"
-
-                result += "Files and their imports (\(fileImports.count) files):\n\n"
-                for (file, imports) in fileImports.sorted(by: { $0.key < $1.key }).prefix(20) {
-                    let fileName = (file as NSString).lastPathComponent
-                    result += "\(fileName):\n"
-                    for imp in imports {
-                        result += "  └─ \(imp.module) (line \(imp.line))\n"
-                    }
-                    result += "\n"
-                }
-
-                if fileImports.count > 20 {
-                    result += "... and \(fileImports.count - 20) more files\n"
-                }
-
-                return CallTool.Result(content: [.text(result)])
+                return try await AnalyzeImportsTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.getTypeHierarchy:
-                guard let memory = projectMemory else {
-                    throw MCPError.invalidRequest(ErrorMessages.projectNotInitialized)
-                }
-                guard let args = params.arguments,
-                      let typeNameValue = args[ParameterKeys.typeName] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingTypeName)
-                }
-                let typeName = String(describing: typeNameValue)
-
-                guard let hierarchy = try SwiftSyntaxAnalyzer.getTypeHierarchy(
-                    typeName: typeName,
-                    projectPath: memory.projectPath,
-                    projectMemory: memory
-                ) else {
-                    return CallTool.Result(content: [.text("Type '\(typeName)' not found in project")])
-                }
-
-                var result = "Type Hierarchy for '\(typeName)':\n\n"
-                result += "[\(hierarchy.typeKind)] \(hierarchy.typeName)\n"
-                result += "  Location: \(hierarchy.filePath):\(hierarchy.line)\n\n"
-
-                if let superclass = hierarchy.superclass {
-                    result += "Inherits from:\n"
-                    result += "  └─ \(superclass)\n\n"
-                }
-
-                if !hierarchy.protocols.isEmpty {
-                    result += "Conforms to:\n"
-                    for proto in hierarchy.protocols {
-                        result += "  └─ \(proto)\n"
-                    }
-                    result += "\n"
-                }
-
-                if !hierarchy.subclasses.isEmpty {
-                    result += "Subclasses:\n"
-                    for subclass in hierarchy.subclasses {
-                        result += "  └─ \(subclass)\n"
-                    }
-                    result += "\n"
-                }
-
-                if !hierarchy.conformingTypes.isEmpty {
-                    result += "Types conforming to this protocol:\n"
-                    for type in hierarchy.conformingTypes {
-                        result += "  └─ \(type)\n"
-                    }
-                    result += "\n"
-                }
-
-                return CallTool.Result(content: [.text(result)])
+                return try await GetTypeHierarchyTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.findTestCases:
-                guard let memory = projectMemory else {
-                    throw MCPError.invalidRequest(ErrorMessages.projectNotInitialized)
-                }
-
-                let testCases = try SwiftSyntaxAnalyzer.findTestCases(projectPath: memory.projectPath)
-
-                if testCases.isEmpty {
-                    return CallTool.Result(content: [.text("No XCTest cases found in project")])
-                }
-
-                var result = "XCTest Cases (\(testCases.count) classes):\n\n"
-
-                for testClass in testCases {
-                    let fileName = (testClass.filePath as NSString).lastPathComponent
-                    result += "[TestClass] \(testClass.className)\n"
-                    result += "  File: \(fileName):\(testClass.line)\n"
-
-                    if !testClass.testMethods.isEmpty {
-                        result += "  Test methods (\(testClass.testMethods.count)):\n"
-                        for method in testClass.testMethods {
-                            result += "    └─ \(method.name) (line \(method.line))\n"
-                        }
-                    } else {
-                        result += "  No test methods found\n"
-                    }
-
-                    result += "\n"
-                }
-
-                return CallTool.Result(content: [.text(result)])
+                return try await FindTestCasesTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             case ToolNames.findTypeUsages:
-                guard let memory = projectMemory else {
-                    throw MCPError.invalidRequest(ErrorMessages.projectNotInitialized)
-                }
-                guard let args = params.arguments,
-                      let typeNameValue = args[ParameterKeys.typeName] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingTypeName)
-                }
-                let typeName = String(describing: typeNameValue)
+                return try await FindTypeUsagesTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
-                let usages = try SwiftSyntaxAnalyzer.findTypeUsages(typeName: typeName, projectPath: memory.projectPath)
+            // v0.5.0 新規ツール実装
 
-                if usages.isEmpty {
-                    return CallTool.Result(content: [.text("No usages found for type '\(typeName)'")])
-                }
+            case ToolNames.thinkAboutAnalysis:
+                return try await ThinkAboutAnalysisTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
-                var result = "Type Usages for '\(typeName)' (\(usages.count) usages):\n\n"
+            case ToolNames.setAnalysisMode:
+                return try await SetAnalysisModeTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
-                for usage in usages {
-                    let fileName = (usage.filePath as NSString).lastPathComponent
-                    result += "[\(usage.usageKind)] \(usage.context)\n"
-                    result += "  File: \(fileName):\(usage.line)\n\n"
-                }
+            case ToolNames.readSymbol:
+                return try await ReadSymbolTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
-                return CallTool.Result(content: [.text(result)])
+            case ToolNames.listDirectory:
+                return try await ListDirectoryTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
+
+            case ToolNames.readFile:
+                return try await ReadFileTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
 
             default:
                 throw MCPError.invalidParams("Unknown tool: \(params.name)")

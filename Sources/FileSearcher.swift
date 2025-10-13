@@ -33,8 +33,10 @@ enum FileSearcher {
             }
 
             if file.hasSuffix(".swift") {
-                let range = NSRange(file.startIndex..., in: file)
-                if regex.firstMatch(in: file, range: range) != nil {
+                // ファイル名部分だけを取り出してマッチング
+                let fileName = (file as NSString).lastPathComponent
+                let range = NSRange(fileName.startIndex..., in: fileName)
+                if regex.firstMatch(in: fileName, range: range) != nil {
                     results.append((directory as NSString).appendingPathComponent(file))
                 }
             }
