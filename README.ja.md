@@ -1,4 +1,4 @@
-# Swift Selena
+# Swift Selena - Swift Analyzer MCP Server with respect to Serena
 
 <img width="400" src="selena.png">
 
@@ -310,6 +310,16 @@ rm -rf ~/.swift-selena/
 - **[SwiftSyntax](https://github.com/apple/swift-syntax)** (602.0.0) - 構文解析
 - **CryptoKit** - プロジェクトパスのハッシュ化
 - **swift-log** - ロギング
+
+## ドキュメント
+
+### ユーザー向け
+- [README (English)](README.md) - 英語版
+- [README (Japanese)](README.ja.md) - このファイル
+
+### 開発者向け
+- **[CLAUDE.md](CLAUDE.md)** - プロジェクト概要とClaude Code用コマンド
+- **[Swift-Selena Design](docs/Swift-Selena%20Design.md)** - アーキテクチャと設計思想
 
 ## コントリビューション
 

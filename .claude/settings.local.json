@@ -2,13 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(swift build)",
+      "Bash(pkill:*)",
+      "Bash(awk:*)",
+      "Bash(find:*)",
       "mcp__swift-selena__list_protocol_conformances",
       "mcp__swift-selena__initialize_project",
       "mcp__swift-selena__list_extensions",
       "mcp__swift-selena__list_property_wrappers",
       "mcp__swift-selena__list_symbols",
       "mcp__swift-selena__analyze_imports",
-      "Bash(pkill:*)",
       "mcp__swift-selena__get_type_hierarchy",
       "mcp__swift-selena__find_files",
       "mcp__swift-selena__search_code",
@@ -19,7 +21,12 @@
       "mcp__swift-selena__search_notes",
       "mcp__swift-selena__get_project_stats",
       "mcp__swift-selena__find_test_cases",
-      "mcp__swift-selena__find_type_usages"
+      "mcp__swift-selena__find_type_usages",
+      "mcp__swift-selena__set_analysis_mode",
+      "mcp__swift-selena__think_about_analysis",
+      "mcp__swift-selena__list_directory",
+      "mcp__swift-selena__read_file",
+      "mcp__swift-selena__read_symbol"
     ],
     "deny": [],
     "ask": []
