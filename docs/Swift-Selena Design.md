@@ -48,7 +48,7 @@
 ┌──────────────▼──────────────────────┐
 │      Swift-Selena MCP Server        │
 │  ┌─────────────────────────────┐   │
-│  │  Tool Handlers (17 tools)   │   │
+│  │  Tool Handlers (22 tools)   │   │
 │  │  - initialize_project       │   │
 │  │  - find_files               │   │
 │  │  - search_code              │   │
@@ -151,7 +151,7 @@
 
 ## 機能設計
 
-### Tier 1: 基本機能（実装完了 - v0.4.2）
+### Tier 1: 基本機能（実装完了 - v0.5.0）
 
 #### ファイルシステム操作
 
@@ -181,8 +181,16 @@
 
 - `read_function_body`: 関数実装の抽出
 - `read_lines`: 行範囲指定読み取り
+- `read_symbol`: シンボル単位読み取り（v0.5.0）
+- `read_file`: 汎用ファイル読み取り（v0.5.0）
+- `list_directory`: ディレクトリ一覧（v0.5.0）
 - `add_note` / `search_notes`: プロジェクトメモ
 - `get_project_stats`: 統計情報
+
+#### メタ機能（v0.5.0）
+
+- `set_analysis_mode`: 分析モード切り替え（SwiftUI/Architecture/Testing/Refactoring/General）
+- `think_about_analysis`: 思考促進プロンプト
 
 ### Tier 2: 高度な機能（計画中）
 
@@ -338,18 +346,6 @@ struct TypeConformanceInfo: Codable {
 - クロスプロジェクト参照（Swift Packageの依存先等）
 - セマンティックな等価性の判定（UserとPersonが同じ概念かの判断）
 
-## 競合製品との比較
-
-| 機能            | Swift-Selena | SourceKit-LSP | Serena |
-| --------------- | ------------ | ------------- | ------ |
-| ビルド不要      | ✅            | ❌             | ✅      |
-| Swift専用最適化 | ✅            | ✅             | ❌      |
-| 完全ローカル    | ✅            | ✅             | ✅      |
-| SwiftUI対応     | ✅            | ✅             | ❌      |
-| 型推論          | 限定的       | 完全          | ❌      |
-| 呼び出しグラフ  | 計画中       | ✅             | ❌      |
-| 軽量性          | ✅            | △             | ✅      |
-
 ## バージョン情報
 
 **Current Version**: v0.5.0 (2025/10/13)
@@ -357,24 +353,6 @@ struct TypeConformanceInfo: Codable {
 リリース履歴と今後の開発計画については、以下を参照：
 - **[HISTORY.md](../HISTORY.md)** - リリース履歴
 - **[Hybrid Architecture Plan](Hybrid-Architecture-Plan.md)** - v0.5.x系開発計画
-
-## コントリビューション
-
-### 追加したい機能の提案
-
-1. Issueで提案を作成
-2. 設計原則との整合性を確認
-3. 実装方針を議論
-4. Pull Request
-
-### 設計原則の遵守
-
-新機能は以下を満たす必要があります：
-
-- ビルド非依存性
-- ローカル完結性
-- 軽量性
-- 拡張性
 
 ## 参考資料
 
@@ -388,6 +366,6 @@ struct TypeConformanceInfo: Codable {
 
 ------
 
-**Document Version**: 1.1
-**Last Updated**: 2025-10-11
+**Document Version**: 1.3
+**Last Updated**: 2025-10-15
 **Maintainer**: Swift-Selena Development Team
