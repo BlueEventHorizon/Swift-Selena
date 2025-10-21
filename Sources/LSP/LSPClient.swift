@@ -116,11 +116,96 @@ class LSPClient {
         try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
     }
 
+    // MARK: - v0.5.2 LSP API実装
+
+    private var messageId = 2  // Initialize=1を使ったので2から
+
+    /// 参照箇所を検索（textDocument/references）
+    ///
+    /// - Parameters:
+    ///   - filePath: ファイルパス
+    ///   - line: 行番号（0-indexed）
+    ///   - column: 列番号（0-indexed）
+    /// - Returns: 参照箇所のリスト
+    func findReferences(filePath: String, line: Int, column: Int) async throws -> [LSPLocation] {
+        messageId += 1
+        let id = messageId
+
+        // textDocument/referencesリクエスト
+        let request = """
+        {"jsonrpc":"2.0","id":\(id),"method":"textDocument/references","params":{"textDocument":{"uri":"file://\(filePath)"},"position":{"line":\(line),"character":\(column)},"context":{"includeDeclaration":false}}}
+        """
+
+        let contentLength = request.utf8.count
+        let message = "Content-Length: \(contentLength)\r\n\r\n\(request)"
+
+        guard let data = message.data(using: .utf8) else {
+            throw LSPError.encodingFailed
+        }
+
+        // リクエスト送信
+        inputPipe.fileHandleForWriting.write(data)
+        logger.debug("Sent textDocument/references request")
+
+        // レスポンス受信（簡易実装）
+        // v0.5.2: 基本的なレスポンス解析
+        let response = try await receiveResponse()
+
+        // JSONパース
+        guard let jsonData = response.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+              let result = json["result"] as? [[String: Any]] else {
+            return []  // 参照なし
+        }
+
+        // Location解析
+        var locations: [LSPLocation] = []
+        for loc in result {
+            if let uri = loc["uri"] as? String,
+               let range = loc["range"] as? [String: Any],
+               let start = range["start"] as? [String: Any],
+               let line = start["line"] as? Int {
+                locations.append(LSPLocation(
+                    filePath: uri.replacingOccurrences(of: "file://", with: ""),
+                    line: line + 1  // 0-indexed → 1-indexed
+                ))
+            }
+        }
+
+        return locations
+    }
+
+    /// レスポンス受信（簡易実装）
+    private func receiveResponse() async throws -> String {
+        // v0.5.2: 簡易実装（タイムアウト1秒）
+        try await Task.sleep(nanoseconds: 1_000_000_000)
+
+        let handle = outputPipe.fileHandleForReading
+        guard let data = try? handle.availableData,
+              !data.isEmpty,
+              let response = String(data: data, encoding: .utf8) else {
+            throw LSPError.communicationFailed
+        }
+
+        // Content-Lengthヘッダーをスキップ
+        if let jsonStart = response.range(of: "{") {
+            return String(response[jsonStart.lowerBound...])
+        }
+
+        return response
+    }
+
     /// LSP接続を切断
     func disconnect() {
         logger.info("Terminating LSP process...")
         process.terminate()
     }
+}
+
+/// LSP位置情報
+struct LSPLocation {
+    let filePath: String
+    let line: Int
 }
 
 /// LSPエラー
@@ -129,4 +214,5 @@ enum LSPError: Error {
     case initializeFailed(Error)
     case encodingFailed
     case communicationFailed
+    case responseTimeout
 }

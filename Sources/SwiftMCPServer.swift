@@ -60,13 +60,9 @@ struct SwiftMCPServer {
                 ThinkAboutAnalysisTool.toolDefinition
             ])
 
-            // v0.5.1: LSPツール（ビルド可能時のみ）
-            // 現在は未実装（v0.5.2で追加予定）
+            // v0.5.2: LSPツール（ビルド可能時のみ）
             if await lspState.isLSPAvailable() {
-                // v0.5.2で追加予定:
-                // tools.append(FindSymbolReferencesTool.toolDefinition)
-                // tools.append(GetSymbolInfoTool.toolDefinition)
-                // tools.append(FindImplementationTool.toolDefinition)
+                tools.append(FindSymbolReferencesTool.toolDefinition)
             }
 
             return ListTools.Result(tools: tools)
@@ -228,6 +224,14 @@ struct SwiftMCPServer {
 
             case ToolNames.readSymbol:
                 return try await ReadSymbolTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
+
+            // v0.5.2 新規ツール
+            case ToolNames.findSymbolReferences:
+                return try await FindSymbolReferencesTool.execute(
                     params: params,
                     projectMemory: projectMemory,
                     logger: logger
