@@ -25,11 +25,17 @@ struct SwiftMCPServer {
             )
         )
 
+        // v0.5.1: LSP状態管理
+        let lspState = LSPState(logger: logger)
+
         var projectMemory: ProjectMemory?
 
-        // ツールリスト
+        // ツールリスト（v0.5.1: 動的生成対応）
         await server.withMethodHandler(ListTools.self) { _ in
-            ListTools.Result(tools: [
+            var tools: [Tool] = []
+
+            // SwiftSyntaxツール（常に利用可能）
+            tools.append(contentsOf: [
                 // v0.5.0: 新しい構造のツール
                 InitializeProjectTool.toolDefinition,
                 FindFilesTool.toolDefinition,
@@ -38,9 +44,7 @@ struct SwiftMCPServer {
                 FindSymbolDefinitionTool.toolDefinition,
                 AddNoteTool.toolDefinition,
                 SearchNotesTool.toolDefinition,
-                GetProjectStatsTool.toolDefinition,
-                ReadFunctionBodyTool.toolDefinition,
-                ReadLinesTool.toolDefinition,
+                // v0.6.0で削除: GetProjectStats, ReadFunctionBody, ReadLines
                 ListPropertyWrappersTool.toolDefinition,
                 ListProtocolConformancesTool.toolDefinition,
                 ListExtensionsTool.toolDefinition,
@@ -51,11 +55,21 @@ struct SwiftMCPServer {
                 // v0.5.0 新規ツール
                 SetAnalysisModeTool.toolDefinition,
                 ReadSymbolTool.toolDefinition,
-                ListDirectoryTool.toolDefinition,
-                ReadFileTool.toolDefinition,
+                // v0.6.0で削除: ListDirectory, ReadFile
                 // v0.5.0 新規ツール
                 ThinkAboutAnalysisTool.toolDefinition
             ])
+
+            // v0.5.1: LSPツール（ビルド可能時のみ）
+            // 現在は未実装（v0.5.2で追加予定）
+            if await lspState.isLSPAvailable() {
+                // v0.5.2で追加予定:
+                // tools.append(FindSymbolReferencesTool.toolDefinition)
+                // tools.append(GetSymbolInfoTool.toolDefinition)
+                // tools.append(FindImplementationTool.toolDefinition)
+            }
+
+            return ListTools.Result(tools: tools)
         }
 
         // ツール実行
@@ -77,10 +91,23 @@ struct SwiftMCPServer {
                     throw MCPError.invalidParams("Project path does not exist or is not a directory")
                 }
 
+                // ProjectMemory初期化
                 projectMemory = try ProjectMemory(projectPath: projectPath)
 
+                // v0.5.1: LSP接続を試みる（バックグラウンド、非ブロッキング）
+                Task {
+                    let lspAvailable = await lspState.tryConnect(projectPath: projectPath)
+
+                    if lspAvailable {
+                        logger.info("✅ LSP available - Enhanced features ready")
+                    } else {
+                        logger.info("ℹ️ LSP unavailable - Using SwiftSyntax only")
+                    }
+                }
+
+                // 即座にレスポンス返却（LSP接続を待たない）
                 return CallTool.Result(content: [
-                    .text("✅ Project initialized: \(projectPath)\n\n\(projectMemory?.getStats() ?? "")")
+                    .text("✅ Project initialized: \(projectPath)\n\nℹ️ Checking LSP availability in background...\n\n\(projectMemory?.getStats() ?? "")")
                 ])
 
             case ToolNames.findFiles:
@@ -125,22 +152,10 @@ struct SwiftMCPServer {
                     logger: logger
                 )
 
-            case ToolNames.getProjectStats:
-                return try await GetProjectStatsTool.execute(
-                    params: params,
-                    projectMemory: projectMemory,
-                    logger: logger
-                )
+            // v0.6.0で削除: getProjectStats, readFunctionBody, readLines
 
-            case ToolNames.readFunctionBody:
-                return try await ReadFunctionBodyTool.execute(
-                    params: params,
-                    projectMemory: projectMemory,
-                    logger: logger
-                )
-
-            case ToolNames.readLines:
-                return try await ReadLinesTool.execute(
+            case ToolNames.listPropertyWrappers:
+                return try await ListPropertyWrappersTool.execute(
                     params: params,
                     projectMemory: projectMemory,
                     logger: logger
@@ -218,19 +233,7 @@ struct SwiftMCPServer {
                     logger: logger
                 )
 
-            case ToolNames.listDirectory:
-                return try await ListDirectoryTool.execute(
-                    params: params,
-                    projectMemory: projectMemory,
-                    logger: logger
-                )
-
-            case ToolNames.readFile:
-                return try await ReadFileTool.execute(
-                    params: params,
-                    projectMemory: projectMemory,
-                    logger: logger
-                )
+            // v0.6.0で削除: listDirectory, readFile
 
             default:
                 throw MCPError.invalidParams("Unknown tool: \(params.name)")

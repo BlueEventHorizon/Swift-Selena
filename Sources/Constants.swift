@@ -10,7 +10,7 @@ import Foundation
 /// アプリケーション全体の定数
 enum AppConstants {
     static let name = "Swift-Selena"
-    static let version = "0.5.0"
+    static let version = "0.5.1"
     static let loggerLabel = "swift-selena"
     static let storageDirectory = ".swift-selena"
 }
@@ -24,9 +24,7 @@ enum ToolNames {
     static let findSymbolDefinition = "find_symbol_definition"
     static let addNote = "add_note"
     static let searchNotes = "search_notes"
-    static let getProjectStats = "get_project_stats"
-    static let readFunctionBody = "read_function_body"
-    static let readLines = "read_lines"
+    // v0.6.0で削除: get_project_stats, read_function_body, read_lines（価値が低い、または代替可能）
     static let listPropertyWrappers = "list_property_wrappers"
     static let listProtocolConformances = "list_protocol_conformances"
     static let listExtensions = "list_extensions"
@@ -38,9 +36,8 @@ enum ToolNames {
     // v0.5.0 新規ツール
     static let setAnalysisMode = "set_analysis_mode"
     static let readSymbol = "read_symbol"
-    static let listDirectory = "list_directory"
-    static let readFile = "read_file"
-    static let thinkAboutAnalysis = "think_about_analysis"
+    static let thinkAboutAnalysis = "think_about_analysis"  // v0.6.2でPrompts移行予定
+    // v0.6.0で削除: list_directory, read_file（Claude標準機能で代替）
 }
 
 /// パラメータキーの定数
