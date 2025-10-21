@@ -75,9 +75,20 @@ enum FindSymbolReferencesTool: MCPTool {
         )
     }
 
+    // MCPToolプロトコル準拠用（使用されない）
     static func execute(
         params: CallTool.Parameters,
         projectMemory: ProjectMemory?,
+        logger: Logger
+    ) async throws -> CallTool.Result {
+        throw MCPError.invalidRequest("This tool requires LSP state. Use execute(params:projectMemory:lspState:logger:) instead.")
+    }
+
+    // LSPState付きの実際の実装
+    static func execute(
+        params: CallTool.Parameters,
+        projectMemory: ProjectMemory?,
+        lspState: LSPState,
         logger: Logger
     ) async throws -> CallTool.Result {
         // LSP利用可能性チェックは呼び出し側で実施済み
@@ -88,23 +99,40 @@ enum FindSymbolReferencesTool: MCPTool {
             errorMessage: ErrorMessages.missingFilePath
         )
         let line = ToolHelpers.getInt(from: params.arguments, key: ParameterKeys.line, defaultValue: 1)
-        let column = ToolHelpers.getInt(from: params.arguments, key: ParameterKeys.column, defaultValue: 0)
+        let column = ToolHelpers.getInt(from: params.arguments, key: ParameterKeys.column, defaultValue: 1)
 
-        // LSPClient取得（LSPState経由）
-        // 注: LSPStateはグローバルで保持されている必要がある
-        // この実装は後で統合時に調整
+        // LSPClient取得
+        guard let lspClient = await lspState.getClient() else {
+            throw MCPError.invalidRequest("""
+                ❌ LSP not available.
 
-        // 仮実装: エラー返却
-        throw MCPError.invalidRequest("""
-            ❌ This tool requires LSP integration.
+                This tool requires a buildable project with SourceKit-LSP.
 
-            LSP is currently being implemented. This tool will be available when:
-            - Project is buildable
-            - SourceKit-LSP is running
+                💡 Alternatives:
+                - Use 'find_type_usages' for type-level reference search (SwiftSyntax)
+                - Use 'search_code' for text-based search
+                """)
+        }
 
-            💡 Alternatives:
-            - Use 'find_type_usages' for type-level reference search (SwiftSyntax)
-            - Use 'search_code' for text-based search
-            """)
+        // LSP参照検索（0-indexed）
+        let locations = try await lspClient.findReferences(
+            filePath: filePath,
+            line: line - 1,  // 1-indexed → 0-indexed
+            column: column - 1
+        )
+
+        // 結果フォーマット
+        guard !locations.isEmpty else {
+            return CallTool.Result(content: [
+                .text("No references found for symbol at \(filePath):\(line):\(column)")
+            ])
+        }
+
+        var result = "Found \(locations.count) reference(s):\n\n"
+        for loc in locations {
+            result += "  \(loc.filePath):\(loc.line)\n"
+        }
+
+        return CallTool.Result(content: [.text(result)])
     }
 }

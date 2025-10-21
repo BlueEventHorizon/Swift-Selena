@@ -234,6 +234,7 @@ struct SwiftMCPServer {
                 return try await FindSymbolReferencesTool.execute(
                     params: params,
                     projectMemory: projectMemory,
+                    lspState: lspState,
                     logger: logger
                 )
 
