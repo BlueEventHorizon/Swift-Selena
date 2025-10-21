@@ -40,12 +40,14 @@ swift package clean
 ### コアコンポーネント
 
 1. **SwiftMCPServer.swift** (メインエントリポイント)
-   - コード解析用の10のツールを持つMCPサーバーを構成
-   - ProjectMemoryのライフサイクルを管理
+   - コード解析用のMCPサーバーを構成（17-18ツール）
+   - ProjectMemoryとLSPStateのライフサイクルを管理
    - 非同期CallToolハンドラを介してツール実行を処理
    - 通信にstdioトランスポートを使用
+   - 動的ツールリスト生成（LSP利用可能時にLSPツール追加）
    - **FileSearcher**: ファイルシステムベースの検索（ワイルドカード、grep的検索）
    - **SwiftSyntaxAnalyzer**: ビルド不要のAST解析によるシンボル抽出
+   - **LSPState/LSPClient**: ビルド可能時のLSP統合（v0.5.1+）
 
 2. **ProjectMemory.swift** (永続ストレージ)
    - `~/.swift-selena/clients/{clientId}/projects/{projectName}-{hash}/memory.json`にプロジェクトメタデータを保存
@@ -79,6 +81,12 @@ swift package clean
 - **位置情報**: SourceLocationConverterで行番号を取得
 - **利点**: ビルドエラーがあっても構文が正しければ動作
 
+**LSPState/LSPClient** (型情報ベース解析、v0.5.1+):
+- **LSP接続管理**: SourceKit-LSPプロセスの起動・初期化・切断
+- **スレッドセーフ**: Actorで並行アクセスを安全に管理
+- **グレースフルデグレード**: ビルド不可の場合はSwiftSyntaxのみで動作
+- **利点**: 型情報を使った正確な参照検索、ビルド可能なプロジェクトで高度な機能を提供
+
 ### メモリシステム
 
 ProjectMemoryは3つのインデックスを保持：
@@ -109,8 +117,13 @@ ProjectMemoryは3つのインデックスを保持：
 - `find_type_usages`: 型の使用箇所を検出（変数宣言、関数パラメータ、戻り値型）
 
 ### コンテキスト効率的な読み取り
-- `read_function_body`: 単一関数の実装を抽出（シンプルなブレースカウント）
-- `read_lines`: 特定の行範囲を読み取り
+- `read_symbol`: シンボル単位で読み取り（関数、クラス、構造体等）
+
+### LSP統合機能（v0.5.2+、ビルド可能時のみ）
+- `find_symbol_references`: シンボル参照検索（型情報ベース、LSP使用）
+  - ファイルパス + 行 + 列で位置指定
+  - textDocument/referencesリクエスト使用
+  - ビルド不可の場合は利用不可（代替: find_type_usages, search_code）
 
 ### メモリ/ノート
 - `add_note`: 観察内容を永続化

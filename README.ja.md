@@ -13,6 +13,7 @@
 ## 主な特徴
 
 - **ビルド不要**: SwiftSyntaxベースの静的解析により、ビルドエラーがあっても動作
+- **LSP統合**: ビルド可能時はSourceKit-LSPで高度な機能を提供（v0.5.1+）
 - **SwiftUI対応**: Property Wrapper（@State, @Binding等）を自動検出
 - **高速検索**: ファイルシステムベースの検索で大規模プロジェクトでも高速
 - **プロジェクト記憶**: 解析結果とメモを永続化し、セッション間で共有
@@ -39,13 +40,21 @@
 - **`find_type_usages`** - 型の使用箇所を検出（変数宣言、関数パラメータ、戻り値型）
 
 ### 効率的な読み取り
-- **`read_function_body`** - 特定の関数実装のみを抽出
-- **`read_lines`** - ファイルの指定行範囲を読み取り
+- **`read_symbol`** - シンボル単位で読み取り（関数、クラス、構造体等）
+
+### LSP統合機能（v0.5.2+、ビルド可能時のみ）
+- **`find_symbol_references`** - シンボル参照検索（型情報ベース、LSP使用）
+  - 型情報を使った正確な参照検索
+  - ビルド可能なプロジェクトでのみ利用可能
+  - LSP利用不可時: find_type_usages または search_code を代替として使用
+
+### 分析モード
+- **`set_analysis_mode`** - 分析モード設定（SwiftUI/Architecture/Testing/Refactoring/General）
+- **`think_about_analysis`** - 分析進捗の振り返り
 
 ### プロジェクトメモ
 - **`add_note`** - 設計決定や重要事項をメモとして保存
 - **`search_notes`** - 保存したメモを検索
-- **`get_project_stats`** - プロジェクト統計とキャッシュ情報を表示
 
 ## インストール
 

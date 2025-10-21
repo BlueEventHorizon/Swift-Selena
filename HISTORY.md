@@ -4,6 +4,45 @@ Swift-Selenaのリリース履歴
 
 ---
 
+## v0.5.2 - 2025/10/21
+
+### LSP機能実装
+
+**新規ツール:**
+- ✅ **find_symbol_references** - シンボル参照検索（LSP版）
+  - 型情報ベースの正確な参照検索
+  - textDocument/referencesリクエスト使用
+  - ビルド可能時のみ利用可能（動的ツールリスト）
+  - LSP利用不可時: find_type_usages, search_code を代替として案内
+
+**技術実装:**
+- FindSymbolReferencesTool.execute()にlspStateパラメータ追加
+- SwiftMCPServerからlspStateを渡す実装
+- MCPToolプロトコル準拠のためのラッパー実装
+- 0-indexed ↔ 1-indexed インデックス変換
+
+**ツール総数:**
+- ビルド不可: 17個（SwiftSyntaxのみ）
+- ビルド可能: 18個（+find_symbol_references）
+
+**設計判断:**
+- list_symbols強化、get_type_hierarchy強化はv0.5.3に延期
+- 理由: LSP documentSymbol統合に追加実装時間が必要
+- v0.5.2は基本的なLSP機能（参照検索）に集中
+
+**削除した機能:**
+- ❌ get_tool_usage_stats（v0.8.0に延期）
+  - 後方互換性の問題
+  - 設計見直しが必要（ProjectMemory外で管理）
+
+**コミット:**
+- 7cfd60c: complete FindSymbolReferencesTool
+- cfdd1eb: add: FindSymbolReferencesTool
+
+**詳細**: docs/tool_design/PLAN.md v0.5.2セクション参照
+
+---
+
 ## v0.5.1 - 2025/10/21
 
 ### LSP基盤整備
