@@ -85,6 +85,38 @@ pwd
 
 The build artifact is generated at `.build/release/Swift-Selena`.
 
+## Debugging & Logging
+
+### Log File Monitoring (v0.5.3+)
+
+Swift-Selena outputs logs to a file for debugging and troubleshooting:
+
+**Log file location:**
+```
+~/.swift-selena/logs/server.log
+```
+
+**Monitor logs in real-time:**
+```bash
+tail -f ~/.swift-selena/logs/server.log
+```
+
+**What you can see:**
+- Server startup messages
+- Tool execution logs
+- LSP connection status (success/failure)
+- Error messages and diagnostics
+
+**Example log output:**
+```
+[17:29:24] ℹ️ [info] Starting Swift MCP Server...
+[17:29:50] ℹ️ [info] Tool called: initialize_project
+[17:29:50] ℹ️ [info] Attempting LSP connection...
+[17:29:51] ℹ️ [info] ✅ LSP connected successfully
+```
+
+**Tip:** Keep `tail -f` running in a separate terminal while using Swift-Selena for real-time debugging.
+
 ## Setup
 
 ### Easy Setup (Recommended)

@@ -7,15 +7,29 @@ import SwiftParser
 @main
 struct SwiftMCPServer {
     static func main() async throws {
+        // v0.5.3: ファイルログ設定
+        let logFilePath = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".swift-selena/logs/server.log")
+            .path
+
         // ロギング設定
         LoggingSystem.bootstrap { label in
-            var handler = StreamLogHandler.standardError(label: label)
-            handler.logLevel = .info
-            return handler
+            if let handler = try? FileLogHandler(logFilePath: logFilePath) {
+                var h = handler
+                h.logLevel = .info
+                return h
+            } else {
+                // フォールバック: stderr
+                var handler = StreamLogHandler.standardError(label: label)
+                handler.logLevel = .info
+                return handler
+            }
         }
 
         let logger = Logger(label: AppConstants.loggerLabel)
-        logger.info("Starting Swift MCP Server (Filesystem + SwiftSyntax)...")
+        logger.info("Starting Swift MCP Server (Filesystem + SwiftSyntax + LSP)...")
+        logger.info("Log file: \(logFilePath)")
+        logger.info("Monitor with: tail -f \(logFilePath)")
 
         let server = Server(
             name: AppConstants.name,
@@ -32,6 +46,7 @@ struct SwiftMCPServer {
 
         // ツールリスト（v0.5.1: 動的生成対応）
         await server.withMethodHandler(ListTools.self) { _ in
+            logger.info("ListTools handler called")
             var tools: [Tool] = []
 
             // SwiftSyntaxツール（常に利用可能）
@@ -60,10 +75,12 @@ struct SwiftMCPServer {
                 ThinkAboutAnalysisTool.toolDefinition
             ])
 
-            // v0.5.2: LSPツール（ビルド可能時のみ）
-            if await lspState.isLSPAvailable() {
-                tools.append(FindSymbolReferencesTool.toolDefinition)
-            }
+            // v0.5.2: LSPツール（常にツールリストに追加、実行時にLSP利用可能性をチェック）
+            tools.append(FindSymbolReferencesTool.toolDefinition)
+
+            let lspAvailable = await lspState.isLSPAvailable()
+            logger.info("LSP status: \(lspAvailable ? "available" : "not available")")
+            logger.info("Total tools: \(tools.count)")
 
             return ListTools.Result(tools: tools)
         }

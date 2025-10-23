@@ -85,6 +85,38 @@ pwd
 
 ビルド成果物は `.build/release/Swift-Selena` に生成されます。
 
+## デバッグ・ログ機能
+
+### ログファイル監視（v0.5.3+）
+
+Swift-Selenaはデバッグとトラブルシューティングのためにログファイルに出力します：
+
+**ログファイル位置:**
+```
+~/.swift-selena/logs/server.log
+```
+
+**リアルタイムでログを監視:**
+```bash
+tail -f ~/.swift-selena/logs/server.log
+```
+
+**確認できる内容:**
+- サーバー起動メッセージ
+- ツール実行ログ
+- LSP接続状態（成功/失敗）
+- エラーメッセージと診断情報
+
+**ログ出力例:**
+```
+[17:29:24] ℹ️ [info] Starting Swift MCP Server...
+[17:29:50] ℹ️ [info] Tool called: initialize_project
+[17:29:50] ℹ️ [info] Attempting LSP connection...
+[17:29:51] ℹ️ [info] ✅ LSP connected successfully
+```
+
+**ヒント:** Swift-Selena使用中は、別のターミナルで`tail -f`を実行し続けておくと、リアルタイムデバッグが可能です。
+
 ## セットアップ
 
 ### 簡単セットアップ（推奨）
