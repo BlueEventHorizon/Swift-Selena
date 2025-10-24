@@ -44,6 +44,18 @@ struct SwiftMCPServer {
 
         var projectMemory: ProjectMemory?
 
+        #if DEBUG
+        // v0.5.3: デバッグランナー起動（5秒後に自動実行）
+        Task.detached {
+            await DebugRunner.run(
+                delay: 5.0,
+                lspState: lspState,
+                logger: logger
+            )
+        }
+        logger.info("🔧 DebugRunner enabled - automatic tests will start in 5 seconds")
+        #endif
+
         // ツールリスト（v0.5.1: 動的生成対応）
         await server.withMethodHandler(ListTools.self) { _ in
             logger.info("ListTools handler called")

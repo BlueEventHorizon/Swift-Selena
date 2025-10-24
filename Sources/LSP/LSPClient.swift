@@ -55,6 +55,9 @@ class LSPClient {
         self.outputPipe = Pipe()
         self.errorPipe = Pipe()
 
+        // v0.5.3: SIGPIPEを無視（パイプ書き込み時のクラッシュ防止）
+        signal(SIGPIPE, SIG_IGN)
+
         // SourceKit-LSPプロセスを起動
         self.process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/sourcekit-lsp")
@@ -99,21 +102,45 @@ class LSPClient {
     private func sendInitialize() async throws {
         let processId = ProcessInfo.processInfo.processIdentifier
 
-        let request = """
-        Content-Length: 200\r
-        \r
+        // initializeリクエスト
+        let jsonRequest = """
         {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"processId":\(processId),"rootUri":"file://\(projectPath)","capabilities":{}}}
         """
+
+        let contentLength = jsonRequest.utf8.count
+        let request = "Content-Length: \(contentLength)\r\n\r\n\(jsonRequest)"
 
         guard let data = request.data(using: .utf8) else {
             throw LSPError.encodingFailed
         }
 
-        inputPipe.fileHandleForWriting.write(data)
+        // v0.5.3: SIGPIPE対策
+        do {
+            try inputPipe.fileHandleForWriting.write(contentsOf: data)
+        } catch {
+            logger.error("Failed to write initialize request: \(error)")
+            throw LSPError.communicationFailed
+        }
 
-        // v0.5.1: レスポンス受信は簡易実装（成功前提）
-        // v0.5.2: レスポンス解析を完全実装
-        try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+        // v0.5.3: Initializeレスポンス待機
+        try await Task.sleep(nanoseconds: 1_000_000_000) // 1秒待機
+
+        // v0.5.3: initialized通知を送信（LSPプロトコル必須）
+        let initializedNotification = """
+        {"jsonrpc":"2.0","method":"initialized","params":{}}
+        """
+        let initializedLength = initializedNotification.utf8.count
+        let initializedMessage = "Content-Length: \(initializedLength)\r\n\r\n\(initializedNotification)"
+
+        if let initializedData = initializedMessage.data(using: .utf8) {
+            do {
+                try inputPipe.fileHandleForWriting.write(contentsOf: initializedData)
+                logger.info("LSP initialized notification sent")
+            } catch {
+                logger.error("Failed to send initialized notification: \(error)")
+                // 失敗してもエラーにしない（継続を試みる）
+            }
+        }
     }
 
     // MARK: - v0.5.2 LSP API実装
@@ -143,9 +170,21 @@ class LSPClient {
             throw LSPError.encodingFailed
         }
 
-        // リクエスト送信
-        inputPipe.fileHandleForWriting.write(data)
-        logger.debug("Sent textDocument/references request")
+        // リクエスト送信（v0.5.3: SIGPIPE対策）
+        // プロセス状態確認
+        if !process.isRunning {
+            logger.error("LSP process is not running!")
+            throw LSPError.processTerminated
+        }
+
+        do {
+            try inputPipe.fileHandleForWriting.write(contentsOf: data)
+            logger.debug("Sent textDocument/references request")
+        } catch {
+            logger.error("Failed to write to LSP pipe: \(error)")
+            logger.error("LSP process running: \(process.isRunning)")
+            throw LSPError.communicationFailed
+        }
 
         // レスポンス受信（簡易実装）
         // v0.5.2: 基本的なレスポンス解析
@@ -175,24 +214,47 @@ class LSPClient {
         return locations
     }
 
-    /// レスポンス受信（簡易実装）
+    /// レスポンス受信（Content-Length対応版）
     private func receiveResponse() async throws -> String {
-        // v0.5.2: 簡易実装（タイムアウト1秒）
+        // v0.5.3: 正しいContent-Length処理
         try await Task.sleep(nanoseconds: 1_000_000_000)
 
         let handle = outputPipe.fileHandleForReading
         guard let data = try? handle.availableData,
-              !data.isEmpty,
-              let response = String(data: data, encoding: .utf8) else {
+              !data.isEmpty else {
             throw LSPError.communicationFailed
         }
 
-        // Content-Lengthヘッダーをスキップ
-        if let jsonStart = response.range(of: "{") {
-            return String(response[jsonStart.lowerBound...])
+        guard let fullResponse = String(data: data, encoding: .utf8) else {
+            throw LSPError.communicationFailed
         }
 
-        return response
+        // Content-Lengthヘッダーをパース
+        let lines = fullResponse.split(separator: "\r\n", maxSplits: 10, omittingEmptySubsequences: false)
+        var contentLength: Int?
+
+        for line in lines {
+            if line.hasPrefix("Content-Length: ") {
+                let lengthStr = line.replacingOccurrences(of: "Content-Length: ", with: "")
+                contentLength = Int(lengthStr.trimmingCharacters(in: .whitespaces))
+                break
+            }
+        }
+
+        // JSON部分を抽出（\r\n\r\nの後）
+        if let separatorRange = fullResponse.range(of: "\r\n\r\n") {
+            let jsonPart = String(fullResponse[separatorRange.upperBound...])
+
+            // Content-Lengthがあれば、その長さだけ取得
+            if let length = contentLength, jsonPart.count >= length {
+                let endIndex = jsonPart.index(jsonPart.startIndex, offsetBy: length)
+                return String(jsonPart[..<endIndex])
+            }
+
+            return jsonPart
+        }
+
+        throw LSPError.communicationFailed
     }
 
     /// LSP接続を切断
@@ -215,4 +277,5 @@ enum LSPError: Error {
     case encodingFailed
     case communicationFailed
     case responseTimeout
+    case processTerminated  // v0.5.3
 }

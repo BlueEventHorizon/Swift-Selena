@@ -115,11 +115,17 @@ enum FindSymbolReferencesTool: MCPTool {
         }
 
         // LSP参照検索（0-indexed）
-        let locations = try await lspClient.findReferences(
-            filePath: filePath,
-            line: line - 1,  // 1-indexed → 0-indexed
-            column: column - 1
-        )
+        let locations: [LSPLocation]
+        do {
+            locations = try await lspClient.findReferences(
+                filePath: filePath,
+                line: line - 1,  // 1-indexed → 0-indexed
+                column: column - 1
+            )
+        } catch {
+            logger.error("LSP findReferences failed: \(error)")
+            throw MCPError.internalError("LSP request failed: \(error.localizedDescription)")
+        }
 
         // 結果フォーマット
         guard !locations.isEmpty else {
