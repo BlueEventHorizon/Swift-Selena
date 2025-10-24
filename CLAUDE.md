@@ -137,8 +137,12 @@ ProjectMemoryは3つのインデックスを保持：
   - MCP Swift SDK (0.10.2 exact)
   - SwiftSyntax (602.0.0 exact) - SwiftParser含む
 - **ビルド不要**: SourceKit-LSPに依存しないため、実装中のコードでも動作
+- **LSP統合**: ビルド可能時はSourceKit-LSPで高度な機能提供（v0.5.1+）
 - **エラーハンドリング**: ツールはMCPError.invalidParamsまたはMCPError.invalidRequestをthrow
-- **ロギング**: .infoレベルでswift-logを使用してstderrに出力
+- **ロギング**: FileLogHandlerで~/.swift-selena/logs/server.logに出力（v0.5.3+）
+  - 監視: `tail -f ~/.swift-selena/logs/server.log`
+  - デバッグレベル出力、LSPレスポンス詳細表示
+- **デバッグ**: DebugRunner（#if DEBUG、Xcodeデバッガ対応、v0.5.3+）
 - **サーバーライフタイム**: start後、1000秒のスリープループで無期限に実行
 
 ## 複数MCPクライアント対応

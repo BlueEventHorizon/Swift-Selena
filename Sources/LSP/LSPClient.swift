@@ -122,8 +122,17 @@ class LSPClient {
             throw LSPError.communicationFailed
         }
 
-        // v0.5.3: Initializeレスポンス待機
+        // v0.5.3: Initializeレスポンス待機と読み捨て
         try await Task.sleep(nanoseconds: 1_000_000_000) // 1秒待機
+
+        // Initializeレスポンスを読み捨てる（バッファをクリア）
+        do {
+            let initResponse = try await receiveResponse()
+            logger.debug("Initialize response received (discarded): \(initResponse.prefix(100))...")
+        } catch {
+            logger.warning("Failed to read initialize response: \(error)")
+            // エラーでも継続（レスポンスがない可能性）
+        }
 
         // v0.5.3: initialized通知を送信（LSPプロトコル必須）
         let initializedNotification = """
@@ -146,6 +155,46 @@ class LSPClient {
     // MARK: - v0.5.2 LSP API実装
 
     private var messageId = 2  // Initialize=1を使ったので2から
+    private var openedFiles = Set<String>()  // v0.5.3: 開いたファイルを記録
+
+    /// textDocument/didOpen通知を送信
+    ///
+    /// - Parameter filePath: ファイルパス
+    private func sendDidOpen(filePath: String) async throws {
+        // 既に開いている場合はスキップ
+        if openedFiles.contains(filePath) {
+            return
+        }
+
+        // ファイル内容を読み取る
+        guard let fileContent = try? String(contentsOfFile: filePath, encoding: .utf8) else {
+            logger.warning("Cannot read file for didOpen: \(filePath)")
+            return
+        }
+
+        let didOpenNotification = """
+        {"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file://\(filePath)","languageId":"swift","version":1,"text":"\(fileContent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n"))"}}}
+        """
+
+        let contentLength = didOpenNotification.utf8.count
+        let message = "Content-Length: \(contentLength)\r\n\r\n\(didOpenNotification)"
+
+        guard let data = message.data(using: .utf8) else {
+            throw LSPError.encodingFailed
+        }
+
+        do {
+            try inputPipe.fileHandleForWriting.write(contentsOf: data)
+            openedFiles.insert(filePath)
+            logger.debug("Sent textDocument/didOpen for \(filePath)")
+        } catch {
+            logger.error("Failed to send didOpen: \(error)")
+            throw LSPError.communicationFailed
+        }
+
+        // didOpenのレスポンスはない（通知なので）、少し待機
+        try await Task.sleep(nanoseconds: 100_000_000)  // 0.1秒
+    }
 
     /// 参照箇所を検索（textDocument/references）
     ///
@@ -155,6 +204,9 @@ class LSPClient {
     ///   - column: 列番号（0-indexed）
     /// - Returns: 参照箇所のリスト
     func findReferences(filePath: String, line: Int, column: Int) async throws -> [LSPLocation] {
+        // v0.5.3: textDocument/didOpenを送信（LSPにファイルを通知）
+        try await sendDidOpen(filePath: filePath)
+
         messageId += 1
         let id = messageId
 
@@ -190,11 +242,33 @@ class LSPClient {
         // v0.5.2: 基本的なレスポンス解析
         let response = try await receiveResponse()
 
+        // v0.5.3: デバッグ用：レスポンス全体をログ出力
+        logger.info("📋 LSP Raw Response (length=\(response.count)):")
+        logger.info("---START---")
+        logger.info("\(response)")
+        logger.info("---END---")
+
         // JSONパース
         guard let jsonData = response.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-              let result = json["result"] as? [[String: Any]] else {
-            return []  // 参照なし
+              let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
+            logger.warning("❌ Failed to parse LSP response as JSON")
+            logger.warning("Response bytes: \(response.utf8.map { String(format: "%02X", $0) }.joined(separator: " "))")
+            return []
+        }
+
+        logger.info("✅ Parsed JSON successfully")
+        logger.info("JSON keys: \(json.keys.joined(separator: ", "))")
+
+        // エラーチェック
+        if let error = json["error"] as? [String: Any] {
+            logger.error("LSP returned error: \(error)")
+            return []
+        }
+
+        guard let result = json["result"] as? [[String: Any]] else {
+            let resultType = type(of: json["result"])
+            logger.info("LSP result type: \(resultType), value: \(json["result"] ?? "missing")")
+            return []  // 参照なし（result: null は正常）
         }
 
         // Location解析

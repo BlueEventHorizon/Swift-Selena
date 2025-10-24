@@ -58,8 +58,8 @@ actor DebugRunner {
         logger.info("🔧 DebugRunner: Starting Automatic Test Sequence")
         logger.info("🔧 DebugRunner: ========================================")
 
-        // テスト対象プロジェクト（実験台）
-        let testProjectPath = "/Users/k_terada/data/dev/_WORKING_/apps/CCMonitor"
+        // テスト対象プロジェクト（Swift-Selena自身でテスト）
+        let testProjectPath = "/Users/k_terada/data/dev/_WORKING_/apps/Swift-Selena"
 
         do {
             // ProjectMemory初期化
@@ -109,21 +109,23 @@ actor DebugRunner {
 
     /// find_symbol_references連続実行テスト
     private func testFindSymbolReferencesSequence(projectMemory: ProjectMemory) async throws {
-        let testCases: [(line: Int, column: Int)] = [
-            (14, 7),   // AppDelegate
-            (19, 10),  // applicationDidFinishLaunching
-            (24, 10),  // applicationWillTerminate
-            (28, 10),  // applicationShouldTerminateAfterLastWindowClosed
-            (34, 10)   // configure
+        // Swift-Selena自身のファイルでテスト（参照が確実にあるシンボル）
+        let testCases: [(file: String, line: Int, column: Int, description: String)] = [
+            ("Sources/LSP/LSPClient.swift", 30, 7, "LSPClient class"),
+            ("Sources/LSP/LSPState.swift", 34, 7, "LSPState actor"),
+            ("Sources/ProjectMemory.swift", 12, 7, "ProjectMemory class"),
+            ("Sources/Tools/LSP/FindSymbolReferencesTool.swift", 48, 6, "FindSymbolReferencesTool"),
+            ("Sources/SwiftMCPServer.swift", 8, 8, "SwiftMCPServer struct")
         ]
 
         for (index, testCase) in testCases.enumerated() {
             let round = index + 1
-            logger.info("🔧 Test \(round)/\(testCases.count): line=\(testCase.line), column=\(testCase.column)")
+            logger.info("🔧 Test \(round)/\(testCases.count): \(testCase.description) at \(testCase.file):\(testCase.line):\(testCase.column)")
 
             try await testFindSymbolReferences(
                 projectMemory: projectMemory,
                 round: round,
+                file: testCase.file,
                 line: testCase.line,
                 column: testCase.column
             )
@@ -137,11 +139,15 @@ actor DebugRunner {
     private func testFindSymbolReferences(
         projectMemory: ProjectMemory,
         round: Int,
+        file: String,
         line: Int,
         column: Int
     ) async throws {
+        // フルパス作成
+        let fullPath = "/Users/k_terada/data/dev/_WORKING_/apps/Swift-Selena/\(file)"
+
         // MCPのValue型で引数を作成
-        let filePath: MCP.Value = .string("/Users/k_terada/data/dev/_WORKING_/apps/CCMonitor/App/AppDelegate.swift")
+        let filePath: MCP.Value = .string(fullPath)
         let lineValue: MCP.Value = .init(integerLiteral: line)
         let columnValue: MCP.Value = .init(integerLiteral: column)
 

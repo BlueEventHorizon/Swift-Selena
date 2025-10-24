@@ -25,7 +25,7 @@ struct FileLogHandler: LogHandler {
     private let logFilePath: String
 
     var metadata = Logger.Metadata()
-    var logLevel: Logger.Level = .info
+    var logLevel: Logger.Level = .debug  // v0.5.3: デバッグレベルに変更
 
     init(logFilePath: String) throws {
         self.logFilePath = logFilePath

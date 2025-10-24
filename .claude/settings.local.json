@@ -35,7 +35,8 @@
       "mcp__swift-selena__think_about_analysis",
       "mcp__swift-selena__list_directory",
       "mcp__swift-selena__read_file",
-      "mcp__swift-selena__read_symbol"
+      "mcp__swift-selena__read_symbol",
+      "mcp__swift-selena__find_symbol_references"
     ],
     "deny": [],
     "ask": []

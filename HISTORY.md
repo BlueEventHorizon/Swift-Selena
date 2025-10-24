@@ -4,6 +4,45 @@ Swift-Selenaのリリース履歴
 
 ---
 
+## v0.5.3 - 2025/10/24
+
+### LSP安定化とデバッグ機能
+
+**LSP修正（find_symbol_references完全動作）:**
+- ✅ **initialized通知追加** - LSPプロトコル準拠
+- ✅ **textDocument/didOpen実装** - ファイルをLSPに通知
+- ✅ **initializeレスポンス読み捨て** - バッファクリア
+- ✅ **SIGPIPE対策** - signal(SIGPIPE, SIG_IGN)
+- ✅ **Content-Length計算修正** - 実際のJSON長を計算
+- ✅ **エラーハンドリング強化** - プロセス状態チェック、try-catch
+
+**デバッグ機能:**
+- ✅ **FileLogHandler** - ファイルログ出力（~/.swift-selena/logs/server.log）
+- ✅ **DebugRunner** - プロセス内自動テストランナー（#if DEBUG、Xcodeデバッガ対応）
+- ✅ **LSPState診断機能** - getStatus()メソッド追加
+
+**検証結果:**
+- find_symbol_references: 5回連続実行でクラッシュなし
+- LSPStateの参照: 3件検出成功
+- ProjectMemoryの参照: 34件検出成功
+- FindSymbolReferencesTool: 3件検出成功
+
+**技術詳細:**
+- LSPプロトコル完全準拠（initialize → initialized → didOpen → requests）
+- 開いたファイルをキャッシュ（openedFiles）
+- publishDiagnostics通知を正しく処理
+- レスポンス解析の詳細ログ出力
+
+**ツール総数:** 18個（変更なし、安定性向上）
+
+**ドキュメント:**
+- README.md/README.ja.md: ログ監視方法を追記
+- docs/tool_design/DES-008: DebugRunner設計書
+
+**詳細**: docs/tool_design/DES-008_DebugRunner_Design.md参照
+
+---
+
 ## v0.5.2 - 2025/10/21
 
 ### LSP機能実装
