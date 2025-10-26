@@ -40,7 +40,8 @@
       "Bash(for f in DES-004_HISTORY.md DES-004_swift_toc DES-005_code DES-005_HISTORY DES-006_code DES-007_lsp DES-008_DebugRunner DES-008_tool DES-009_list)",
       "Bash(do head -15 \"/Users/k_terada/data/dev/_WORKING_/apps/Swift-Selena/docs/tool_design/$f\"*.md)",
       "Bash(done)",
-      "Read(//Users/k_terada/.swift-selena/logs/**)"
+      "Read(//Users/k_terada/.swift-selena/logs/**)",
+      "Read(//Users/k_terada/data/dev/moons/product/ContactB プロジェクト/ContactB/**)"
     ],
     "deny": [],
     "ask": []

@@ -347,27 +347,39 @@ class LSPClient {
             return []
         }
 
-        // DocumentSymbol解析
+        // DocumentSymbol解析（階層構造を再帰的に展開）
         var symbols: [LSPDocumentSymbol] = []
         for symbol in result {
-            if let name = symbol["name"] as? String,
-               let kind = symbol["kind"] as? Int,
-               let range = symbol["range"] as? [String: Any],
-               let start = range["start"] as? [String: Any],
-               let line = start["line"] as? Int {
-
-                let detail = symbol["detail"] as? String
-
-                symbols.append(LSPDocumentSymbol(
-                    name: name,
-                    kind: kind,
-                    detail: detail,
-                    line: line + 1  // 0-indexed → 1-indexed
-                ))
-            }
+            parseDocumentSymbol(symbol, into: &symbols)
         }
 
         return symbols
+    }
+
+    /// DocumentSymbolを再帰的に解析（階層構造対応）
+    private func parseDocumentSymbol(_ symbol: [String: Any], into symbols: inout [LSPDocumentSymbol]) {
+        if let name = symbol["name"] as? String,
+           let kind = symbol["kind"] as? Int,
+           let range = symbol["range"] as? [String: Any],
+           let start = range["start"] as? [String: Any],
+           let line = start["line"] as? Int {
+
+            let detail = symbol["detail"] as? String
+
+            symbols.append(LSPDocumentSymbol(
+                name: name,
+                kind: kind,
+                detail: detail,
+                line: line + 1  // 0-indexed → 1-indexed
+            ))
+
+            // 子要素を再帰的に処理
+            if let children = symbol["children"] as? [[String: Any]] {
+                for child in children {
+                    parseDocumentSymbol(child, into: &symbols)
+                }
+            }
+        }
     }
 
     /// 型階層を取得（textDocument/prepareTypeHierarchy）
