@@ -288,6 +288,166 @@ class LSPClient {
         return locations
     }
 
+    /// ドキュメントシンボルを取得（textDocument/documentSymbol）
+    ///
+    /// - Parameter filePath: ファイルパス
+    /// - Returns: ドキュメントシンボルのリスト
+    func documentSymbol(filePath: String) async throws -> [LSPDocumentSymbol] {
+        // textDocument/didOpenを送信
+        try await sendDidOpen(filePath: filePath)
+
+        messageId += 1
+        let id = messageId
+
+        // textDocument/documentSymbolリクエスト
+        let request = """
+        {"jsonrpc":"2.0","id":\(id),"method":"textDocument/documentSymbol","params":{"textDocument":{"uri":"file://\(filePath)"}}}
+        """
+
+        let contentLength = request.utf8.count
+        let message = "Content-Length: \(contentLength)\r\n\r\n\(request)"
+
+        guard let data = message.data(using: .utf8) else {
+            throw LSPError.encodingFailed
+        }
+
+        // プロセス状態確認
+        if !process.isRunning {
+            logger.error("LSP process is not running!")
+            throw LSPError.processTerminated
+        }
+
+        do {
+            try inputPipe.fileHandleForWriting.write(contentsOf: data)
+            logger.debug("Sent textDocument/documentSymbol request")
+        } catch {
+            logger.error("Failed to write to LSP pipe: \(error)")
+            throw LSPError.communicationFailed
+        }
+
+        // レスポンス受信
+        let response = try await receiveResponse()
+        logger.info("📋 LSP documentSymbol response (length=\(response.count))")
+
+        // JSONパース
+        guard let jsonData = response.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
+            logger.warning("Failed to parse LSP documentSymbol response as JSON")
+            return []
+        }
+
+        // エラーチェック
+        if let error = json["error"] as? [String: Any] {
+            logger.error("LSP returned error: \(error)")
+            return []
+        }
+
+        guard let result = json["result"] as? [[String: Any]] else {
+            logger.info("LSP documentSymbol result is empty or invalid")
+            return []
+        }
+
+        // DocumentSymbol解析
+        var symbols: [LSPDocumentSymbol] = []
+        for symbol in result {
+            if let name = symbol["name"] as? String,
+               let kind = symbol["kind"] as? Int,
+               let range = symbol["range"] as? [String: Any],
+               let start = range["start"] as? [String: Any],
+               let line = start["line"] as? Int {
+
+                let detail = symbol["detail"] as? String
+
+                symbols.append(LSPDocumentSymbol(
+                    name: name,
+                    kind: kind,
+                    detail: detail,
+                    line: line + 1  // 0-indexed → 1-indexed
+                ))
+            }
+        }
+
+        return symbols
+    }
+
+    /// 型階層を取得（textDocument/prepareTypeHierarchy）
+    ///
+    /// - Parameters:
+    ///   - filePath: ファイルパス
+    ///   - line: 行番号（0-indexed）
+    ///   - column: 列番号（0-indexed）
+    /// - Returns: 型階層情報（最初の1件のみ）
+    func typeHierarchy(filePath: String, line: Int, column: Int) async throws -> LSPTypeHierarchy? {
+        // textDocument/didOpenを送信
+        try await sendDidOpen(filePath: filePath)
+
+        messageId += 1
+        let id = messageId
+
+        // textDocument/prepareTypeHierarchyリクエスト
+        let request = """
+        {"jsonrpc":"2.0","id":\(id),"method":"textDocument/prepareTypeHierarchy","params":{"textDocument":{"uri":"file://\(filePath)"},"position":{"line":\(line),"character":\(column)}}}
+        """
+
+        let contentLength = request.utf8.count
+        let message = "Content-Length: \(contentLength)\r\n\r\n\(request)"
+
+        guard let data = message.data(using: .utf8) else {
+            throw LSPError.encodingFailed
+        }
+
+        // プロセス状態確認
+        if !process.isRunning {
+            logger.error("LSP process is not running!")
+            throw LSPError.processTerminated
+        }
+
+        do {
+            try inputPipe.fileHandleForWriting.write(contentsOf: data)
+            logger.debug("Sent textDocument/prepareTypeHierarchy request")
+        } catch {
+            logger.error("Failed to write to LSP pipe: \(error)")
+            throw LSPError.communicationFailed
+        }
+
+        // レスポンス受信
+        let response = try await receiveResponse()
+        logger.info("📋 LSP typeHierarchy response (length=\(response.count))")
+
+        // JSONパース
+        guard let jsonData = response.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
+            logger.warning("Failed to parse LSP typeHierarchy response as JSON")
+            return nil
+        }
+
+        // エラーチェック
+        if let error = json["error"] as? [String: Any] {
+            logger.error("LSP returned error: \(error)")
+            return nil
+        }
+
+        guard let result = json["result"] as? [[String: Any]],
+              let first = result.first else {
+            logger.info("LSP typeHierarchy result is empty")
+            return nil
+        }
+
+        // TypeHierarchy解析
+        if let name = first["name"] as? String,
+           let kind = first["kind"] as? Int {
+            let detail = first["detail"] as? String
+
+            return LSPTypeHierarchy(
+                name: name,
+                kind: kind,
+                detail: detail
+            )
+        }
+
+        return nil
+    }
+
     /// レスポンス受信（Content-Length対応版）
     private func receiveResponse() async throws -> String {
         // v0.5.3: 正しいContent-Length処理
@@ -342,6 +502,21 @@ class LSPClient {
 struct LSPLocation {
     let filePath: String
     let line: Int
+}
+
+/// LSPドキュメントシンボル（v0.5.4）
+struct LSPDocumentSymbol {
+    let name: String
+    let kind: Int
+    let detail: String?
+    let line: Int
+}
+
+/// LSP型階層（v0.5.4）
+struct LSPTypeHierarchy {
+    let name: String
+    let kind: Int
+    let detail: String?
 }
 
 /// LSPエラー

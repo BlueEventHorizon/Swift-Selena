@@ -90,6 +90,11 @@ actor DebugRunner {
 
             try await testFindSymbolReferencesSequence(projectMemory: projectMemory)
 
+            // v0.5.4: 新しいLSP APIのテスト
+            logger.info("🔧 Step 4: Testing v0.5.4 LSP enhancements...")
+            try await testDocumentSymbol(projectMemory: projectMemory)
+            try await testTypeHierarchy(projectMemory: projectMemory)
+
             logger.info("🔧 ========================================")
             logger.info("✅ DebugRunner: All tests passed!")
             logger.info("🔧 ========================================")
@@ -174,6 +179,66 @@ actor DebugRunner {
         for content in result.content {
             if case .text(let text) = content {
                 logger.info("   Result: \(text.replacingOccurrences(of: "\n", with: " "))")
+            }
+        }
+    }
+
+    /// documentSymbolテスト（v0.5.4）
+    private func testDocumentSymbol(projectMemory: ProjectMemory) async throws {
+        logger.info("🔧 Test v0.5.4: documentSymbol API")
+
+        let fullPath = "/Users/k_terada/data/dev/_WORKING_/apps/Swift-Selena/Sources/ProjectMemory.swift"
+
+        let filePath: MCP.Value = .string(fullPath)
+
+        let params = CallTool.Parameters(
+            name: "list_symbols",
+            arguments: ["file_path": filePath]
+        )
+
+        let result = try await ListSymbolsTool.executeWithLSP(
+            params: params,
+            projectMemory: projectMemory,
+            lspState: lspState,
+            logger: logger
+        )
+
+        logger.info("✅ documentSymbol test completed")
+
+        // 結果をログに出力（最初の200文字のみ）
+        for content in result.content {
+            if case .text(let text) = content {
+                let preview = String(text.prefix(200))
+                logger.info("   Result: \(preview)...")
+            }
+        }
+    }
+
+    /// typeHierarchyテスト（v0.5.4）
+    private func testTypeHierarchy(projectMemory: ProjectMemory) async throws {
+        logger.info("🔧 Test v0.5.4: typeHierarchy API")
+
+        let typeName: MCP.Value = .string("ProjectMemory")
+
+        let params = CallTool.Parameters(
+            name: "get_type_hierarchy",
+            arguments: ["type_name": typeName]
+        )
+
+        let result = try await GetTypeHierarchyTool.executeWithLSP(
+            params: params,
+            projectMemory: projectMemory,
+            lspState: lspState,
+            logger: logger
+        )
+
+        logger.info("✅ typeHierarchy test completed")
+
+        // 結果をログに出力（最初の200文字のみ）
+        for content in result.content {
+            if case .text(let text) = content {
+                let preview = String(text.prefix(200))
+                logger.info("   Result: \(preview)...")
             }
         }
     }

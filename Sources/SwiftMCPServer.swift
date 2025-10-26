@@ -150,9 +150,11 @@ struct SwiftMCPServer {
                 )
 
             case ToolNames.listSymbols:
-                return try await ListSymbolsTool.execute(
+                // v0.5.4: LSP強化版
+                return try await ListSymbolsTool.executeWithLSP(
                     params: params,
                     projectMemory: projectMemory,
+                    lspState: lspState,
                     logger: logger
                 )
 
@@ -215,9 +217,11 @@ struct SwiftMCPServer {
                 )
 
             case ToolNames.getTypeHierarchy:
-                return try await GetTypeHierarchyTool.execute(
+                // v0.5.4: LSP強化版
+                return try await GetTypeHierarchyTool.executeWithLSP(
                     params: params,
                     projectMemory: projectMemory,
+                    lspState: lspState,
                     logger: logger
                 )
 
