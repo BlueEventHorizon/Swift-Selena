@@ -159,13 +159,12 @@ enum SwiftSyntaxAnalyzer {
             // キャッシュになければ解析
             do {
                 let imports = try listImports(filePath: file)
-                if !imports.isEmpty {
-                    fileImports[file] = imports
+                // v0.5.4: Importが空でも結果に含める（ファイル数を正確にカウント）
+                fileImports[file] = imports
 
-                    // キャッシュに保存
-                    let cacheData = imports.map { ProjectMemory.Memory.ImportInfo(module: $0.module, kind: $0.kind, line: $0.line) }
-                    projectMemory.cacheImports(filePath: file, imports: cacheData)
-                }
+                // キャッシュに保存
+                let cacheData = imports.map { ProjectMemory.Memory.ImportInfo(module: $0.module, kind: $0.kind, line: $0.line) }
+                projectMemory.cacheImports(filePath: file, imports: cacheData)
             } catch {
                 // ファイル読み込みエラーをスキップ
                 continue

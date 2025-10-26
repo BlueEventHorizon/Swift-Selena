@@ -26,9 +26,9 @@ enum FileSearcher {
         }
 
         for case let file as String in enumerator {
-            // 除外ディレクトリをスキップ
-            let excludePrefixes = [".build/", ".git/", ".swiftpm/", "Pods/", "Carthage/", "DerivedData/", "Build/"]
-            if excludePrefixes.contains(where: { file.hasPrefix($0) }) {
+            // 除外ディレクトリをスキップ（v0.5.4: Constants使用）
+            let fullPath = (directory as NSString).appendingPathComponent(file)
+            if ExcludedDirectories.shouldExclude(fullPath) {
                 continue
             }
 
@@ -59,9 +59,9 @@ enum FileSearcher {
         }
 
         for case let file as String in enumerator {
-            // 除外ディレクトリをスキップ
-            let excludePrefixes = [".build/", ".git/", ".swiftpm/", "Pods/", "Carthage/", "DerivedData/", "Build/"]
-            if excludePrefixes.contains(where: { file.hasPrefix($0) }) {
+            // 除外ディレクトリをスキップ（v0.5.4: Constants使用）
+            let fullPath = (directory as NSString).appendingPathComponent(file)
+            if ExcludedDirectories.shouldExclude(fullPath) {
                 continue
             }
 

@@ -46,8 +46,12 @@ struct FileLogHandler: LogHandler {
         self.fileHandle = handle
         try handle.seekToEnd()
 
-        // 起動時のセパレータ
-        let separator = "\n========== Swift-Selena Started: \(Date()) ==========\n"
+        // 起動時のセパレータ（v0.5.4: 日本時間表示）
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+        let timestamp = formatter.string(from: Date())
+        let separator = "\n========== Swift-Selena Started: \(timestamp) (JST) ==========\n"
         if let data = separator.data(using: .utf8) {
             try handle.write(contentsOf: data)
         }
@@ -67,7 +71,12 @@ struct FileLogHandler: LogHandler {
         function: String,
         line: UInt
     ) {
-        let timestamp = ISO8601DateFormatter().string(from: Date())
+        // v0.5.4: 日本時間（JST）でタイムスタンプ表示
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+        let timestamp = formatter.string(from: Date())
+
         let levelIcon: String
 
         switch level {

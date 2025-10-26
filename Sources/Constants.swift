@@ -71,6 +71,26 @@ enum ParameterKeys {
     static let column = "column"
 }
 
+/// 除外するディレクトリパターン（v0.5.4）
+enum ExcludedDirectories {
+    /// 除外するディレクトリ名
+    static let patterns = [
+        ".build",           // Swift Package Manager build artifacts
+        "checkouts",        // SPM dependencies
+        "DerivedData",      // Xcode build cache
+        ".git",             // Git repository
+        "Pods",             // CocoaPods dependencies
+        "Carthage",         // Carthage dependencies
+        ".swiftpm",         // SPM configuration
+        "xcuserdata"        // Xcode user data
+    ]
+
+    /// パスが除外対象か判定
+    static func shouldExclude(_ path: String) -> Bool {
+        return patterns.contains { path.contains("/\($0)/") || path.hasSuffix("/\($0)") }
+    }
+}
+
 /// エラーメッセージの定数
 enum ErrorMessages {
     static let projectNotInitialized = "Project not initialized"
