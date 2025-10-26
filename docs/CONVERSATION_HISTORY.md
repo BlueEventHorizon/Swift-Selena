@@ -1390,6 +1390,133 @@ pkill -9 -f Swift-Selena  # ← 危険
 
 ---
 
+### 追加修正（同日実施）
+
+#### documentSymbol階層構造対応
+
+**問題発見:**
+- ContactBプロジェクト（399ファイル）でテスト
+- list_symbols: 956行ファイルで1個のシンボルのみ検出
+- 期待: 90+個のシンボル
+
+**原因:**
+- LSP documentSymbolは階層構造（children）を返す
+- トップレベルのみ取得、ネストしたシンボルを無視
+
+**修正:**
+- parseDocumentSymbol()再帰関数追加
+- children要素を全階層展開
+
+**効果:**
+- 検出数: 1個 → 90+個（90倍改善）
+
+---
+
+#### 除外ディレクトリ対応（重大バグ修正）
+
+**問題指摘:**
+- analyze_imports: 399ファイル検出（.build含む）
+- 正しいファイル数: 263ファイル
+- 136ファイルが依存ライブラリ（除外すべき）
+
+**影響:**
+- パフォーマンス悪化（不要ファイル解析）
+- 結果汚染（依存ライブラリのコードが混入）
+- 統計不正確
+
+**修正内容:**
+
+**1. ExcludedDirectories enum追加（Constants.swift）:**
+```swift
+static let patterns = [
+    ".build", "checkouts", "DerivedData", ".git",
+    "Pods", "Carthage", ".swiftpm", "xcuserdata"
+]
+```
+
+**2. FileSearcher統一:**
+- ハードコード除外 → ExcludedDirectories.shouldExclude()使用
+- findFiles(), searchCode()両方対応
+
+**3. analyze_imports修正:**
+- Import空ファイルも結果に含める
+- 修正前: Importがないファイルを除外（261ファイル）
+- 修正後: 空でも含める（263ファイル）
+
+**検出したImport空ファイル（3個）:**
+- MKLocalSearch+Async.swift: `@preconcurrency import MapKit`
+- ViewState.swift: Importなし（純粋enum）
+- ContactSortType.swift: Importなし（純粋enum）
+
+**テスト結果:**
+- 修正前: 399 → 362 → 261ファイル
+- 修正後: **263ファイル** ✅
+- find_files: 263ファイル ✅
+- analyze_imports: 263ファイル ✅
+- **完全一致達成**
+
+---
+
+#### ログ時刻JST表示
+
+**問題:**
+- ログタイムスタンプがUTC表示
+- 日本時間との時差-9時間で混乱
+
+**修正:**
+- ISO8601DateFormatter → DateFormatter
+- timeZone: Asia/Tokyo
+- フォーマット: `yyyy-MM-dd HH:mm:ss.SSS`
+- 起動時セパレータも日本時間表示
+
+---
+
+#### pkillインシデントと調査
+
+**発生事象:**
+```bash
+pkill -9 -f Swift-Selena
+→ Operation not permitted × 19件
+```
+
+**原因:**
+- `-f` オプション: コマンドライン全体を検索
+- 無関係なシステムプロセス19個に影響試行
+- Apple Intelligence、JAMF等のシステムサービス
+
+**結果:**
+- System Integrity Protection（SIP）が保護
+- 実際にはkillされず、実害なし
+- しかし、重大な操作ミス
+
+**教訓:**
+- `pkill -f` は極めて危険
+- 特定フルパスで限定すべき
+- 事前にpgrepで確認必須
+
+---
+
+### 最終成果
+
+**v0.5.4実装完了:**
+- ✅ LSPClient: documentSymbol(), typeHierarchy()
+- ✅ list_symbols強化（LSP版、階層構造対応）
+- ✅ get_type_hierarchy強化（LSP版）
+- ✅ 除外ディレクトリ対応
+- ✅ ログJST表示
+- ✅ 7テスト成功
+- ✅ ContactB（263ファイル）で実証
+
+**追加コード:**
+- 約500行（LSP API + 修正）
+
+**修正したバグ:**
+1. documentSymbol階層構造未対応
+2. 除外ディレクトリ未実装（重大）
+3. Import空ファイル除外
+
+---
+
 ### 次のバージョン
 
 **v0.5.5（予定）:**
@@ -1402,7 +1529,7 @@ pkill -9 -f Swift-Selena  # ← 危険
 
 ---
 
-**Document Version**: 1.4
+**Document Version**: 1.5
 **Created**: 2025-10-15
 **Last Updated**: 2025-10-26
 **Purpose**: 開発過程の記録と知見の共有
