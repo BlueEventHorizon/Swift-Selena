@@ -36,7 +36,11 @@
       "mcp__swift-selena__list_directory",
       "mcp__swift-selena__read_file",
       "mcp__swift-selena__read_symbol",
-      "mcp__swift-selena__find_symbol_references"
+      "mcp__swift-selena__find_symbol_references",
+      "Bash(for f in DES-004_HISTORY.md DES-004_swift_toc DES-005_code DES-005_HISTORY DES-006_code DES-007_lsp DES-008_DebugRunner DES-008_tool DES-009_list)",
+      "Bash(do head -15 \"/Users/k_terada/data/dev/_WORKING_/apps/Swift-Selena/docs/tool_design/$f\"*.md)",
+      "Bash(done)",
+      "Read(//Users/k_terada/.swift-selena/logs/**)"
     ],
     "deny": [],
     "ask": []
