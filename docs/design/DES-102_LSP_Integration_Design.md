@@ -673,50 +673,108 @@ mindmap
 
 ---
 
-## 11. 将来の改善（v0.5.5+）
+## 11. v0.5.4で発見した問題（v0.5.5で修正）
 
-### 11.1 レスポンスバッファリング
+### 11.1 LSP非同期通知混入問題
+
+**発見日:** 2025-10-26（v0.5.4テスト時）
+
+**問題の詳細:**
 
 ```mermaid
-graph TD
-    Current[現状:<br/>availableData<br/>全バッファ取得]
-    Problem[問題:<br/>複数レスポンス混在]
+sequenceDiagram
+    participant Client as LSPClient
+    participant LSP as SourceKit-LSP
 
-    Future[改善:<br/>ResponseBuffer]
-    Solution[Content-Lengthで<br/>1レスポンスずつ切り出し]
+    Client->>LSP: textDocument/documentSymbol<br/>id=3
 
-    Current --> Problem
-    Problem --> Future
-    Future --> Solution
+    par Background
+        LSP-->>Client: publishDiagnostics<br/>（非同期通知）
+    end
 
-    style Current fill:#ffccbc
-    style Future fill:#c8e6c9
+    LSP->>Client: documentSymbol response<br/>id=3
+
+    Note over Client: receiveResponse()<br/>availableData取得
+
+    Client->>Client: publishDiagnostics混入！<br/>JSONパース失敗
+
+    Client->>Client: SwiftSyntax版へフォールバック
+```
+
+**実際のログ:**
+```
+LSP typeHierarchy response (length=196)
+---START---
+{"method":"textDocument/publishDiagnostics",...}  ← 非同期通知
+---END---
+⚠️ Failed to parse LSP typeHierarchy response as JSON
+Using SwiftSyntax for list_symbols
+```
+
+**影響範囲:**
+- find_symbol_references: ✅ 動作（非同期通知が少ない）
+- documentSymbol: ❌ 不安定（フォールバック）
+- typeHierarchy: ❌ 不安定（フォールバック）
+
+---
+
+### 11.2 根本原因
+
+**現状の実装（receiveResponse）:**
+```swift
+let data = try? handle.availableData  // 全バッファ取得
+```
+
+**問題点:**
+1. 複数メッセージが混在する
+2. 非同期通知が先に読まれる
+3. 実際のレスポンスを読めない
+
+**正しい実装（v0.5.5）:**
+```swift
+1. Content-Lengthヘッダー読み取り
+2. 指定バイト数だけ読み取り
+3. 1メッセージずつ処理
+4. 非同期通知（method）と応答（id）を分離
 ```
 
 ---
 
-### 11.2 非同期通知の処理
+### 11.3 v0.5.5での修正計画
 
 ```mermaid
-graph LR
-    Request[Request]
-    Response[Response]
-    Notification[publishDiagnostics<br/>等の通知]
+graph TD
+    Start[receiveResponse改善]
 
-    LSP[SourceKit-LSP]
+    Read[Read until CRLF CRLF]
+    Parse[Parse Content-Length]
+    ReadBody[Read exact bytes]
+    Check{Has id?}
+    Response[Return as response]
+    Notify[Process as notification]
 
-    LSP --> Response
-    LSP -.->|非同期| Notification
+    Start --> Read
+    Read --> Parse
+    Parse --> ReadBody
+    ReadBody --> Check
+    Check -->|Yes| Response
+    Check -->|No| Notify
 
-    Response --> Parse1[Parse as response]
-    Notification --> Parse2[Parse as notification<br/>（将来実装）]
+    Notify --> Read
 
-    Parse1 --> Tool[Tool result]
-    Parse2 -.-> Diagnostics[診断情報<br/>（将来活用）]
-
-    style Notification fill:#fff9c4
-    style Diagnostics fill:#ffe0b2
+    style Response fill:#c8e6c9
+    style Notify fill:#fff9c4
 ```
+
+**実装方針:**
+1. ResponseBufferクラス作成
+2. Content-Length正確解析
+3. メッセージ種別判定（id有無）
+4. 非同期通知は別処理またはスキップ
+
+**工数:** 2-3時間
+
+**優先度:** 🔴 最高（v0.5.5の最優先課題）
 
 ---
 
@@ -827,7 +885,59 @@ sequenceDiagram
 
 ---
 
-## 14. 参照
+### 13.3 検証結果（v0.5.4）
+
+**Swift-Selena自身（Swift Package）:**
+
+| API | 接続 | レスポンス取得 | パース | 動作 |
+|-----|------|---------------|--------|------|
+| find_symbol_references | ✅ | ✅ | ✅ | ✅ 完全動作 |
+| documentSymbol | ✅ | ✅ (16KB) | ❌ 非同期通知混入 | △ フォールバック |
+| typeHierarchy | ✅ | ✅ (196byte) | ❌ 非同期通知混入 | △ フォールバック |
+
+**ContactBプロジェクト（Xcodeプロジェクト）:**
+
+| ツール | LSP接続 | LSP動作 | SwiftSyntax版 | 結果 |
+|--------|---------|---------|---------------|------|
+| list_symbols | ✅ | ❌ | ✅ | ✅ 263ファイル完全一致 |
+| analyze_imports | - | - | ✅ | ✅ 263ファイル完全一致 |
+| find_files | - | - | ✅ | ✅ 263ファイル完全一致 |
+
+**結論:**
+- グレースフルデグレード完璧 ✅
+- SwiftSyntax版で全機能動作 ✅
+- LSP版は v0.5.5 で安定化予定
+
+---
+
+## 14. v0.5.4実装の最終評価
+
+### 14.1 達成事項
+
+**完全実装:**
+- ✅ LSPClient API追加（documentSymbol, typeHierarchy）
+- ✅ 階層構造対応（children再帰、90倍改善）
+- ✅ 除外ディレクトリ（重大バグ修正）
+- ✅ Import空ファイル対応
+- ✅ ログJST表示
+
+**部分実装:**
+- △ LSP版動作（非同期通知問題、v0.5.5で完成）
+
+### 14.2 v0.5.5への引継ぎ
+
+**必須課題:**
+1. ResponseBuffer実装（最優先）
+2. documentSymbol/typeHierarchy安定化
+3. 非同期通知処理
+
+**期待効果:**
+- LSP版が完全動作
+- 型情報表示（detailフィールドがあれば）
+
+---
+
+## 15. 参照
 
 **要件定義:**
 - REQ-002: LSP統合要件
@@ -841,9 +951,12 @@ sequenceDiagram
 
 ---
 
-**Document Version**: 2.0
+**Document Version**: 2.1
 **Created**: 2025-10-24
-**Last Updated**: 2025-10-24
+**Last Updated**: 2025-10-26
 **Status**: 承認待ち
-**Changes**: mermaid図中心に再構成、詳細コード削減
+**Changes**:
+- v0.5.4実装完了、検証結果追加
+- LSP非同期通知問題を記載
+- v0.5.5への引継ぎ事項明確化
 **Supersedes**: DES-007, DES-008 DebugRunner, DES-009, Hybrid-Architecture-Plan.md（LSP部分）

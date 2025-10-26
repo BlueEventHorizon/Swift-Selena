@@ -1517,11 +1517,59 @@ pkill -9 -f Swift-Selena
 
 ---
 
+### 既知の問題（v0.5.5に延期）
+
+#### LSP非同期通知の混入問題
+
+**発見:**
+- documentSymbol/typeHierarchyのレスポンスに`publishDiagnostics`（非同期通知）が混入
+- 正しいレスポンスを読めず、SwiftSyntax版にフォールバック
+- find_symbol_referencesは動作（非同期通知が少ない）
+
+**原因:**
+- receiveResponse()が全バッファ取得（availableData）
+- Content-Lengthで1つずつ切り出していない
+- 非同期通知（method）と応答（id）を分離していない
+
+**影響:**
+- documentSymbol: 実装済みだが動作不安定（フォールバック）
+- typeHierarchy: 実装済みだが動作不安定（フォールバック）
+- グレースフルデグレードで実害なし ✅
+
+**v0.5.5での修正:**
+- ResponseBuffer実装
+- Content-Lengthで1レスポンスずつ切り出し
+- 非同期通知を適切に処理
+- 工数: 2-3時間
+
+**検証:**
+- Swift-SelenaプロジェクトでLSP接続成功
+- しかし、publishDiagnostics混入で失敗
+- ログで確認：`{"method":"textDocument/publishDiagnostics"}`
+
+---
+
+### v0.5.4の実際の成果
+
+**完全動作（実プロジェクトで検証済み）:**
+- ✅ 除外ディレクトリ対応（263ファイル完全一致）
+- ✅ 階層構造対応（90+シンボル）
+- ✅ グレースフルデグレード完璧
+- ✅ SwiftSyntax版で全機能動作
+- ✅ find_symbol_references動作
+
+**部分実装（v0.5.5で完成）:**
+- △ documentSymbol実装（非同期通知問題で不安定）
+- △ typeHierarchy実装（非同期通知問題で不安定）
+
+---
+
 ### 次のバージョン
 
-**v0.5.5（予定）:**
-- get_call_hierarchy（呼び出し階層）
-- その他LSP機能（definition, hover等、必要性を判断）
+**v0.5.5（優先）:**
+- **必須**: レスポンスバッファリング実装
+- **必須**: documentSymbol/typeHierarchy安定化
+- get_call_hierarchy（その後）
 
 **v0.6.0（予定）:**
 - Code Header DB
@@ -1529,7 +1577,7 @@ pkill -9 -f Swift-Selena
 
 ---
 
-**Document Version**: 1.5
+**Document Version**: 1.6
 **Created**: 2025-10-15
 **Last Updated**: 2025-10-26
 **Purpose**: 開発過程の記録と知見の共有

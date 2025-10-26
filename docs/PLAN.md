@@ -156,30 +156,51 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
    - SwiftSyntax版: 従来通り
    - グレースフルデグレード完全実装
 
+**実装完了:**
+- ✅ LSPClient拡張（documentSymbol, typeHierarchy）
+- ✅ 階層構造対応（children再帰処理）
+- ✅ 除外ディレクトリ対応（263ファイル完全一致）
+- ✅ Import空ファイル対応
+- ✅ ログJST表示
+- ✅ グレースフルデグレード完璧
+
+**既知の問題（v0.5.5に延期）:**
+- △ LSP非同期通知混入（publishDiagnostics）
+- △ documentSymbol/typeHierarchy不安定（フォールバック動作）
+- ✅ 実害なし（SwiftSyntax版で完全動作）
+
 **テスト結果:**
-- ✅ documentSymbol: 11KB レスポンス取得成功
-- ✅ typeHierarchy: 型詳細取得成功
-- ✅ 7テスト全て成功（find_symbol_references × 5 + 新規2）
-- ✅ クラッシュなし
+- ✅ ContactBプロジェクト: 全ツール完全一致検証
+- ✅ find_symbol_references: 動作
+- ✅ グレースフルデグレード完璧
 
 **ツール総数:**
 - ビルド不可: 17個
 - ビルド可能: 18個
-- 強化ツール: 2個（list_symbols, get_type_hierarchy）
+- 強化ツール: 2個（実装済み、v0.5.5で安定化）
 
-**工数**: 約90分（計画1-2時間、高速達成）
+**工数**: 約5時間（実装90分 + テスト・修正3.5時間）
 
 **詳細**: CONVERSATION_HISTORY.md v0.5.4セクション参照
 
 ---
 
-### v0.5.5（LSP追加機能）
+### v0.5.5（LSP安定化・優先）
 
-**目標**: 呼び出し階層などの追加LSP機能
+**目標**: LSP非同期通知問題の解決とdocumentSymbol/typeHierarchy安定化
 
 **実装内容:**
 
-1. **get_call_hierarchy**（新規LSPツール）
+1. **ResponseBuffer実装**（最優先）
+   - Content-Lengthで1レスポンスずつ切り出し
+   - 非同期通知（method付き）と応答（id付き）を分離
+   - publishDiagnostics等を適切に処理
+
+2. **documentSymbol/typeHierarchy安定化**
+   - v0.5.4で実装済みだが非同期通知問題で不安定
+   - ResponseBuffer適用で完全動作を実現
+
+3. **get_call_hierarchy**（安定化後）
    - 呼び出し階層の取得（誰が呼んでいるか/誰を呼んでいるか）
    - textDocument/callHierarchyリクエスト使用
 

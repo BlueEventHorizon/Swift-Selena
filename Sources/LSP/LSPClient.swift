@@ -328,6 +328,9 @@ class LSPClient {
         // レスポンス受信
         let response = try await receiveResponse()
         logger.info("📋 LSP documentSymbol response (length=\(response.count))")
+        logger.info("---START---")
+        logger.info("\(response)")
+        logger.info("---END---")
 
         // JSONパース
         guard let jsonData = response.data(using: .utf8),
@@ -425,6 +428,9 @@ class LSPClient {
         // レスポンス受信
         let response = try await receiveResponse()
         logger.info("📋 LSP typeHierarchy response (length=\(response.count))")
+        logger.info("---START---")
+        logger.info("\(response)")
+        logger.info("---END---")
 
         // JSONパース
         guard let jsonData = response.data(using: .utf8),
