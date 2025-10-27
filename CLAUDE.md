@@ -119,12 +119,13 @@ Swift-Selenaプロジェクトで：
 
 ```
 # 例: ContactBプロジェクトでsearch_files_without_pattern をテスト
+# 注意: DEBUG版のツール名は mcp__swift-selena-debug__* です
 
-1. mcp__swift-selena__initialize_project を呼び出し
+1. mcp__swift-selena-debug__initialize_project を呼び出し
    project_path: "/Users/k_terada/data/dev/moons/product/ContactB プロジェクト/ContactB"
 
 2. 新しいツールを呼び出し
-   mcp__swift-selena__search_files_without_pattern(pattern: "^import")
+   mcp__swift-selena-debug__search_files_without_pattern(pattern: "^import")
 
 3. 実際の結果を確認
    - 返される件数は？
@@ -140,6 +141,8 @@ Swift-Selenaプロジェクトで：
 - Swift-SelenaはMCPサーバーとして動作し、**他のプロジェクトを解析**します
 - `initialize_project`で解析対象プロジェクト（ContactB等）を指定します
 - Swift-Selenaプロジェクト自体を解析することも可能です
+- **DEBUG版は`swift-selena-debug`、本番版は`swift-selena`として別々に登録**
+- 本番環境には一切影響しません
 
 #### 4. ログ確認（必要に応じて）
 

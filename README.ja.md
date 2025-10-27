@@ -77,6 +77,7 @@ swift build -c release -Xswiftc -Osize
 # セットアップスクリプトに実行権限を付与
 chmod +x register-mcp-to-claude-desktop.sh
 chmod +x register-selena-to-claude-code.sh
+chmod +x register-selena-to-claude-code-debug.sh
 
 # 実行可能ファイルのパスを確認
 pwd
@@ -134,19 +135,22 @@ tail -f ~/.swift-selena/logs/server.log
 - `claude_desktop_config.json`に設定を追加
 - 既存の設定を保持（jqがインストールされている場合）
 
-#### Claude Codeの場合（特定プロジェクトに接続）
+#### Claude Codeの場合
 
-Swift-Selenaを特定のプロジェクトに接続するには：
+Swift-SelenaをClaude Codeに接続するには：
 
 ```bash
-# Swift-Selenaディレクトリから実行
-./register-selena-to-claude-code.sh /path/to/your/project
+# Swift-Selenaディレクトリから実行（本番用）
+./register-selena-to-claude-code.sh
+
+# 開発・テスト用（本番環境と分離）
+./register-selena-to-claude-code-debug.sh
 ```
 
 このスクリプトは以下を自動実行します：
 - 実行ファイルの存在確認
-- ターゲットプロジェクトディレクトリに移動
-- `claude mcp add`で登録（そのプロジェクトのみ有効）
+- Swift-Selenaプロジェクト自体に登録
+- Debug版は`swift-selena-debug`として別名登録（本番用`swift-selena`に影響なし）
 
 **別の方法：makefileを使用**（プロジェクトにmakefileがある場合）
 

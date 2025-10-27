@@ -48,15 +48,15 @@ echo "  パス: $EXECUTABLE_PATH"
 BUILD_TIME=$(stat -f "%Sm" "$EXECUTABLE_PATH")
 echo "  ビルド日時: $BUILD_TIME"
 
-# Swift-Selenaプロジェクト自体に登録
+# Swift-Selenaプロジェクト自体に登録（別名で登録）
 echo ""
 echo -e "${CYAN}Claude Code MCP設定に登録中...${NC}"
 
-# 既存の設定を削除（存在する場合）
-claude mcp remove swift-selena 2>/dev/null || true
+# 既存のswift-selena-debug設定を削除（存在する場合）
+claude mcp remove swift-selena-debug 2>/dev/null || true
 
-# 新しい設定を追加
-claude mcp add swift-selena -- "$EXECUTABLE_PATH"
+# 別名で新しい設定を追加（本番のswift-selenaとは別）
+claude mcp add swift-selena-debug -- "$EXECUTABLE_PATH"
 RESULT=$?
 
 if [ $RESULT -eq 0 ]; then
@@ -65,17 +65,22 @@ if [ $RESULT -eq 0 ]; then
     echo ""
     echo -e "${CYAN}=== DEBUG版として登録されました ===${NC}"
     echo "登録先: Swift-Selenaプロジェクト"
+    echo "MCP名: swift-selena-debug (本番用swift-selenaとは別)"
     echo ""
     echo "次のステップ:"
     echo "1. Swift-SelenaプロジェクトでClaude Codeを再起動"
     echo "   (Claude Codeを終了して再起動)"
     echo ""
-    echo "2. swift-selenaツールが利用可能になります"
+    echo "2. swift-selena-debugツールが利用可能になります"
+    echo "   ツール名プレフィックス: mcp__swift-selena-debug__*"
     echo "   例: 他のプロジェクトを解析する場合"
-    echo "   initialize_project(project_path: \"/path/to/ContactB\")"
-    echo "   search_files_without_pattern(pattern: \"^import\")"
+    echo "   mcp__swift-selena-debug__initialize_project(project_path: \"/path/to/ContactB\")"
+    echo "   mcp__swift-selena-debug__search_files_without_pattern(pattern: \"^import\")"
     echo ""
-    echo -e "${YELLOW}注意: DEBUGビルドのため、リリース版より遅い可能性があります${NC}"
+    echo -e "${YELLOW}注意:${NC}"
+    echo "  - DEBUGビルドのため、リリース版より遅い可能性があります"
+    echo "  - DebugRunnerが起動時に5秒間自動テストを実行します"
+    echo "  - 本番用swift-selenaには影響ありません"
 else
     echo ""
     echo -e "${RED}登録に失敗しました${NC}"

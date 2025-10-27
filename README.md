@@ -77,6 +77,7 @@ swift build -c release -Xswiftc -Osize
 # Grant execute permission to setup scripts
 chmod +x register-mcp-to-claude-desktop.sh
 chmod +x register-selena-to-claude-code.sh
+chmod +x register-selena-to-claude-code-debug.sh
 
 # Verify executable path
 pwd
@@ -134,19 +135,22 @@ This script automatically:
 - Adds settings to `claude_desktop_config.json`
 - Preserves existing settings (if jq is installed)
 
-#### For Claude Code (Connect to Specific Project)
+#### For Claude Code
 
-To connect Swift-Selena to a specific project:
+To connect Swift-Selena to Claude Code:
 
 ```bash
-# From Swift-Selena directory
-./register-selena-to-claude-code.sh /path/to/your/project
+# From Swift-Selena directory (production use)
+./register-selena-to-claude-code.sh
+
+# For development/testing (separate from production)
+./register-selena-to-claude-code-debug.sh
 ```
 
 This script automatically:
 - Verifies executable existence
-- Moves to target project directory
-- Registers with `claude mcp add` (local to that project)
+- Registers Swift-Selena to the Swift-Selena project itself
+- Debug version registers as `swift-selena-debug` (does not affect production `swift-selena`)
 
 **Alternative: Using makefile** (if your project has one)
 
