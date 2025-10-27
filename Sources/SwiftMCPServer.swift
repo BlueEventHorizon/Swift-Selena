@@ -67,6 +67,7 @@ struct SwiftMCPServer {
                 InitializeProjectTool.toolDefinition,
                 FindFilesTool.toolDefinition,
                 SearchCodeTool.toolDefinition,
+                SearchFilesWithoutPatternTool.toolDefinition,  // v0.5.5 新規ツール
                 ListSymbolsTool.toolDefinition,
                 FindSymbolDefinitionTool.toolDefinition,
                 AddNoteTool.toolDefinition,
@@ -144,6 +145,13 @@ struct SwiftMCPServer {
 
             case ToolNames.searchCode:
                 return try await SearchCodeTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
+
+            case ToolNames.searchFilesWithoutPattern:
+                return try await SearchFilesWithoutPatternTool.execute(
                     params: params,
                     projectMemory: projectMemory,
                     logger: logger
@@ -282,10 +290,9 @@ struct SwiftMCPServer {
         let transport = StdioTransport(logger: logger)
         try await server.start(transport: transport)
 
-        // サーバーを永続的に実行
-        while true {
-            try await Task.sleep(nanoseconds: 1_000_000_000_000)
-        }
+        // サーバーが完了するまで待機（EOF受信まで）
+        await server.waitUntilCompleted()
+        logger.info("Server stopped - client disconnected")
     }
 }
 

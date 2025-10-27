@@ -41,20 +41,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## ビルド・実行コマンド
 
 ```bash
-# プロジェクトのビルド（開発用）
+# プロジェクトのビルド（開発用・デバッグビルド）
 swift build
+# 成果物: .build/arm64-apple-macosx/debug/Swift-Selena
 
 # 本番用リリースビルド
+# ⚠️ 警告: 絶対に勝手に実行しないこと！
+# 他のClaude Codeインスタンスが本番用Swift-Selenaを使用している可能性があります
+# 明示的な人間の指示があるまで実行禁止
 swift build -c release -Xswiftc -Osize
+# 成果物: .build/release/Swift-Selena
 
 # セットアップスクリプトに実行権限を付与
 chmod +x register-mcp-to-claude-desktop.sh
 chmod +x register-selena-to-claude-code.sh
+chmod +x register-selena-to-claude-code-debug.sh
 
-# Claude Desktopに登録（自動）
+# Claude Desktopに登録（本番用）
 ./register-mcp-to-claude-desktop.sh
 
-# Claude Codeに登録（自動）
+# Claude Codeに登録（本番用）
 ./register-selena-to-claude-code.sh
 
 # サーバーの実行（開発用）
@@ -66,6 +72,112 @@ open .swiftpm/xcode/package.xcworkspace
 # ビルド成果物のクリーンアップ
 swift package clean
 ```
+
+## DEBUGビルドでのテスト方法
+
+新しいツールを実装した後、実際にMCPツールとして動作するか確認するため、DEBUGビルドでテストします。
+
+### テストの基本原則
+
+**重要**: 以下はテストではありません：
+- ❌ Bashスクリプトで直接ロジックを再実装して実行
+- ❌ `strings`コマンドでバイナリに含まれているか確認するだけ
+- ❌ 「〜件返されるはず」という推測だけ述べる
+
+**正しいテスト**:
+- ✅ Swift-SelenaのMCPサーバーに接続
+- ✅ 新しいツールを実際にMCPツールとして呼び出す
+- ✅ 実際の結果を確認する
+- ✅ 期待値と一致するか検証
+
+### 手順
+
+#### 1. DEBUGビルドと登録（1コマンドで完了）
+
+```bash
+cd /Users/k_terada/data/dev/_WORKING_/apps/Swift-Selena
+./register-selena-to-claude-code-debug.sh
+```
+
+このスクリプトは以下を自動実行：
+1. `swift build` でDEBUGビルド実行
+2. `.build/arm64-apple-macosx/debug/Swift-Selena` を確認
+3. Swift-Selenaプロジェクトの `.claude/mcp_config.json` に登録
+4. ビルド日時を表示
+
+**重要**: スクリプト内でビルドを実行するため、最新のコードが必ず反映されます
+
+#### 2. Swift-SelenaプロジェクトでClaude Codeを完全に再起動
+
+Swift-Selenaプロジェクトで：
+1. Claude Codeを終了
+2. Swift-Selenaプロジェクトで Claude Codeを起動
+
+#### 3. 解析対象プロジェクトを初期化してテスト
+
+**実際のMCPツールとして呼び出します**：
+
+```
+# 例: ContactBプロジェクトでsearch_files_without_pattern をテスト
+
+1. mcp__swift-selena__initialize_project を呼び出し
+   project_path: "/Users/k_terada/data/dev/moons/product/ContactB プロジェクト/ContactB"
+
+2. 新しいツールを呼び出し
+   mcp__swift-selena__search_files_without_pattern(pattern: "^import")
+
+3. 実際の結果を確認
+   - 返される件数は？
+   - どのファイルが返される？
+   - 統計情報は正しい？
+
+4. 期待値と比較
+   期待: 3件（MKLocalSearch+Async.swift, ViewState.swift, ContactSortType.swift）
+   統計: Files checked: 262, Files without pattern: 3 (1.1%)
+```
+
+**重要**:
+- Swift-SelenaはMCPサーバーとして動作し、**他のプロジェクトを解析**します
+- `initialize_project`で解析対象プロジェクト（ContactB等）を指定します
+- Swift-Selenaプロジェクト自体を解析することも可能です
+
+#### 4. ログ確認（必要に応じて）
+
+動作がおかしい場合：
+
+```bash
+tail -f ~/.swift-selena/logs/server.log
+```
+
+#### 5. リリース版への切り替え（人間の明示的指示があった場合のみ）
+
+**⚠️ 警告: 勝手に実行しないこと**
+
+他のClaude Codeインスタンスが本番用Swift-Selenaを使用中の可能性があります。
+人間が明示的に「リリースビルドして」と指示した場合のみ実行してください。
+
+```bash
+# リリースビルド（明示的指示があった場合のみ）
+swift build -c release -Xswiftc -Osize
+
+# リリース版を登録
+./register-selena-to-claude-code.sh
+```
+
+### トラブルシューティング
+
+**問題**: 新しいツールが表示されない
+- 原因: MCPサーバーが再起動されていない
+- 解決: Claude Codeを完全に再起動
+
+**問題**: 古いバイナリが使われている
+- 確認: ビルド日時を確認 `ls -lh .build/arm64-apple-macosx/debug/Swift-Selena`
+- 解決: `swift build` で再ビルド、debug用スクリプトで再登録
+
+**問題**: ツールは表示されるが動作しない
+- ログ確認: `tail -f ~/.swift-selena/logs/server.log`
+- パラメータエラー: ツール定義の `inputSchema` 確認
+- 実装エラー: DebugRunner（#if DEBUG）でデバッグ
 
 ## アーキテクチャ
 

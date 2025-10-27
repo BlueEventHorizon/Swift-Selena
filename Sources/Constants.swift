@@ -10,7 +10,7 @@ import Foundation
 /// アプリケーション全体の定数
 enum AppConstants {
     static let name = "Swift-Selena"
-    static let version = "0.5.3"
+    static let version = "0.5.5"
     static let loggerLabel = "swift-selena"
     static let storageDirectory = ".swift-selena"
 }
@@ -20,6 +20,7 @@ enum ToolNames {
     static let initializeProject = "initialize_project"
     static let findFiles = "find_files"
     static let searchCode = "search_code"
+    static let searchFilesWithoutPattern = "search_files_without_pattern"  // v0.5.5 新規ツール
     static let listSymbols = "list_symbols"
     static let findSymbolDefinition = "find_symbol_definition"
     static let addNote = "add_note"
