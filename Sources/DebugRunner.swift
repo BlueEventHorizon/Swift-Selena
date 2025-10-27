@@ -85,13 +85,8 @@ actor DebugRunner {
                 }
             }
 
-            // テストシーケンス実行
-            logger.info("🔧 Step 3: Running test sequence...")
-
-            try await testFindSymbolReferencesSequence(projectMemory: projectMemory)
-
-            // v0.5.4: 新しいLSP APIのテスト
-            logger.info("🔧 Step 4: Testing v0.5.4 LSP enhancements...")
+            // v0.5.4: LSP APIのテスト
+            logger.info("🔧 Step 3: Testing LSP enhancements...")
             try await testDocumentSymbol(projectMemory: projectMemory)
             try await testTypeHierarchy(projectMemory: projectMemory)
 
@@ -108,77 +103,6 @@ actor DebugRunner {
             // エラー詳細をログに出力
             if let mcpError = error as? MCPError {
                 logger.error("MCP Error type: \(mcpError)")
-            }
-        }
-    }
-
-    /// find_symbol_references連続実行テスト
-    private func testFindSymbolReferencesSequence(projectMemory: ProjectMemory) async throws {
-        // Swift-Selena自身のファイルでテスト（参照が確実にあるシンボル）
-        let testCases: [(file: String, line: Int, column: Int, description: String)] = [
-            ("Sources/LSP/LSPClient.swift", 30, 7, "LSPClient class"),
-            ("Sources/LSP/LSPState.swift", 34, 7, "LSPState actor"),
-            ("Sources/ProjectMemory.swift", 12, 7, "ProjectMemory class"),
-            ("Sources/Tools/LSP/FindSymbolReferencesTool.swift", 48, 6, "FindSymbolReferencesTool"),
-            ("Sources/SwiftMCPServer.swift", 8, 8, "SwiftMCPServer struct")
-        ]
-
-        for (index, testCase) in testCases.enumerated() {
-            let round = index + 1
-            logger.info("🔧 Test \(round)/\(testCases.count): \(testCase.description) at \(testCase.file):\(testCase.line):\(testCase.column)")
-
-            try await testFindSymbolReferences(
-                projectMemory: projectMemory,
-                round: round,
-                file: testCase.file,
-                line: testCase.line,
-                column: testCase.column
-            )
-
-            // 各テスト間に少し待機
-            try? await Task.sleep(nanoseconds: 500_000_000)  // 0.5秒
-        }
-    }
-
-    /// find_symbol_references単体テスト
-    private func testFindSymbolReferences(
-        projectMemory: ProjectMemory,
-        round: Int,
-        file: String,
-        line: Int,
-        column: Int
-    ) async throws {
-        // フルパス作成
-        let fullPath = "/Users/k_terada/data/dev/_WORKING_/apps/Swift-Selena/\(file)"
-
-        // MCPのValue型で引数を作成
-        let filePath: MCP.Value = .string(fullPath)
-        let lineValue: MCP.Value = .init(integerLiteral: line)
-        let columnValue: MCP.Value = .init(integerLiteral: column)
-
-        let params = CallTool.Parameters(
-            name: "find_symbol_references",
-            arguments: [
-                "file_path": filePath,
-                "line": lineValue,
-                "column": columnValue
-            ]
-        )
-
-        // ここにブレークポイントを設定可能
-        let result = try await FindSymbolReferencesTool.execute(
-            params: params,
-            projectMemory: projectMemory,
-            lspState: lspState,
-            logger: logger
-        )
-
-        logger.info("✅ Round \(round) completed")
-
-        // 結果をログに出力
-        for content in result.content {
-            if case .text(let text) = content {
-                logger.info("   Result: \(text.replacingOccurrences(of: "\n", with: " "))")
             }
         }
     }

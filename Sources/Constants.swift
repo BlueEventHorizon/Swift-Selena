@@ -39,9 +39,6 @@ enum ToolNames {
     static let readSymbol = "read_symbol"
     static let thinkAboutAnalysis = "think_about_analysis"  // v0.6.2でPrompts移行予定
 
-    // v0.5.2 新規ツール
-    static let findSymbolReferences = "find_symbol_references"  // LSPツール
-
     // v0.6.0で削除: list_directory, read_file（Claude標準機能で代替）
 }
 

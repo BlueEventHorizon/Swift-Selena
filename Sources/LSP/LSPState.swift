@@ -32,8 +32,8 @@ import Logging
 /// }
 /// ```
 actor LSPState {
-    private var isAvailable: Bool = false
-    private var lspClient: LSPClient?
+    private var lspClients: [String: LSPClient] = [:]  // プロジェクトパスごとにLSPClient保持
+    private var currentProjectPath: String?
     private let logger: Logger
 
     /// 初期化
@@ -46,9 +46,10 @@ actor LSPState {
     /// LSP接続を試みる
     ///
     /// ## 処理フロー
-    /// 1. 直接LSPClient起動を試行
-    /// 2. 成功 = LSP利用可能
-    /// 3. 失敗 = LSP利用不可（理由は問わない）
+    /// 1. 既存接続をチェック（同じプロジェクトなら再利用）
+    /// 2. 新規の場合、LSPClient起動を試行
+    /// 3. 成功 = LSP利用可能
+    /// 4. 失敗 = LSP利用不可（理由は問わない）
     ///
     /// ## 失敗する理由（全て同じ扱い）
     /// - ビルド未実施
@@ -59,19 +60,25 @@ actor LSPState {
     /// - Parameter projectPath: プロジェクトパス
     /// - Returns: 接続成功したか
     func tryConnect(projectPath: String) async -> Bool {
+        // 既に同じプロジェクトに接続済みか確認
+        if let existingClient = lspClients[projectPath] {
+            logger.info("✅ LSP already connected for: \(projectPath)")
+            currentProjectPath = projectPath
+            return true
+        }
+
         logger.info("Attempting LSP connection for: \(projectPath)")
 
-        // 直接LSP接続試行（BuildChecker削除）
+        // 直接LSP接続試行
         do {
             let client = try await LSPClient(projectPath: projectPath, logger: logger)
-            lspClient = client
-            isAvailable = true
+            lspClients[projectPath] = client
+            currentProjectPath = projectPath
             logger.info("✅ LSP connected successfully")
             return true
         } catch {
             logger.info("ℹ️ LSP connection failed: \(error.localizedDescription)")
             logger.info("ℹ️ Using SwiftSyntax only")
-            isAvailable = false
             return false
         }
     }
@@ -80,23 +87,41 @@ actor LSPState {
     ///
     /// - Returns: LSP利用可能ならtrue
     func isLSPAvailable() -> Bool {
-        return isAvailable
+        guard let projectPath = currentProjectPath else {
+            return false
+        }
+        return lspClients[projectPath] != nil
     }
 
     /// LSPClientを取得
     ///
     /// - Returns: LSPClientインスタンス（利用不可の場合nil）
     func getClient() -> LSPClient? {
-        return lspClient
+        guard let projectPath = currentProjectPath else {
+            return nil
+        }
+        return lspClients[projectPath]
     }
 
-    /// LSP接続を切断
-    func disconnect() async {
-        if let client = lspClient {
+    /// 特定プロジェクトのLSP接続を切断
+    func disconnect(projectPath: String) async {
+        if let client = lspClients[projectPath] {
             client.disconnect()
-            logger.info("LSP disconnected")
+            logger.info("LSP disconnected for: \(projectPath)")
+            lspClients.removeValue(forKey: projectPath)
         }
-        lspClient = nil
-        isAvailable = false
+        if currentProjectPath == projectPath {
+            currentProjectPath = nil
+        }
+    }
+
+    /// 全てのLSP接続を切断
+    func disconnectAll() async {
+        for (projectPath, client) in lspClients {
+            client.disconnect()
+            logger.info("LSP disconnected for: \(projectPath)")
+        }
+        lspClients.removeAll()
+        currentProjectPath = nil
     }
 }

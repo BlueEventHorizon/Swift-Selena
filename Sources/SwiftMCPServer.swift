@@ -88,9 +88,6 @@ struct SwiftMCPServer {
                 ThinkAboutAnalysisTool.toolDefinition
             ])
 
-            // v0.5.2: LSPツール（常にツールリストに追加、実行時にLSP利用可能性をチェック）
-            tools.append(FindSymbolReferencesTool.toolDefinition)
-
             let lspAvailable = await lspState.isLSPAvailable()
             logger.info("LSP status: \(lspAvailable ? "available" : "not available")")
             logger.info("Total tools: \(tools.count)")
@@ -120,20 +117,14 @@ struct SwiftMCPServer {
                 // ProjectMemory初期化
                 projectMemory = try ProjectMemory(projectPath: projectPath)
 
-                // v0.5.1: LSP接続を試みる（バックグラウンド、非ブロッキング）
-                Task {
-                    let lspAvailable = await lspState.tryConnect(projectPath: projectPath)
+                // v0.5.5: LSP接続を試みる（同期的に待機）
+                let lspAvailable = await lspState.tryConnect(projectPath: projectPath)
 
-                    if lspAvailable {
-                        logger.info("✅ LSP available - Enhanced features ready")
-                    } else {
-                        logger.info("ℹ️ LSP unavailable - Using SwiftSyntax only")
-                    }
-                }
+                let lspStatus = lspAvailable ? "✅ LSP available - Enhanced features ready" : "ℹ️ LSP unavailable - Using SwiftSyntax only"
 
-                // 即座にレスポンス返却（LSP接続を待たない）
+                // LSP接続完了後にレスポンス返却
                 return CallTool.Result(content: [
-                    .text("✅ Project initialized: \(projectPath)\n\nℹ️ Checking LSP availability in background...\n\n\(projectMemory?.getStats() ?? "")")
+                    .text("✅ Project initialized: \(projectPath)\n\n\(lspStatus)\n\n\(projectMemory?.getStats() ?? "")")
                 ])
 
             case ToolNames.findFiles:
@@ -267,15 +258,6 @@ struct SwiftMCPServer {
                 return try await ReadSymbolTool.execute(
                     params: params,
                     projectMemory: projectMemory,
-                    logger: logger
-                )
-
-            // v0.5.2 新規ツール
-            case ToolNames.findSymbolReferences:
-                return try await FindSymbolReferencesTool.execute(
-                    params: params,
-                    projectMemory: projectMemory,
-                    lspState: lspState,
                     logger: logger
                 )
 

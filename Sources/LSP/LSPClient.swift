@@ -196,98 +196,6 @@ class LSPClient {
         try await Task.sleep(nanoseconds: 100_000_000)  // 0.1秒
     }
 
-    /// 参照箇所を検索（textDocument/references）
-    ///
-    /// - Parameters:
-    ///   - filePath: ファイルパス
-    ///   - line: 行番号（0-indexed）
-    ///   - column: 列番号（0-indexed）
-    /// - Returns: 参照箇所のリスト
-    func findReferences(filePath: String, line: Int, column: Int) async throws -> [LSPLocation] {
-        // v0.5.3: textDocument/didOpenを送信（LSPにファイルを通知）
-        try await sendDidOpen(filePath: filePath)
-
-        messageId += 1
-        let id = messageId
-
-        // textDocument/referencesリクエスト
-        let request = """
-        {"jsonrpc":"2.0","id":\(id),"method":"textDocument/references","params":{"textDocument":{"uri":"file://\(filePath)"},"position":{"line":\(line),"character":\(column)},"context":{"includeDeclaration":false}}}
-        """
-
-        let contentLength = request.utf8.count
-        let message = "Content-Length: \(contentLength)\r\n\r\n\(request)"
-
-        guard let data = message.data(using: .utf8) else {
-            throw LSPError.encodingFailed
-        }
-
-        // リクエスト送信（v0.5.3: SIGPIPE対策）
-        // プロセス状態確認
-        if !process.isRunning {
-            logger.error("LSP process is not running!")
-            throw LSPError.processTerminated
-        }
-
-        do {
-            try inputPipe.fileHandleForWriting.write(contentsOf: data)
-            logger.debug("Sent textDocument/references request")
-        } catch {
-            logger.error("Failed to write to LSP pipe: \(error)")
-            logger.error("LSP process running: \(process.isRunning)")
-            throw LSPError.communicationFailed
-        }
-
-        // レスポンス受信（簡易実装）
-        // v0.5.2: 基本的なレスポンス解析
-        let response = try await receiveResponse()
-
-        // v0.5.3: デバッグ用：レスポンス全体をログ出力
-        logger.info("📋 LSP Raw Response (length=\(response.count)):")
-        logger.info("---START---")
-        logger.info("\(response)")
-        logger.info("---END---")
-
-        // JSONパース
-        guard let jsonData = response.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
-            logger.warning("❌ Failed to parse LSP response as JSON")
-            logger.warning("Response bytes: \(response.utf8.map { String(format: "%02X", $0) }.joined(separator: " "))")
-            return []
-        }
-
-        logger.info("✅ Parsed JSON successfully")
-        logger.info("JSON keys: \(json.keys.joined(separator: ", "))")
-
-        // エラーチェック
-        if let error = json["error"] as? [String: Any] {
-            logger.error("LSP returned error: \(error)")
-            return []
-        }
-
-        guard let result = json["result"] as? [[String: Any]] else {
-            let resultType = type(of: json["result"])
-            logger.info("LSP result type: \(resultType), value: \(json["result"] ?? "missing")")
-            return []  // 参照なし（result: null は正常）
-        }
-
-        // Location解析
-        var locations: [LSPLocation] = []
-        for loc in result {
-            if let uri = loc["uri"] as? String,
-               let range = loc["range"] as? [String: Any],
-               let start = range["start"] as? [String: Any],
-               let line = start["line"] as? Int {
-                locations.append(LSPLocation(
-                    filePath: uri.replacingOccurrences(of: "file://", with: ""),
-                    line: line + 1  // 0-indexed → 1-indexed
-                ))
-            }
-        }
-
-        return locations
-    }
-
     /// ドキュメントシンボルを取得（textDocument/documentSymbol）
     ///
     /// - Parameter filePath: ファイルパス
@@ -468,45 +376,80 @@ class LSPClient {
 
     /// レスポンス受信（Content-Length対応版）
     private func receiveResponse() async throws -> String {
-        // v0.5.3: 正しいContent-Length処理
-        try await Task.sleep(nanoseconds: 1_000_000_000)
-
+        // v0.5.5: 非同期通知をスキップして、応答のみ取得
         let handle = outputPipe.fileHandleForReading
-        guard let data = try? handle.availableData,
-              !data.isEmpty else {
-            throw LSPError.communicationFailed
-        }
 
-        guard let fullResponse = String(data: data, encoding: .utf8) else {
-            throw LSPError.communicationFailed
-        }
+        // 非同期通知をスキップして応答（id付き）を探す
+        while true {
+            try await Task.sleep(nanoseconds: 100_000_000)  // 100ms待機
 
-        // Content-Lengthヘッダーをパース
-        let lines = fullResponse.split(separator: "\r\n", maxSplits: 10, omittingEmptySubsequences: false)
-        var contentLength: Int?
-
-        for line in lines {
-            if line.hasPrefix("Content-Length: ") {
-                let lengthStr = line.replacingOccurrences(of: "Content-Length: ", with: "")
-                contentLength = Int(lengthStr.trimmingCharacters(in: .whitespaces))
-                break
-            }
-        }
-
-        // JSON部分を抽出（\r\n\r\nの後）
-        if let separatorRange = fullResponse.range(of: "\r\n\r\n") {
-            let jsonPart = String(fullResponse[separatorRange.upperBound...])
-
-            // Content-Lengthがあれば、その長さだけ取得
-            if let length = contentLength, jsonPart.count >= length {
-                let endIndex = jsonPart.index(jsonPart.startIndex, offsetBy: length)
-                return String(jsonPart[..<endIndex])
+            guard let data = try? handle.availableData,
+                  !data.isEmpty else {
+                throw LSPError.communicationFailed
             }
 
-            return jsonPart
-        }
+            guard let text = String(data: data, encoding: .utf8) else {
+                throw LSPError.communicationFailed
+            }
 
-        throw LSPError.communicationFailed
+            // Content-Lengthで1メッセージずつ切り出し
+            var remainingText = text
+
+            while !remainingText.isEmpty {
+                // Content-Lengthヘッダーを探す
+                guard let headerEnd = remainingText.range(of: "\r\n\r\n") else {
+                    break  // ヘッダー不完全、次の読み取りを待つ
+                }
+
+                let headerPart = String(remainingText[..<headerEnd.lowerBound])
+
+                // Content-Lengthをパース
+                var contentLength: Int?
+                for line in headerPart.split(separator: "\r\n") {
+                    if line.hasPrefix("Content-Length: ") {
+                        let lengthStr = line.replacingOccurrences(of: "Content-Length: ", with: "")
+                        contentLength = Int(lengthStr.trimmingCharacters(in: .whitespaces))
+                        break
+                    }
+                }
+
+                guard let length = contentLength else {
+                    throw LSPError.communicationFailed
+                }
+
+                // JSON部分の開始位置
+                let jsonStart = headerEnd.upperBound
+                let jsonStartIndex = remainingText.distance(from: remainingText.startIndex, to: jsonStart)
+
+                // Content-Length分のデータがあるか確認
+                let availableJsonLength = remainingText.count - jsonStartIndex
+                if availableJsonLength < length {
+                    break  // データ不完全、次の読み取りを待つ
+                }
+
+                // 正確にContent-Length分だけ取得
+                let jsonEndIndex = remainingText.index(jsonStart, offsetBy: length)
+                let jsonPart = String(remainingText[jsonStart..<jsonEndIndex])
+
+                // 残りのテキストを更新
+                remainingText = String(remainingText[jsonEndIndex...])
+
+                // メッセージ種別を判定（id有無）
+                if jsonPart.contains("\"id\":") {
+                    // 応答メッセージ（id付き）→ これを返す
+                    return jsonPart
+                } else {
+                    // 非同期通知（method付き、id無し）→ スキップ
+                    logger.debug("Skipping async notification: \(jsonPart.prefix(100))...")
+                    continue
+                }
+            }
+
+            // バッファにデータが残っている場合、次の読み取りを待つ
+            if remainingText.isEmpty {
+                try await Task.sleep(nanoseconds: 100_000_000)
+            }
+        }
     }
 
     /// LSP接続を切断
