@@ -103,7 +103,8 @@ enum FileSearcher {
         var filesWithoutPattern: [String] = []
         let fileManager = FileManager.default
 
-        let regex = try NSRegularExpression(pattern: pattern, options: [])
+        // マルチラインモード（^と$が各行の先頭・末尾にマッチ）
+        let regex = try NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines])
 
         guard let enumerator = fileManager.enumerator(atPath: directory) else {
             throw NSError(domain: "FileSearcher", code: -1, userInfo: [

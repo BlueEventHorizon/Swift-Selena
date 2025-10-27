@@ -1577,8 +1577,253 @@ pkill -9 -f Swift-Selena
 
 ---
 
-**Document Version**: 1.6
+## 2025-10-27 - v0.5.5実装：search_files_without_patternとゾンビプロセス修正
+
+### 実施内容
+
+#### 新ツール実装：search_files_without_pattern
+
+**ユーザー要望:**
+- Code Header未作成ファイルの一括検出
+- Import未記述ファイルの発見
+- 「ないものを探す」検索機能（grep -L相当）
+
+**実装:**
+- FileSearcher.searchFilesWithoutPattern()メソッド追加
+- SearchFilesWithoutPatternTool.swift新規作成
+- 統計情報付き出力（Files checked, Files without pattern, 割合）
+
+**バグ修正1（正規表現）:**
+- 問題: 262/263ファイルが「Import無し」と誤検出
+- 原因: `^import`が文字列全体の先頭にのみマッチ
+- 修正: `.anchorsMatchLines`オプション追加
+- 結果: 3ファイル検出（期待値と一致）
+
+---
+
+#### 重大バグ修正：ゾンビプロセス問題
+
+**発見:**
+- Swift-Selenaプロセスが21個も残留
+- クライアント切断後もプロセスが終了しない
+
+**原因調査:**
+```swift
+// 旧実装
+while true {
+    try await Task.sleep(nanoseconds: 1_000_000_000_000)
+}
+```
+- MCP仕様調査: StdioTransportはEOF受信で終了すべき
+- `server.start()`は非ブロッキング（即座にreturn）
+- 無限ループでプロセス永続化していた
+- EOF受信しても無限ループ継続 → ゾンビ化
+
+**修正1（失敗）:**
+- 無限ループを削除
+- → `server.start()`が即座にreturn → main関数終了 → プロセス即終了
+- サーバーが動作しない
+
+**修正2（成功）:**
+- `await server.waitUntilCompleted()`追加
+- EOF受信までブロッキング待機
+- EOF → 正常終了
+
+**検証:**
+- ログ: `EOF received` → `Server stopped - client disconnected`
+- プロセス数: 増加なし（正常終了）
+
+---
+
+#### 設計問題修正：本番環境汚染防止
+
+**問題:**
+- debugビルドを`swift-selena`として登録
+- 他のClaude Codeインスタンスがdebugビルドに接続
+- DebugRunnerで5秒待たされる
+- 本番環境が影響を受ける
+
+**解決:**
+- debug版を**別名で登録**: `swift-selena-debug`
+- 本番版: `swift-selena` (release)
+- 開発版: `swift-selena-debug` (debug)
+- ツールプレフィックス: `mcp__swift-selena-debug__*`
+- 完全に分離、本番環境に影響なし
+
+---
+
+#### スクリプト全面修正
+
+**register-selena-to-claude-code-debug.sh:**
+- クリーンビルド自動実行（`swift package clean && swift build`）
+- `swift-selena-debug`として別名登録
+- `claude mcp remove`で既存設定削除
+- Swift-Selenaプロジェクト自体に登録（引数不要）
+
+**register-selena-to-claude-code.sh:**
+- Swift-Selenaプロジェクト自体に登録（引数削除）
+- `claude mcp remove`で既存設定削除
+- `swift-selena`として登録
+
+---
+
+### 技術的知見
+
+#### 1. MCP StdioTransportの仕様
+
+**調査結果:**
+- **1クライアント = 1サーバープロセス**（必須）
+- 複数クライアントで1プロセス共有は不可能
+- 仕様: "Single client connection only"
+- 複数クライアント対応にはSSE Transportが必要
+
+**`MCP_CLIENT_ID`の意味:**
+- プロセス分離ではなく**データ分離**のため
+- 各クライアントが独自プロセスを起動しても、データは共有ストレージ
+- Claude DesktopとClaude Codeでキャッシュを分離
+- 設計は正しい
+
+#### 2. server.start()とwaitUntilCompleted()
+
+**server.start():**
+- 非ブロッキング（即座にreturn）
+- バックグラウンドでメッセージループ開始
+- EOF検知はしない
+
+**server.waitUntilCompleted():**
+- EOF受信までブロッキング待機
+- クライアント切断で自動return
+- プロセス永続化とグレースフルシャットダウンを両立
+
+**誤った実装パターン:**
+```swift
+try await server.start(transport: transport)
+// ここで即座に終了 → サーバー動作しない
+```
+
+**正しい実装パターン:**
+```swift
+try await server.start(transport: transport)
+await server.waitUntilCompleted()  // EOF待機
+logger.info("Server stopped")
+```
+
+#### 3. 正規表現のanchorsMatchLines
+
+**問題:**
+- `^import`はデフォルトで文字列全体の先頭にマッチ
+- ファイル全体を1つの文字列として扱うと、`^`は最初の1文字のみ
+
+**解決:**
+- `.anchorsMatchLines`オプション
+- `^`と`$`が各行の先頭・末尾にマッチ
+- grep的な動作を実現
+
+---
+
+### 学んだ教訓
+
+#### 1. MCP仕様の完全理解が必須
+
+**失敗:**
+- 「1プロセスで複数クライアント処理できる」と誤解
+- ドキュメントを読まずに無限ループ削除
+
+**教訓:**
+- 公式仕様を必ず確認
+- 他の実装例を参考にする
+- 推測で変更しない
+
+#### 2. テストの重要性
+
+**失敗:**
+- Bashスクリプトで直接ロジック再実装
+- stringsコマンドでバイナリ確認だけ
+- 「〜件返されるはず」と推測
+
+**正しいテスト:**
+- 実際にMCPツールとして呼び出す
+- 実際の結果を確認
+- 期待値と比較検証
+
+#### 3. 本番環境への影響を常に考慮
+
+**失敗:**
+- debugビルドを`swift-selena`として登録
+- 他のインスタンスへの影響を考慮していなかった
+
+**教訓:**
+- 開発版と本番版を明確に分離
+- 別名登録で完全分離
+- スクリプト実行の影響範囲を理解
+
+#### 4. 段階的テストの重要性
+
+**成功パターン:**
+1. 実装 → ビルド
+2. 小規模テスト（1ファイル確認）
+3. 実際のMCPツールとして実行
+4. 結果検証
+5. バグ発見 → 修正 → 再テスト
+
+---
+
+### 実装統計
+
+**開発時間:** 約3-4時間（ゾンビ問題調査含む）
+
+**追加コード:**
+- FileSearcher.swift: +52行（searchFilesWithoutPattern）
+- SearchFilesWithoutPatternTool.swift: +113行（新規）
+- SwiftMCPServer.swift: 3行変更（ルーティング、waitUntilCompleted）
+- Constants.swift: 1行追加（ツール名）
+
+**スクリプト全面修正:**
+- register-selena-to-claude-code-debug.sh: 全面書き直し
+- register-selena-to-claude-code.sh: 引数削除、remove追加
+
+**ドキュメント更新:**
+- CLAUDE.md: DEBUGテスト手順追加
+- README.md/README.ja.md: debug版スクリプト追加
+
+**修正したバグ:**
+1. 正規表現マルチラインモード欠落
+2. ゾンビプロセス問題（無限ループ）
+3. 本番環境汚染問題（同名登録）
+
+---
+
+### 成果（v0.5.5）
+
+**完全動作:**
+- ✅ search_files_without_pattern: ContactBで3ファイル検出（期待値一致）
+- ✅ ゾンビプロセス解消: EOF受信で正常終了
+- ✅ 本番環境分離: swift-selena-debug別名登録
+- ✅ Total tools: 19（新ツール含む）
+
+**提供価値:**
+- Code Header未作成ファイルの一括検出
+- Import未記述ファイルの発見
+- ドキュメント整備状況の可視化
+- grep -L相当の標準機能
+
+---
+
+### 次のバージョン
+
+**v0.5.6（優先）:**
+- レスポンスバッファリング実装
+- documentSymbol/typeHierarchy安定化（非同期通知混入問題）
+
+**v0.6.0（予定）:**
+- Code Header DB
+- 意図ベース検索
+- Apple NaturalLanguage統合
+
+---
+
+**Document Version**: 1.7
 **Created**: 2025-10-15
-**Last Updated**: 2025-10-26
+**Last Updated**: 2025-10-27
 **Purpose**: 開発過程の記録と知見の共有
 
