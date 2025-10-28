@@ -4,6 +4,90 @@ Swift-Selenaのリリース履歴
 
 ---
 
+## v0.5.5 - 2025/10/27
+
+### LSP安定化、MCP基盤修正、新ツール実装
+
+**新機能:**
+- ✅ **search_files_without_pattern** - grep -L相当、「ないものを探す」検索
+  - Code Header未作成ファイルの検出
+  - Import未記述ファイルの発見
+  - 統計情報表示（Files checked、Files without pattern、割合）
+
+**重要なバグ修正（6件）:**
+1. ✅ **正規表現マルチラインモード** - `.anchorsMatchLines`追加、`^import`が各行にマッチ
+2. ✅ **ゾンビプロセス** - `server.waitUntilCompleted()`でEOF正常終了、無限ループ削除
+3. ✅ **本番環境汚染** - `swift-selena-debug`別名登録で開発版と本番版を完全分離
+4. ✅ **LSP非同期通知混入** - Content-Length正確処理、publishDiagnosticsスキップ
+5. ✅ **LSPState単一プロジェクト** - Dictionary管理で複数プロジェクト対応
+6. ✅ **initialize_projectバックグラウンド** - 同期待機、LSP接続完了後にreturn
+
+**find_symbol_references削除:**
+- 調査結果: Swift Package（✅動作）、Xcodeプロジェクト（❌常に0件）
+- 原因: SourceKit-LSP Issue #730（Xcodeプロジェクト未サポート）
+- 決断: 削除（約270行）、代替手段（find_type_usages）を推奨
+- 理由: 全プロジェクトタイプで動作する構成を優先
+
+**ドキュメント整備:**
+- CLAUDE.md: 言語設定、失敗パターンと対策、チェックリスト、ドキュメント更新ルール追加
+- PLAN.md: v0.5.5の実装内容を反映
+- LATEST_CONVERSATION_HISTORY.md: v0.5.5サマリー作成
+- MCP_LSP_LEARNINGS.md: 重要な知見を追加
+
+**重要な知見:**
+- MCP仕様: `server.waitUntilCompleted()`必須、無限ループは不要
+- LSP制限: Xcodeプロジェクトでは参照検索不可、documentSymbol/typeHierarchyは動作
+- 開発版と本番版の完全分離: 別名登録で本番環境汚染を防止
+
+**ツール総数:** 18個（find_symbol_references削除により減少）
+
+**詳細**: docs/LATEST_CONVERSATION_HISTORY.md、docs/MCP_LSP_LEARNINGS.md参照
+
+---
+
+## v0.5.4 - 2025/10/26
+
+### list_symbols、get_type_hierarchyにLSP型情報を統合
+
+**LSPClient拡張:**
+- ✅ **documentSymbol()** - textDocument/documentSymbol API実装
+- ✅ **typeHierarchy()** - textDocument/prepareTypeHierarchy API実装
+- LSPDocumentSymbol、LSPTypeHierarchy構造体追加
+
+**list_symbols強化:**
+- executeWithLSP()メソッド追加
+- LSP版: 型情報付き表示（例：`[Method] save: func save() throws`）
+- SwiftSyntax版: 従来通り（フォールバック）
+- symbolKindToString()でLSP SymbolKind変換
+
+**get_type_hierarchy強化:**
+- executeWithLSP()メソッド追加
+- LSP版: Type Detail追加（例：`Type Detail: class ProjectMemory`）
+- SwiftSyntax版: 従来通り（フォールバック）
+- グレースフルデグレード完全実装
+
+**実装完了:**
+- ✅ LSPClient拡張（documentSymbol, typeHierarchy）
+- ✅ 階層構造対応（children再帰処理）
+- ✅ 除外ディレクトリ対応（263ファイル完全一致）
+- ✅ Import空ファイル対応
+- ✅ ログJST表示
+- ✅ グレースフルデグレード完璧
+
+**テスト結果:**
+- ✅ ContactBプロジェクト: 全ツール完全一致検証
+- ✅ find_symbol_references: 動作
+- ✅ グレースフルデグレード完璧
+
+**ツール総数:**
+- ビルド不可: 17個
+- ビルド可能: 18個
+- 強化ツール: 2個（list_symbols、get_type_hierarchy）
+
+**詳細**: docs/CONVERSATION_HISTORY.md v0.5.4セクション参照
+
+---
+
 ## v0.5.3 - 2025/10/24
 
 ### LSP安定化とデバッグ機能
@@ -285,4 +369,4 @@ Swift-Selenaのリリース履歴
 
 ---
 
-**Last Updated**: 2025-10-11
+**Last Updated**: 2025-10-28
