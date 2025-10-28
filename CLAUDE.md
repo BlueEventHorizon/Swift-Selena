@@ -4,6 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## 言語設定
+
+**このプロジェクトでは日本語で対話してください。**
+
+- コードのコメント、変数名、関数名は英語
+- Claude Codeとの対話、説明、ドキュメントは日本語
+- エラーメッセージやログ出力は英語（開発者向け）
+
+---
+
 ## 開発時の基本原則
 
 ### 1. 仕様を必ず最初に確認する
@@ -14,6 +24,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 「知っている」と思っても確認する
 - バージョンの仕様変更を把握する
 
+**実装前の確認手順**:
+1. **公式ドキュメント確認**: 最新の仕様を読む（MCP、LSP、SwiftSyntax等）
+2. **GitHub Issuesチェック**: 既知の制限や未サポート機能を確認
+3. **プラットフォーム制限調査**: Xcodeプロジェクト vs Swift Packageの違い
+4. **既存実装の参考**: 公式サンプルや他の実装例を確認
+
+**失敗例**:
+- ❌ LSP参照検索を実装後、Xcodeプロジェクトで動作しないと判明（Issue #730見落とし）
+- ❌ 「接続成功」を「全機能動作」と誤解
+
 ### 2. 小さく試してから大きく展開する
 
 一度に大量生産せず、1つを完成させてから次へ進んでください。
@@ -21,6 +41,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 1つのサンプルで動作確認
 - 問題なければ他に展開
 - エラーが出てから修正では遅い
+
+**実装の進め方**:
+1. 最小限の実装で動作確認
+2. 主要ユースケース（Xcodeプロジェクト）でテスト
+3. 問題なければ機能拡張
+4. ドキュメント更新
 
 ### 3. 品質を最優先する
 
@@ -31,6 +57,165 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - 間違った場合に手戻りが膨大です
   - 単純置換などはOK
 - 手抜きしない（全力で作業に向き合ってください）
+
+---
+
+## よくある失敗パターンと対策
+
+### 1. MCP実装での失敗
+
+**失敗**: 無限ループでサーバーを動作させる
+```swift
+// ❌ 誤り
+try await server.start(transport: transport)
+while true {
+    try await Task.sleep(for: .seconds(1000))
+}
+```
+
+**対策**: `waitUntilCompleted()`を使う
+```swift
+// ✅ 正解
+try await server.start(transport: transport)
+await server.waitUntilCompleted()  // EOF待機
+```
+
+**理由**: `server.start()`は非ブロッキング、無限ループはゾンビプロセスの原因
+
+---
+
+**失敗**: 開発版を本番と同じ名前で登録
+```bash
+# ❌ 誤り - 本番環境が影響を受ける
+claude mcp add swift-selena -- /path/to/debug/Swift-Selena
+```
+
+**対策**: 別名で登録
+```bash
+# ✅ 正解 - 開発版は別名
+claude mcp add swift-selena-debug -- /path/to/debug/Swift-Selena
+```
+
+**理由**: ツールプレフィックスが分離され、本番環境に影響しない
+
+---
+
+### 2. LSP実装での失敗
+
+**失敗**: Xcodeプロジェクトで参照検索を実装
+```swift
+// textDocument/references を実装
+// → Xcodeプロジェクトでは常に0件
+```
+
+**対策**: 事前にプラットフォーム制限を調査
+- SourceKit-LSP Issue #730確認
+- Xcodeプロジェクトではグローバルインデックス不可
+- 代替手段（SwiftSyntax）を用意
+
+---
+
+**失敗**: LSP接続をバックグラウンドで実行
+```swift
+// ❌ 誤り
+Task {
+    await lspState.tryConnect(projectPath)
+}
+return Result(...)  // 接続完了前にreturn
+```
+
+**対策**: 同期待機
+```swift
+// ✅ 正解
+let lspAvailable = await lspState.tryConnect(projectPath)
+return Result(...)  // 接続完了後
+```
+
+---
+
+### 3. テストでの失敗
+
+**失敗**: Bashスクリプトで直接ロジック再実装
+```bash
+# ❌ これはテストではない
+find . -name "*.swift" | while read f; do
+    grep -L "^import" "$f"
+done
+```
+
+**対策**: 実際のMCPツールとして呼び出す
+```
+# ✅ 正しいテスト
+mcp__swift-selena-debug__initialize_project(project_path: "/path/to/project")
+mcp__swift-selena-debug__search_files_without_pattern(pattern: "^import")
+```
+
+**理由**: MCPサーバーとしての統合動作を確認する必要がある
+
+---
+
+## 変更時の影響確認チェックリスト
+
+### コード変更時
+
+- [ ] **ビルド確認**: `swift build` でエラーなくビルドできるか
+- [ ] **DEBUGビルドテスト**: `./register-selena-to-claude-code-debug.sh` で動作確認
+- [ ] **実際のMCPツールとしてテスト**: 新機能を実際に呼び出して検証
+- [ ] **ログ確認**: `tail -f ~/.swift-selena/logs/server.log` でエラーなし
+- [ ] **ドキュメント更新**: 該当するドキュメントを更新（下記参照）
+
+### リリースビルド実行前（人間の明示的指示が必要）
+
+**⚠️ 警告: 以下を確認するまでリリースビルドは絶対に実行しない**
+
+- [ ] **他のClaude Codeインスタンスが本番版を使用中でないか確認**
+- [ ] **人間から「リリースビルドして」と明示的指示があったか**
+- [ ] **変更内容が本番環境に影響しないか確認**
+
+**理由**: 他のプロジェクト（CCMonitor等）が本番版Swift-Selenaを使用している可能性があります。勝手にリリースビルドすると、それらのプロジェクトに影響が及びます。
+
+---
+
+## ドキュメント更新ルール
+
+### 更新が必要なドキュメント
+
+| 変更内容 | 更新すべきドキュメント |
+|---------|---------------------|
+| 新ツール追加 | CLAUDE.md（ツールカテゴリ）、README.md |
+| バグ修正 | LATEST_CONVERSATION_HISTORY.md、CHANGELOG.md |
+| 重要な知見 | MCP_LSP_LEARNINGS.md |
+| アーキテクチャ変更 | CLAUDE.md（アーキテクチャ）、README.md |
+| テスト方法変更 | CLAUDE.md（DEBUGビルドでのテスト方法） |
+| ビルド・スクリプト変更 | CLAUDE.md（ビルド・実行コマンド） |
+
+### ドキュメントの使い分け
+
+**CLAUDE.md** (このファイル):
+- Claude Codeへの指示・ガイドライン
+- プロジェクト構造、アーキテクチャ
+- ビルド・テスト方法
+- **常に最新状態を保つ**
+
+**LATEST_CONVERSATION_HISTORY.md**:
+- 直近のバージョンの変更サマリー
+- 次のセッションで知っておくべき重要情報
+- **各バージョンリリース時に更新**
+
+**CONVERSATION_HISTORY.md**:
+- 全バージョンの詳細な開発履歴
+- 対話の詳細記録
+- **長期的な参考資料**
+
+**MCP_LSP_LEARNINGS.md**:
+- MCP・LSP実装の重要知見
+- 失敗から学んだ教訓
+- **技術的な深い知識を蓄積**
+
+**README.md**:
+- エンドユーザー向けドキュメント
+- インストール・使用方法
+- **ユーザー視点で記述**
 
 ---
 
