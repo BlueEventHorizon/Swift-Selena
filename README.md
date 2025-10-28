@@ -27,6 +27,7 @@
 ### File Search
 - **`find_files`** - Search files by wildcard pattern (e.g., `*ViewModel.swift`)
 - **`search_code`** - Search code content using regex
+- **`search_files_without_pattern`** - Search files WITHOUT a pattern (grep -L equivalent)
 
 ### SwiftSyntax Analysis
 - **`list_symbols`** - List all symbols (Class, Struct, Function, etc.)
@@ -41,12 +42,6 @@
 
 ### Efficient Reading
 - **`read_symbol`** - Read specific symbol (function, class, struct, etc.)
-
-### LSP Integration (v0.5.2+, buildable projects only)
-- **`find_symbol_references`** - Find all references to a symbol (type-based, requires LSP)
-  - Precise reference search using type information
-  - Available only when project is buildable
-  - Fallback: use `find_type_usages` or `search_code` when LSP unavailable
 
 ### Analysis Modes
 - **`set_analysis_mode`** - Set analysis mode (SwiftUI/Architecture/Testing/Refactoring/General)

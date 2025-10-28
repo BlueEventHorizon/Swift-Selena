@@ -27,6 +27,7 @@
 ### ファイル検索
 - **`find_files`** - ワイルドカードパターンでファイル検索（例: `*ViewModel.swift`）
 - **`search_code`** - 正規表現でコード内容を検索
+- **`search_files_without_pattern`** - パターンにマッチしないファイルを検索（grep -L相当）
 
 ### SwiftSyntax解析
 - **`list_symbols`** - Class, Struct, Function等のシンボル一覧
@@ -41,12 +42,6 @@
 
 ### 効率的な読み取り
 - **`read_symbol`** - シンボル単位で読み取り（関数、クラス、構造体等）
-
-### LSP統合機能（v0.5.2+、ビルド可能時のみ）
-- **`find_symbol_references`** - シンボル参照検索（型情報ベース、LSP使用）
-  - 型情報を使った正確な参照検索
-  - ビルド可能なプロジェクトでのみ利用可能
-  - LSP利用不可時: find_type_usages または search_code を代替として使用
 
 ### 分析モード
 - **`set_analysis_mode`** - 分析モード設定（SwiftUI/Architecture/Testing/Refactoring/General）
