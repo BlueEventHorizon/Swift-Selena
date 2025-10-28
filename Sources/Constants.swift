@@ -10,7 +10,7 @@ import Foundation
 /// アプリケーション全体の定数
 enum AppConstants {
     static let name = "Swift-Selena"
-    static let version = "0.5.0"
+    static let version = "0.5.5"
     static let loggerLabel = "swift-selena"
     static let storageDirectory = ".swift-selena"
 }
@@ -20,13 +20,12 @@ enum ToolNames {
     static let initializeProject = "initialize_project"
     static let findFiles = "find_files"
     static let searchCode = "search_code"
+    static let searchFilesWithoutPattern = "search_files_without_pattern"  // v0.5.5 新規ツール
     static let listSymbols = "list_symbols"
     static let findSymbolDefinition = "find_symbol_definition"
     static let addNote = "add_note"
     static let searchNotes = "search_notes"
-    static let getProjectStats = "get_project_stats"
-    static let readFunctionBody = "read_function_body"
-    static let readLines = "read_lines"
+    // v0.6.0で削除: get_project_stats, read_function_body, read_lines（価値が低い、または代替可能）
     static let listPropertyWrappers = "list_property_wrappers"
     static let listProtocolConformances = "list_protocol_conformances"
     static let listExtensions = "list_extensions"
@@ -38,9 +37,9 @@ enum ToolNames {
     // v0.5.0 新規ツール
     static let setAnalysisMode = "set_analysis_mode"
     static let readSymbol = "read_symbol"
-    static let listDirectory = "list_directory"
-    static let readFile = "read_file"
-    static let thinkAboutAnalysis = "think_about_analysis"
+    static let thinkAboutAnalysis = "think_about_analysis"  // v0.6.2でPrompts移行予定
+
+    // v0.6.0で削除: list_directory, read_file（Claude標準機能で代替）
 }
 
 /// パラメータキーの定数
@@ -64,6 +63,30 @@ enum ParameterKeys {
     static let path = "path"
     static let recursive = "recursive"
     static let includeChildren = "include_children"
+
+    // v0.5.2 新規パラメータ（LSP用）
+    static let line = "line"
+    static let column = "column"
+}
+
+/// 除外するディレクトリパターン（v0.5.4）
+enum ExcludedDirectories {
+    /// 除外するディレクトリ名
+    static let patterns = [
+        ".build",           // Swift Package Manager build artifacts
+        "checkouts",        // SPM dependencies
+        "DerivedData",      // Xcode build cache
+        ".git",             // Git repository
+        "Pods",             // CocoaPods dependencies
+        "Carthage",         // Carthage dependencies
+        ".swiftpm",         // SPM configuration
+        "xcuserdata"        // Xcode user data
+    ]
+
+    /// パスが除外対象か判定
+    static func shouldExclude(_ path: String) -> Bool {
+        return patterns.contains { path.contains("/\($0)/") || path.hasSuffix("/\($0)") }
+    }
 }
 
 /// エラーメッセージの定数

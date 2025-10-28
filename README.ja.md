@@ -13,6 +13,7 @@
 ## 主な特徴
 
 - **ビルド不要**: SwiftSyntaxベースの静的解析により、ビルドエラーがあっても動作
+- **LSP統合**: ビルド可能時はSourceKit-LSPで高度な機能を提供（v0.5.1+）
 - **SwiftUI対応**: Property Wrapper（@State, @Binding等）を自動検出
 - **高速検索**: ファイルシステムベースの検索で大規模プロジェクトでも高速
 - **プロジェクト記憶**: 解析結果とメモを永続化し、セッション間で共有
@@ -39,13 +40,21 @@
 - **`find_type_usages`** - 型の使用箇所を検出（変数宣言、関数パラメータ、戻り値型）
 
 ### 効率的な読み取り
-- **`read_function_body`** - 特定の関数実装のみを抽出
-- **`read_lines`** - ファイルの指定行範囲を読み取り
+- **`read_symbol`** - シンボル単位で読み取り（関数、クラス、構造体等）
+
+### LSP統合機能（v0.5.2+、ビルド可能時のみ）
+- **`find_symbol_references`** - シンボル参照検索（型情報ベース、LSP使用）
+  - 型情報を使った正確な参照検索
+  - ビルド可能なプロジェクトでのみ利用可能
+  - LSP利用不可時: find_type_usages または search_code を代替として使用
+
+### 分析モード
+- **`set_analysis_mode`** - 分析モード設定（SwiftUI/Architecture/Testing/Refactoring/General）
+- **`think_about_analysis`** - 分析進捗の振り返り
 
 ### プロジェクトメモ
 - **`add_note`** - 設計決定や重要事項をメモとして保存
 - **`search_notes`** - 保存したメモを検索
-- **`get_project_stats`** - プロジェクト統計とキャッシュ情報を表示
 
 ## インストール
 
@@ -68,6 +77,7 @@ swift build -c release -Xswiftc -Osize
 # セットアップスクリプトに実行権限を付与
 chmod +x register-mcp-to-claude-desktop.sh
 chmod +x register-selena-to-claude-code.sh
+chmod +x register-selena-to-claude-code-debug.sh
 
 # 実行可能ファイルのパスを確認
 pwd
@@ -75,6 +85,38 @@ pwd
 ```
 
 ビルド成果物は `.build/release/Swift-Selena` に生成されます。
+
+## デバッグ・ログ機能
+
+### ログファイル監視（v0.5.3+）
+
+Swift-Selenaはデバッグとトラブルシューティングのためにログファイルに出力します：
+
+**ログファイル位置:**
+```
+~/.swift-selena/logs/server.log
+```
+
+**リアルタイムでログを監視:**
+```bash
+tail -f ~/.swift-selena/logs/server.log
+```
+
+**確認できる内容:**
+- サーバー起動メッセージ
+- ツール実行ログ
+- LSP接続状態（成功/失敗）
+- エラーメッセージと診断情報
+
+**ログ出力例:**
+```
+[17:29:24] ℹ️ [info] Starting Swift MCP Server...
+[17:29:50] ℹ️ [info] Tool called: initialize_project
+[17:29:50] ℹ️ [info] Attempting LSP connection...
+[17:29:51] ℹ️ [info] ✅ LSP connected successfully
+```
+
+**ヒント:** Swift-Selena使用中は、別のターミナルで`tail -f`を実行し続けておくと、リアルタイムデバッグが可能です。
 
 ## セットアップ
 
@@ -93,19 +135,26 @@ pwd
 - `claude_desktop_config.json`に設定を追加
 - 既存の設定を保持（jqがインストールされている場合）
 
-#### Claude Codeの場合（特定プロジェクトに接続）
+#### Claude Codeの場合
 
-Swift-Selenaを特定のプロジェクトに接続するには：
+Swift-SelenaをClaude Codeに接続するには：
 
 ```bash
-# Swift-Selenaディレクトリから実行
+# 本番用（ターゲットプロジェクトに登録）
 ./register-selena-to-claude-code.sh /path/to/your/project
+
+# 例:
+./register-selena-to-claude-code.sh /Users/yourname/apps/CCMonitor
+
+# 開発・テスト用（Swift-Selenaプロジェクト自体に登録）
+./register-selena-to-claude-code-debug.sh
 ```
 
 このスクリプトは以下を自動実行します：
 - 実行ファイルの存在確認
-- ターゲットプロジェクトディレクトリに移動
+- ターゲットプロジェクトディレクトリに移動（pushd/popd使用）
 - `claude mcp add`で登録（そのプロジェクトのみ有効）
+- Debug版は`swift-selena-debug`として別名登録（本番用`swift-selena`に影響なし）
 
 **別の方法：makefileを使用**（プロジェクトにmakefileがある場合）
 

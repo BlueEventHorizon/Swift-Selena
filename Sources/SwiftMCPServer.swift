@@ -7,15 +7,29 @@ import SwiftParser
 @main
 struct SwiftMCPServer {
     static func main() async throws {
+        // v0.5.3: ファイルログ設定
+        let logFilePath = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".swift-selena/logs/server.log")
+            .path
+
         // ロギング設定
         LoggingSystem.bootstrap { label in
-            var handler = StreamLogHandler.standardError(label: label)
-            handler.logLevel = .info
-            return handler
+            if let handler = try? FileLogHandler(logFilePath: logFilePath) {
+                var h = handler
+                h.logLevel = .info
+                return h
+            } else {
+                // フォールバック: stderr
+                var handler = StreamLogHandler.standardError(label: label)
+                handler.logLevel = .info
+                return handler
+            }
         }
 
         let logger = Logger(label: AppConstants.loggerLabel)
-        logger.info("Starting Swift MCP Server (Filesystem + SwiftSyntax)...")
+        logger.info("Starting Swift MCP Server (Filesystem + SwiftSyntax + LSP)...")
+        logger.info("Log file: \(logFilePath)")
+        logger.info("Monitor with: tail -f \(logFilePath)")
 
         let server = Server(
             name: AppConstants.name,
@@ -25,22 +39,40 @@ struct SwiftMCPServer {
             )
         )
 
+        // v0.5.1: LSP状態管理
+        let lspState = LSPState(logger: logger)
+
         var projectMemory: ProjectMemory?
 
-        // ツールリスト
+        #if DEBUG
+        // v0.5.3: デバッグランナー起動（5秒後に自動実行）
+        Task.detached {
+            await DebugRunner.run(
+                delay: 5.0,
+                lspState: lspState,
+                logger: logger
+            )
+        }
+        logger.info("🔧 DebugRunner enabled - automatic tests will start in 5 seconds")
+        #endif
+
+        // ツールリスト（v0.5.1: 動的生成対応）
         await server.withMethodHandler(ListTools.self) { _ in
-            ListTools.Result(tools: [
+            logger.info("ListTools handler called")
+            var tools: [Tool] = []
+
+            // SwiftSyntaxツール（常に利用可能）
+            tools.append(contentsOf: [
                 // v0.5.0: 新しい構造のツール
                 InitializeProjectTool.toolDefinition,
                 FindFilesTool.toolDefinition,
                 SearchCodeTool.toolDefinition,
+                SearchFilesWithoutPatternTool.toolDefinition,  // v0.5.5 新規ツール
                 ListSymbolsTool.toolDefinition,
                 FindSymbolDefinitionTool.toolDefinition,
                 AddNoteTool.toolDefinition,
                 SearchNotesTool.toolDefinition,
-                GetProjectStatsTool.toolDefinition,
-                ReadFunctionBodyTool.toolDefinition,
-                ReadLinesTool.toolDefinition,
+                // v0.6.0で削除: GetProjectStats, ReadFunctionBody, ReadLines
                 ListPropertyWrappersTool.toolDefinition,
                 ListProtocolConformancesTool.toolDefinition,
                 ListExtensionsTool.toolDefinition,
@@ -51,11 +83,16 @@ struct SwiftMCPServer {
                 // v0.5.0 新規ツール
                 SetAnalysisModeTool.toolDefinition,
                 ReadSymbolTool.toolDefinition,
-                ListDirectoryTool.toolDefinition,
-                ReadFileTool.toolDefinition,
+                // v0.6.0で削除: ListDirectory, ReadFile
                 // v0.5.0 新規ツール
                 ThinkAboutAnalysisTool.toolDefinition
             ])
+
+            let lspAvailable = await lspState.isLSPAvailable()
+            logger.info("LSP status: \(lspAvailable ? "available" : "not available")")
+            logger.info("Total tools: \(tools.count)")
+
+            return ListTools.Result(tools: tools)
         }
 
         // ツール実行
@@ -77,10 +114,17 @@ struct SwiftMCPServer {
                     throw MCPError.invalidParams("Project path does not exist or is not a directory")
                 }
 
+                // ProjectMemory初期化
                 projectMemory = try ProjectMemory(projectPath: projectPath)
 
+                // v0.5.5: LSP接続を試みる（同期的に待機）
+                let lspAvailable = await lspState.tryConnect(projectPath: projectPath)
+
+                let lspStatus = lspAvailable ? "✅ LSP available - Enhanced features ready" : "ℹ️ LSP unavailable - Using SwiftSyntax only"
+
+                // LSP接続完了後にレスポンス返却
                 return CallTool.Result(content: [
-                    .text("✅ Project initialized: \(projectPath)\n\n\(projectMemory?.getStats() ?? "")")
+                    .text("✅ Project initialized: \(projectPath)\n\n\(lspStatus)\n\n\(projectMemory?.getStats() ?? "")")
                 ])
 
             case ToolNames.findFiles:
@@ -97,10 +141,19 @@ struct SwiftMCPServer {
                     logger: logger
                 )
 
-            case ToolNames.listSymbols:
-                return try await ListSymbolsTool.execute(
+            case ToolNames.searchFilesWithoutPattern:
+                return try await SearchFilesWithoutPatternTool.execute(
                     params: params,
                     projectMemory: projectMemory,
+                    logger: logger
+                )
+
+            case ToolNames.listSymbols:
+                // v0.5.4: LSP強化版
+                return try await ListSymbolsTool.executeWithLSP(
+                    params: params,
+                    projectMemory: projectMemory,
+                    lspState: lspState,
                     logger: logger
                 )
 
@@ -125,22 +178,10 @@ struct SwiftMCPServer {
                     logger: logger
                 )
 
-            case ToolNames.getProjectStats:
-                return try await GetProjectStatsTool.execute(
-                    params: params,
-                    projectMemory: projectMemory,
-                    logger: logger
-                )
+            // v0.6.0で削除: getProjectStats, readFunctionBody, readLines
 
-            case ToolNames.readFunctionBody:
-                return try await ReadFunctionBodyTool.execute(
-                    params: params,
-                    projectMemory: projectMemory,
-                    logger: logger
-                )
-
-            case ToolNames.readLines:
-                return try await ReadLinesTool.execute(
+            case ToolNames.listPropertyWrappers:
+                return try await ListPropertyWrappersTool.execute(
                     params: params,
                     projectMemory: projectMemory,
                     logger: logger
@@ -175,9 +216,11 @@ struct SwiftMCPServer {
                 )
 
             case ToolNames.getTypeHierarchy:
-                return try await GetTypeHierarchyTool.execute(
+                // v0.5.4: LSP強化版
+                return try await GetTypeHierarchyTool.executeWithLSP(
                     params: params,
                     projectMemory: projectMemory,
+                    lspState: lspState,
                     logger: logger
                 )
 
@@ -218,19 +261,7 @@ struct SwiftMCPServer {
                     logger: logger
                 )
 
-            case ToolNames.listDirectory:
-                return try await ListDirectoryTool.execute(
-                    params: params,
-                    projectMemory: projectMemory,
-                    logger: logger
-                )
-
-            case ToolNames.readFile:
-                return try await ReadFileTool.execute(
-                    params: params,
-                    projectMemory: projectMemory,
-                    logger: logger
-                )
+            // v0.6.0で削除: listDirectory, readFile
 
             default:
                 throw MCPError.invalidParams("Unknown tool: \(params.name)")
@@ -241,10 +272,9 @@ struct SwiftMCPServer {
         let transport = StdioTransport(logger: logger)
         try await server.start(transport: transport)
 
-        // サーバーを永続的に実行
-        while true {
-            try await Task.sleep(nanoseconds: 1_000_000_000_000)
-        }
+        // サーバーが完了するまで待機（EOF受信まで）
+        await server.waitUntilCompleted()
+        logger.info("Server stopped - client disconnected")
     }
 }
 

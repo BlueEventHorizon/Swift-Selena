@@ -4,6 +4,159 @@ Swift-Selenaのリリース履歴
 
 ---
 
+## v0.5.3 - 2025/10/24
+
+### LSP安定化とデバッグ機能
+
+**LSP修正（find_symbol_references完全動作）:**
+- ✅ **initialized通知追加** - LSPプロトコル準拠
+- ✅ **textDocument/didOpen実装** - ファイルをLSPに通知
+- ✅ **initializeレスポンス読み捨て** - バッファクリア
+- ✅ **SIGPIPE対策** - signal(SIGPIPE, SIG_IGN)
+- ✅ **Content-Length計算修正** - 実際のJSON長を計算
+- ✅ **エラーハンドリング強化** - プロセス状態チェック、try-catch
+
+**デバッグ機能:**
+- ✅ **FileLogHandler** - ファイルログ出力（~/.swift-selena/logs/server.log）
+- ✅ **DebugRunner** - プロセス内自動テストランナー（#if DEBUG、Xcodeデバッガ対応）
+- ✅ **LSPState診断機能** - getStatus()メソッド追加
+
+**検証結果:**
+- find_symbol_references: 5回連続実行でクラッシュなし
+- LSPStateの参照: 3件検出成功
+- ProjectMemoryの参照: 34件検出成功
+- FindSymbolReferencesTool: 3件検出成功
+
+**技術詳細:**
+- LSPプロトコル完全準拠（initialize → initialized → didOpen → requests）
+- 開いたファイルをキャッシュ（openedFiles）
+- publishDiagnostics通知を正しく処理
+- レスポンス解析の詳細ログ出力
+
+**ツール総数:** 18個（変更なし、安定性向上）
+
+**ドキュメント:**
+- README.md/README.ja.md: ログ監視方法を追記
+- docs/tool_design/DES-008: DebugRunner設計書
+
+**詳細**: docs/tool_design/DES-008_DebugRunner_Design.md参照
+
+---
+
+## v0.5.2 - 2025/10/21
+
+### LSP機能実装
+
+**新規ツール:**
+- ✅ **find_symbol_references** - シンボル参照検索（LSP版）
+  - 型情報ベースの正確な参照検索
+  - textDocument/referencesリクエスト使用
+  - ビルド可能時のみ利用可能（動的ツールリスト）
+  - LSP利用不可時: find_type_usages, search_code を代替として案内
+
+**技術実装:**
+- FindSymbolReferencesTool.execute()にlspStateパラメータ追加
+- SwiftMCPServerからlspStateを渡す実装
+- MCPToolプロトコル準拠のためのラッパー実装
+- 0-indexed ↔ 1-indexed インデックス変換
+
+**ツール総数:**
+- ビルド不可: 17個（SwiftSyntaxのみ）
+- ビルド可能: 18個（+find_symbol_references）
+
+**設計判断:**
+- list_symbols強化、get_type_hierarchy強化はv0.5.3に延期
+- 理由: LSP documentSymbol統合に追加実装時間が必要
+- v0.5.2は基本的なLSP機能（参照検索）に集中
+
+**削除した機能:**
+- ❌ get_tool_usage_stats（v0.8.0に延期）
+  - 後方互換性の問題
+  - 設計見直しが必要（ProjectMemory外で管理）
+
+**コミット:**
+- 7cfd60c: complete FindSymbolReferencesTool
+- cfdd1eb: add: FindSymbolReferencesTool
+
+**詳細**: docs/tool_design/PLAN.md v0.5.2セクション参照
+
+---
+
+## v0.5.1 - 2025/10/21
+
+### LSP基盤整備
+
+**新規コンポーネント:**
+- LSPState Actor - LSP接続状態管理
+- LSPClient - SourceKit-LSP通信基盤（JSON-RPC over stdin/stdout）
+- 動的ツールリスト生成（LSP状態に応じてツール変更）
+
+**機能:**
+- バックグラウンドLSP接続（initialize_project時、非ブロッキング）
+- ビルド可能時のみLSP機能を提供（v0.5.2以降）
+- グレースフルデグレード（LSP失敗でもSwiftSyntax動作）
+
+**設計判断:**
+- BuildChecker削除（直接LSP接続試行で十分）
+- Serenaと同じシンプルなアプローチ
+
+---
+
+### ツール削減とクリーンアップ
+
+**削除したツール（-5個）:**
+- ❌ read_file → Claude標準Readで完全代替
+- ❌ read_lines → Claude標準Readで完全代替
+- ❌ read_function_body → read_symbolで代替
+- ❌ list_directory → Claude Bash（ls）で完全代替
+- ❌ get_project_stats → 価値が低い
+
+**削減理由:**
+
+**パフォーマンス分析:**
+- read_file: Swift-Selena = Claude Read（差なし）
+- read_lines: コンテキスト効率は限定的（結局全体を見る）
+- list_directory: ls コマンドと同じ（差なし）
+
+**正確性分析:**
+- 全て同じ結果（ファイルシステム操作）
+
+**代替可能性:**
+- read_file, read_lines, list_directory: Claude標準機能で100%代替
+- read_function_body: read_symbol(symbol_path: "Class/method")で代替
+- get_project_stats: search_notesで十分
+
+**結論:**
+- Claude標準機能との重複排除
+- Swift-Selenaは「Swift解析」に特化
+- メンテナンス負担削減
+
+**ツール総数**: 22個 → **17個**
+
+---
+
+### 今後の方針転換
+
+**LSPツール追加の再考:**
+
+**従来の計画:**
+- LSPツール5個を新規追加（find_symbol_references, get_symbol_info等）
+- ツール総数: 22個 → 27個
+
+**新しい方針:**
+- 既存ツールをLSPで強化（新規ツール追加を最小化）
+- list_symbols → LSP利用時は型情報付き
+- get_type_hierarchy → LSP利用時はfind_overrides情報も含む
+
+**新規追加するのは:**
+- find_symbol_references のみ（既存機能にない）
+
+**最終ツール数**: 17個 → 18個（+1個のみ）
+
+**詳細**: docs/tool_design/内の各設計書を参照
+
+---
+
 ## v0.5.0 - 2025/10/13
 
 ### 新機能

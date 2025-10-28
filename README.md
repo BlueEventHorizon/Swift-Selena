@@ -13,6 +13,7 @@
 ## Key Features
 
 - **Build-Free**: Works even with build errors through SwiftSyntax-based static analysis
+- **LSP Integration**: Advanced features with SourceKit-LSP when project is buildable (v0.5.1+)
 - **SwiftUI Support**: Automatically detects Property Wrappers (@State, @Binding, etc.)
 - **Fast Search**: Filesystem-based search for fast performance even on large projects
 - **Project Memory**: Persists analysis results and notes across sessions
@@ -39,13 +40,21 @@
 - **`find_type_usages`** - Find where a type is used (variable declarations, function parameters, return types)
 
 ### Efficient Reading
-- **`read_function_body`** - Extract only a specific function implementation
-- **`read_lines`** - Read specific line ranges from a file
+- **`read_symbol`** - Read specific symbol (function, class, struct, etc.)
+
+### LSP Integration (v0.5.2+, buildable projects only)
+- **`find_symbol_references`** - Find all references to a symbol (type-based, requires LSP)
+  - Precise reference search using type information
+  - Available only when project is buildable
+  - Fallback: use `find_type_usages` or `search_code` when LSP unavailable
+
+### Analysis Modes
+- **`set_analysis_mode`** - Set analysis mode (SwiftUI/Architecture/Testing/Refactoring/General)
+- **`think_about_analysis`** - Reflect on analysis progress
 
 ### Project Notes
 - **`add_note`** - Save design decisions and important notes
 - **`search_notes`** - Search saved notes
-- **`get_project_stats`** - Display project statistics and cache information
 
 ## Installation
 
@@ -68,6 +77,7 @@ swift build -c release -Xswiftc -Osize
 # Grant execute permission to setup scripts
 chmod +x register-mcp-to-claude-desktop.sh
 chmod +x register-selena-to-claude-code.sh
+chmod +x register-selena-to-claude-code-debug.sh
 
 # Verify executable path
 pwd
@@ -75,6 +85,38 @@ pwd
 ```
 
 The build artifact is generated at `.build/release/Swift-Selena`.
+
+## Debugging & Logging
+
+### Log File Monitoring (v0.5.3+)
+
+Swift-Selena outputs logs to a file for debugging and troubleshooting:
+
+**Log file location:**
+```
+~/.swift-selena/logs/server.log
+```
+
+**Monitor logs in real-time:**
+```bash
+tail -f ~/.swift-selena/logs/server.log
+```
+
+**What you can see:**
+- Server startup messages
+- Tool execution logs
+- LSP connection status (success/failure)
+- Error messages and diagnostics
+
+**Example log output:**
+```
+[17:29:24] ℹ️ [info] Starting Swift MCP Server...
+[17:29:50] ℹ️ [info] Tool called: initialize_project
+[17:29:50] ℹ️ [info] Attempting LSP connection...
+[17:29:51] ℹ️ [info] ✅ LSP connected successfully
+```
+
+**Tip:** Keep `tail -f` running in a separate terminal while using Swift-Selena for real-time debugging.
 
 ## Setup
 
@@ -93,19 +135,26 @@ This script automatically:
 - Adds settings to `claude_desktop_config.json`
 - Preserves existing settings (if jq is installed)
 
-#### For Claude Code (Connect to Specific Project)
+#### For Claude Code
 
-To connect Swift-Selena to a specific project:
+To connect Swift-Selena to Claude Code:
 
 ```bash
-# From Swift-Selena directory
+# For production use (register to target project)
 ./register-selena-to-claude-code.sh /path/to/your/project
+
+# Example:
+./register-selena-to-claude-code.sh /Users/yourname/apps/CCMonitor
+
+# For development/testing (register to Swift-Selena project itself)
+./register-selena-to-claude-code-debug.sh
 ```
 
 This script automatically:
 - Verifies executable existence
-- Moves to target project directory
+- Moves to target project directory (using pushd/popd)
 - Registers with `claude mcp add` (local to that project)
+- Debug version registers as `swift-selena-debug` (does not affect production `swift-selena`)
 
 **Alternative: Using makefile** (if your project has one)
 

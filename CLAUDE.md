@@ -2,6 +2,223 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## 言語設定
+
+**このプロジェクトでは日本語で対話してください。**
+
+- コードのコメント、変数名、関数名は英語
+- Claude Codeとの対話、説明、ドキュメントは日本語
+- エラーメッセージやログ出力は英語（開発者向け）
+
+---
+
+## 開発時の基本原則
+
+### 1. 仕様を必ず最初に確認する
+
+新しいツール、ライブラリ、記法を使う前に公式ドキュメントを読んでください。
+
+- 思い込みで実装しない
+- 「知っている」と思っても確認する
+- バージョンの仕様変更を把握する
+
+**実装前の確認手順**:
+1. **公式ドキュメント確認**: 最新の仕様を読む（MCP、LSP、SwiftSyntax等）
+2. **GitHub Issuesチェック**: 既知の制限や未サポート機能を確認
+3. **プラットフォーム制限調査**: Xcodeプロジェクト vs Swift Packageの違い
+4. **既存実装の参考**: 公式サンプルや他の実装例を確認
+
+**失敗例**:
+- ❌ LSP参照検索を実装後、Xcodeプロジェクトで動作しないと判明（Issue #730見落とし）
+- ❌ 「接続成功」を「全機能動作」と誤解
+
+### 2. 小さく試してから大きく展開する
+
+一度に大量生産せず、1つを完成させてから次へ進んでください。
+
+- 1つのサンプルで動作確認
+- 問題なければ他に展開
+- エラーが出てから修正では遅い
+
+**実装の進め方**:
+1. 最小限の実装で動作確認
+2. 主要ユースケース（Xcodeプロジェクト）でテスト
+3. 問題なければ機能拡張
+4. ドキュメント更新
+
+### 3. 品質を最優先する
+
+スピードより正確性を重視してください。
+
+- 推測より確認
+- 複雑な正規表現を使って一括置換や、一括変更しない
+  - 間違った場合に手戻りが膨大です
+  - 単純置換などはOK
+- 手抜きしない（全力で作業に向き合ってください）
+
+---
+
+## よくある失敗パターンと対策
+
+### 1. MCP実装での失敗
+
+**失敗**: 無限ループでサーバーを動作させる
+```swift
+// ❌ 誤り
+try await server.start(transport: transport)
+while true {
+    try await Task.sleep(for: .seconds(1000))
+}
+```
+
+**対策**: `waitUntilCompleted()`を使う
+```swift
+// ✅ 正解
+try await server.start(transport: transport)
+await server.waitUntilCompleted()  // EOF待機
+```
+
+**理由**: `server.start()`は非ブロッキング、無限ループはゾンビプロセスの原因
+
+---
+
+**失敗**: 開発版を本番と同じ名前で登録
+```bash
+# ❌ 誤り - 本番環境が影響を受ける
+claude mcp add swift-selena -- /path/to/debug/Swift-Selena
+```
+
+**対策**: 別名で登録
+```bash
+# ✅ 正解 - 開発版は別名
+claude mcp add swift-selena-debug -- /path/to/debug/Swift-Selena
+```
+
+**理由**: ツールプレフィックスが分離され、本番環境に影響しない
+
+---
+
+### 2. LSP実装での失敗
+
+**失敗**: Xcodeプロジェクトで参照検索を実装
+```swift
+// textDocument/references を実装
+// → Xcodeプロジェクトでは常に0件
+```
+
+**対策**: 事前にプラットフォーム制限を調査
+- SourceKit-LSP Issue #730確認
+- Xcodeプロジェクトではグローバルインデックス不可
+- 代替手段（SwiftSyntax）を用意
+
+---
+
+**失敗**: LSP接続をバックグラウンドで実行
+```swift
+// ❌ 誤り
+Task {
+    await lspState.tryConnect(projectPath)
+}
+return Result(...)  // 接続完了前にreturn
+```
+
+**対策**: 同期待機
+```swift
+// ✅ 正解
+let lspAvailable = await lspState.tryConnect(projectPath)
+return Result(...)  // 接続完了後
+```
+
+---
+
+### 3. テストでの失敗
+
+**失敗**: Bashスクリプトで直接ロジック再実装
+```bash
+# ❌ これはテストではない
+find . -name "*.swift" | while read f; do
+    grep -L "^import" "$f"
+done
+```
+
+**対策**: 実際のMCPツールとして呼び出す
+```
+# ✅ 正しいテスト
+mcp__swift-selena-debug__initialize_project(project_path: "/path/to/project")
+mcp__swift-selena-debug__search_files_without_pattern(pattern: "^import")
+```
+
+**理由**: MCPサーバーとしての統合動作を確認する必要がある
+
+---
+
+## 変更時の影響確認チェックリスト
+
+### コード変更時
+
+- [ ] **ビルド確認**: `swift build` でエラーなくビルドできるか
+- [ ] **DEBUGビルドテスト**: `./register-selena-to-claude-code-debug.sh` で動作確認
+- [ ] **実際のMCPツールとしてテスト**: 新機能を実際に呼び出して検証
+- [ ] **ログ確認**: `tail -f ~/.swift-selena/logs/server.log` でエラーなし
+- [ ] **ドキュメント更新**: 該当するドキュメントを更新（下記参照）
+
+### リリースビルド実行前（人間の明示的指示が必要）
+
+**⚠️ 警告: 以下を確認するまでリリースビルドは絶対に実行しない**
+
+- [ ] **他のClaude Codeインスタンスが本番版を使用中でないか確認**
+- [ ] **人間から「リリースビルドして」と明示的指示があったか**
+- [ ] **変更内容が本番環境に影響しないか確認**
+
+**理由**: 他のプロジェクト（CCMonitor等）が本番版Swift-Selenaを使用している可能性があります。勝手にリリースビルドすると、それらのプロジェクトに影響が及びます。
+
+---
+
+## ドキュメント更新ルール
+
+### 更新が必要なドキュメント
+
+| 変更内容 | 更新すべきドキュメント |
+|---------|---------------------|
+| 新ツール追加 | CLAUDE.md（ツールカテゴリ）、README.md |
+| バグ修正 | LATEST_CONVERSATION_HISTORY.md、CHANGELOG.md |
+| 重要な知見 | MCP_LSP_LEARNINGS.md |
+| アーキテクチャ変更 | CLAUDE.md（アーキテクチャ）、README.md |
+| テスト方法変更 | CLAUDE.md（DEBUGビルドでのテスト方法） |
+| ビルド・スクリプト変更 | CLAUDE.md（ビルド・実行コマンド） |
+
+### ドキュメントの使い分け
+
+**CLAUDE.md** (このファイル):
+- Claude Codeへの指示・ガイドライン
+- プロジェクト構造、アーキテクチャ
+- ビルド・テスト方法
+- **常に最新状態を保つ**
+
+**LATEST_CONVERSATION_HISTORY.md**:
+- 直近のバージョンの変更サマリー
+- 次のセッションで知っておくべき重要情報
+- **各バージョンリリース時に更新**
+
+**CONVERSATION_HISTORY.md**:
+- 全バージョンの詳細な開発履歴
+- 対話の詳細記録
+- **長期的な参考資料**
+
+**MCP_LSP_LEARNINGS.md**:
+- MCP・LSP実装の重要知見
+- 失敗から学んだ教訓
+- **技術的な深い知識を蓄積**
+
+**README.md**:
+- エンドユーザー向けドキュメント
+- インストール・使用方法
+- **ユーザー視点で記述**
+
+---
+
 ## プロジェクト概要
 
 **Swift Selena**は、ファイルシステム検索とSwiftSyntax静的解析を使用してSwiftコード解析機能を提供するMCP (Model Context Protocol) サーバーです。ビルドエラーがある実装中のコードでも動作する実用的なツールセットを提供します。
@@ -9,21 +226,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## ビルド・実行コマンド
 
 ```bash
-# プロジェクトのビルド（開発用）
+# プロジェクトのビルド（開発用・デバッグビルド）
 swift build
+# 成果物: .build/arm64-apple-macosx/debug/Swift-Selena
 
 # 本番用リリースビルド
+# ⚠️ 警告: 絶対に勝手に実行しないこと！
+# 他のClaude Codeインスタンスが本番用Swift-Selenaを使用している可能性があります
+# 明示的な人間の指示があるまで実行禁止
 swift build -c release -Xswiftc -Osize
+# 成果物: .build/release/Swift-Selena
 
 # セットアップスクリプトに実行権限を付与
 chmod +x register-mcp-to-claude-desktop.sh
 chmod +x register-selena-to-claude-code.sh
+chmod +x register-selena-to-claude-code-debug.sh
 
-# Claude Desktopに登録（自動）
+# Claude Desktopに登録（本番用）
 ./register-mcp-to-claude-desktop.sh
 
-# Claude Codeに登録（自動）
-./register-selena-to-claude-code.sh
+# Claude Codeに登録（本番用、要引数）
+./register-selena-to-claude-code.sh /path/to/your/project
 
 # サーバーの実行（開発用）
 swift run
@@ -35,17 +258,128 @@ open .swiftpm/xcode/package.xcworkspace
 swift package clean
 ```
 
+## DEBUGビルドでのテスト方法
+
+新しいツールを実装した後、実際にMCPツールとして動作するか確認するため、DEBUGビルドでテストします。
+
+### テストの基本原則
+
+**重要**: 以下はテストではありません：
+- ❌ Bashスクリプトで直接ロジックを再実装して実行
+- ❌ `strings`コマンドでバイナリに含まれているか確認するだけ
+- ❌ 「〜件返されるはず」という推測だけ述べる
+
+**正しいテスト**:
+- ✅ Swift-SelenaのMCPサーバーに接続
+- ✅ 新しいツールを実際にMCPツールとして呼び出す
+- ✅ 実際の結果を確認する
+- ✅ 期待値と一致するか検証
+
+### 手順
+
+#### 1. DEBUGビルドと登録（1コマンドで完了）
+
+```bash
+cd /Users/k_terada/data/dev/_WORKING_/apps/Swift-Selena
+./register-selena-to-claude-code-debug.sh
+```
+
+このスクリプトは以下を自動実行：
+1. `swift build` でDEBUGビルド実行
+2. `.build/arm64-apple-macosx/debug/Swift-Selena` を確認
+3. Swift-Selenaプロジェクトの `.claude/mcp_config.json` に登録
+4. ビルド日時を表示
+
+**重要**: スクリプト内でビルドを実行するため、最新のコードが必ず反映されます
+
+#### 2. Swift-SelenaプロジェクトでClaude Codeを完全に再起動
+
+Swift-Selenaプロジェクトで：
+1. Claude Codeを終了
+2. Swift-Selenaプロジェクトで Claude Codeを起動
+
+#### 3. 解析対象プロジェクトを初期化してテスト
+
+**実際のMCPツールとして呼び出します**：
+
+```
+# 例: ContactBプロジェクトでsearch_files_without_pattern をテスト
+# 注意: DEBUG版のツール名は mcp__swift-selena-debug__* です
+
+1. mcp__swift-selena-debug__initialize_project を呼び出し
+   project_path: "/Users/k_terada/data/dev/moons/product/ContactB プロジェクト/ContactB"
+
+2. 新しいツールを呼び出し
+   mcp__swift-selena-debug__search_files_without_pattern(pattern: "^import")
+
+3. 実際の結果を確認
+   - 返される件数は？
+   - どのファイルが返される？
+   - 統計情報は正しい？
+
+4. 期待値と比較
+   期待: 3件（MKLocalSearch+Async.swift, ViewState.swift, ContactSortType.swift）
+   統計: Files checked: 262, Files without pattern: 3 (1.1%)
+```
+
+**重要**:
+- Swift-SelenaはMCPサーバーとして動作し、**他のプロジェクトを解析**します
+- `initialize_project`で解析対象プロジェクト（ContactB等）を指定します
+- Swift-Selenaプロジェクト自体を解析することも可能です
+- **DEBUG版は`swift-selena-debug`、本番版は`swift-selena`として別々に登録**
+- 本番環境には一切影響しません
+
+#### 4. ログ確認（必要に応じて）
+
+動作がおかしい場合：
+
+```bash
+tail -f ~/.swift-selena/logs/server.log
+```
+
+#### 5. リリース版への切り替え（人間の明示的指示があった場合のみ）
+
+**⚠️ 警告: 勝手に実行しないこと**
+
+他のClaude Codeインスタンスが本番用Swift-Selenaを使用中の可能性があります。
+人間が明示的に「リリースビルドして」と指示した場合のみ実行してください。
+
+```bash
+# リリースビルド（明示的指示があった場合のみ）
+swift build -c release -Xswiftc -Osize
+
+# リリース版を登録（ターゲットプロジェクトを指定）
+./register-selena-to-claude-code.sh /path/to/your/project
+```
+
+### トラブルシューティング
+
+**問題**: 新しいツールが表示されない
+- 原因: MCPサーバーが再起動されていない
+- 解決: Claude Codeを完全に再起動
+
+**問題**: 古いバイナリが使われている
+- 確認: ビルド日時を確認 `ls -lh .build/arm64-apple-macosx/debug/Swift-Selena`
+- 解決: `swift build` で再ビルド、debug用スクリプトで再登録
+
+**問題**: ツールは表示されるが動作しない
+- ログ確認: `tail -f ~/.swift-selena/logs/server.log`
+- パラメータエラー: ツール定義の `inputSchema` 確認
+- 実装エラー: DebugRunner（#if DEBUG）でデバッグ
+
 ## アーキテクチャ
 
 ### コアコンポーネント
 
 1. **SwiftMCPServer.swift** (メインエントリポイント)
-   - コード解析用の10のツールを持つMCPサーバーを構成
-   - ProjectMemoryのライフサイクルを管理
+   - コード解析用のMCPサーバーを構成（17-18ツール）
+   - ProjectMemoryとLSPStateのライフサイクルを管理
    - 非同期CallToolハンドラを介してツール実行を処理
    - 通信にstdioトランスポートを使用
+   - 動的ツールリスト生成（LSP利用可能時にLSPツール追加）
    - **FileSearcher**: ファイルシステムベースの検索（ワイルドカード、grep的検索）
    - **SwiftSyntaxAnalyzer**: ビルド不要のAST解析によるシンボル抽出
+   - **LSPState/LSPClient**: ビルド可能時のLSP統合（v0.5.1+）
 
 2. **ProjectMemory.swift** (永続ストレージ)
    - `~/.swift-selena/clients/{clientId}/projects/{projectName}-{hash}/memory.json`にプロジェクトメタデータを保存
@@ -79,6 +413,12 @@ swift package clean
 - **位置情報**: SourceLocationConverterで行番号を取得
 - **利点**: ビルドエラーがあっても構文が正しければ動作
 
+**LSPState/LSPClient** (型情報ベース解析、v0.5.1+):
+- **LSP接続管理**: SourceKit-LSPプロセスの起動・初期化・切断
+- **スレッドセーフ**: Actorで並行アクセスを安全に管理
+- **グレースフルデグレード**: ビルド不可の場合はSwiftSyntaxのみで動作
+- **利点**: 型情報を使った正確な参照検索、ビルド可能なプロジェクトで高度な機能を提供
+
 ### メモリシステム
 
 ProjectMemoryは3つのインデックスを保持：
@@ -109,8 +449,13 @@ ProjectMemoryは3つのインデックスを保持：
 - `find_type_usages`: 型の使用箇所を検出（変数宣言、関数パラメータ、戻り値型）
 
 ### コンテキスト効率的な読み取り
-- `read_function_body`: 単一関数の実装を抽出（シンプルなブレースカウント）
-- `read_lines`: 特定の行範囲を読み取り
+- `read_symbol`: シンボル単位で読み取り（関数、クラス、構造体等）
+
+### LSP統合機能（v0.5.2+、ビルド可能時のみ）
+- `find_symbol_references`: シンボル参照検索（型情報ベース、LSP使用）
+  - ファイルパス + 行 + 列で位置指定
+  - textDocument/referencesリクエスト使用
+  - ビルド不可の場合は利用不可（代替: find_type_usages, search_code）
 
 ### メモリ/ノート
 - `add_note`: 観察内容を永続化
@@ -124,8 +469,12 @@ ProjectMemoryは3つのインデックスを保持：
   - MCP Swift SDK (0.10.2 exact)
   - SwiftSyntax (602.0.0 exact) - SwiftParser含む
 - **ビルド不要**: SourceKit-LSPに依存しないため、実装中のコードでも動作
+- **LSP統合**: ビルド可能時はSourceKit-LSPで高度な機能提供（v0.5.1+）
 - **エラーハンドリング**: ツールはMCPError.invalidParamsまたはMCPError.invalidRequestをthrow
-- **ロギング**: .infoレベルでswift-logを使用してstderrに出力
+- **ロギング**: FileLogHandlerで~/.swift-selena/logs/server.logに出力（v0.5.3+）
+  - 監視: `tail -f ~/.swift-selena/logs/server.log`
+  - デバッグレベル出力、LSPレスポンス詳細表示
+- **デバッグ**: DebugRunner（#if DEBUG、Xcodeデバッガ対応、v0.5.3+）
 - **サーバーライフタイム**: start後、1000秒のスリープループで無期限に実行
 
 ## 複数MCPクライアント対応

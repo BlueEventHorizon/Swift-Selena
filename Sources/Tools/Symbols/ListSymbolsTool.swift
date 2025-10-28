@@ -85,4 +85,81 @@ enum ListSymbolsTool: MCPTool {
 
         return CallTool.Result(content: [.text(result)])
     }
+
+    /// LSP強化版実行（v0.5.4）
+    static func executeWithLSP(
+        params: CallTool.Parameters,
+        projectMemory: ProjectMemory?,
+        lspState: LSPState,
+        logger: Logger
+    ) async throws -> CallTool.Result {
+        let filePath = try ToolHelpers.getString(
+            from: params.arguments,
+            key: ParameterKeys.filePath,
+            errorMessage: ErrorMessages.missingFilePath
+        )
+
+        // LSP利用可能性チェック
+        let isLSPAvailable = await lspState.isLSPAvailable()
+
+        if isLSPAvailable {
+            logger.info("Using LSP for list_symbols (enhanced)")
+
+            // LSP版: documentSymbol APIで型情報付き取得
+            do {
+                if let client = await lspState.getClient() {
+                    let lspSymbols = try await client.documentSymbol(filePath: filePath)
+
+                    if !lspSymbols.isEmpty {
+                        var result = "Symbols in \(filePath) (LSP enhanced):\n\n"
+                        for symbol in lspSymbols {
+                            let kindName = symbolKindToString(symbol.kind)
+                            if let detail = symbol.detail {
+                                result += "[\(kindName)] \(symbol.name): \(detail) (line \(symbol.line))\n"
+                            } else {
+                                result += "[\(kindName)] \(symbol.name) (line \(symbol.line))\n"
+                            }
+                        }
+                        return CallTool.Result(content: [.text(result)])
+                    }
+                }
+            } catch {
+                logger.warning("LSP documentSymbol failed, falling back to SwiftSyntax: \(error)")
+            }
+        }
+
+        // フォールバック: SwiftSyntax版
+        logger.info("Using SwiftSyntax for list_symbols")
+        let symbols = try SwiftSyntaxAnalyzer.listSymbols(filePath: filePath)
+
+        var result = "Symbols in \(filePath):\n\n"
+        for symbol in symbols {
+            result += "[\(symbol.kind)] \(symbol.name) (line \(symbol.line))\n"
+        }
+
+        return CallTool.Result(content: [.text(result)])
+    }
+
+    /// LSP SymbolKind を文字列に変換
+    private static func symbolKindToString(_ kind: Int) -> String {
+        switch kind {
+        case 1: return "File"
+        case 2: return "Module"
+        case 3: return "Namespace"
+        case 4: return "Package"
+        case 5: return "Class"
+        case 6: return "Method"
+        case 7: return "Property"
+        case 8: return "Field"
+        case 9: return "Constructor"
+        case 10: return "Enum"
+        case 11: return "Interface"
+        case 12: return "Function"
+        case 13: return "Variable"
+        case 14: return "Constant"
+        case 22: return "EnumMember"
+        case 23: return "Struct"
+        default: return "Unknown(\(kind))"
+        }
+    }
 }
