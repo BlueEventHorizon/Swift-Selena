@@ -60,8 +60,8 @@ chmod +x register-selena-to-claude-code-debug.sh
 # Claude Desktopに登録（本番用）
 ./register-mcp-to-claude-desktop.sh
 
-# Claude Codeに登録（本番用）
-./register-selena-to-claude-code.sh
+# Claude Codeに登録（本番用、要引数）
+./register-selena-to-claude-code.sh /path/to/your/project
 
 # サーバーの実行（開発用）
 swift run
@@ -163,8 +163,8 @@ tail -f ~/.swift-selena/logs/server.log
 # リリースビルド（明示的指示があった場合のみ）
 swift build -c release -Xswiftc -Osize
 
-# リリース版を登録
-./register-selena-to-claude-code.sh
+# リリース版を登録（ターゲットプロジェクトを指定）
+./register-selena-to-claude-code.sh /path/to/your/project
 ```
 
 ### トラブルシューティング

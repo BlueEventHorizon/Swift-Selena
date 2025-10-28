@@ -140,16 +140,20 @@ tail -f ~/.swift-selena/logs/server.log
 Swift-SelenaをClaude Codeに接続するには：
 
 ```bash
-# Swift-Selenaディレクトリから実行（本番用）
-./register-selena-to-claude-code.sh
+# 本番用（ターゲットプロジェクトに登録）
+./register-selena-to-claude-code.sh /path/to/your/project
 
-# 開発・テスト用（本番環境と分離）
+# 例:
+./register-selena-to-claude-code.sh /Users/yourname/apps/CCMonitor
+
+# 開発・テスト用（Swift-Selenaプロジェクト自体に登録）
 ./register-selena-to-claude-code-debug.sh
 ```
 
 このスクリプトは以下を自動実行します：
 - 実行ファイルの存在確認
-- Swift-Selenaプロジェクト自体に登録
+- ターゲットプロジェクトディレクトリに移動（pushd/popd使用）
+- `claude mcp add`で登録（そのプロジェクトのみ有効）
 - Debug版は`swift-selena-debug`として別名登録（本番用`swift-selena`に影響なし）
 
 **別の方法：makefileを使用**（プロジェクトにmakefileがある場合）

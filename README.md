@@ -140,16 +140,20 @@ This script automatically:
 To connect Swift-Selena to Claude Code:
 
 ```bash
-# From Swift-Selena directory (production use)
-./register-selena-to-claude-code.sh
+# For production use (register to target project)
+./register-selena-to-claude-code.sh /path/to/your/project
 
-# For development/testing (separate from production)
+# Example:
+./register-selena-to-claude-code.sh /Users/yourname/apps/CCMonitor
+
+# For development/testing (register to Swift-Selena project itself)
 ./register-selena-to-claude-code-debug.sh
 ```
 
 This script automatically:
 - Verifies executable existence
-- Registers Swift-Selena to the Swift-Selena project itself
+- Moves to target project directory (using pushd/popd)
+- Registers with `claude mcp add` (local to that project)
 - Debug version registers as `swift-selena-debug` (does not affect production `swift-selena`)
 
 **Alternative: Using makefile** (if your project has one)

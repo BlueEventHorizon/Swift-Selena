@@ -1790,16 +1790,70 @@ logger.info("Server stopped")
 1. 正規表現マルチラインモード欠落
 2. ゾンビプロセス問題（無限ループ）
 3. 本番環境汚染問題（同名登録）
+4. LSP非同期通知混入問題（Content-Length正確処理）
+5. LSPState単一プロジェクト問題（Dictionary管理）
+6. initialize_projectバックグラウンド問題（同期待機）
 
 ---
 
-### 成果（v0.5.5）
+#### XcodeプロジェクトでのLSP制限調査とfind_symbol_references削除
+
+**ユーザー懸念:**
+> 「XcodeプロジェクトでLSP機能を使うと、取得できない情報が出てきて、逆に問題にならないか」
+
+**調査結果:**
+
+**ContactB（Xcodeプロジェクト）でのLSP動作:**
+- ✅ documentSymbol: 動作（型情報付きシンボル一覧取得）
+- ✅ typeHierarchy: 動作（継承関係取得）
+- ❌ find_symbol_references: **常に0件**（参照検索失敗）
+
+**Swift-Selena（Swift Package）でのLSP動作:**
+- ✅ documentSymbol: 完全動作
+- ✅ typeHierarchy: 完全動作
+- ✅ find_symbol_references: **39件検出**（完全動作）
+
+**原因特定（公式調査）:**
+- SourceKit-LSP公式: **Xcodeプロジェクト未サポート**
+- Issue #730: "SourceKit-LSP doesn't yet support Xcode projects"
+- グローバルインデックス（IndexStoreDB）が構築されない
+- クロスファイル参照検索が不可能
+- 単一ファイル内の解析（documentSymbol/typeHierarchy）は動作
+
+**回避策:**
+- xcode-build-serverというサードパーティツールが必要（Swift-Selenaでは未対応）
+
+**決断: find_symbol_references削除**
+
+**理由:**
+1. Swift Packageでのみ動作（Xcodeプロジェクトで動作しない）
+2. 代替手段あり（find_type_usages: SwiftSyntax版、全プロジェクトで動作）
+3. 「0件」が正常なのか異常なのか判断不能（混乱の原因）
+4. 動作環境が限定的な機能は提供しない（シンプル化）
+
+**削除内容:**
+- FindSymbolReferencesTool.swift（110行）
+- LSPClient.findReferences()（92行）
+- SwiftMCPServer.swift（ルーティング）
+- Constants.swift（ツール名定数）
+- DebugRunner.swift（テストケース、70行）
+
+**結果:**
+- ツール数: 19 → **18**
+- LSP機能: documentSymbol/typeHierarchyのみ残存（フォールバックあり）
+- 全プロジェクトタイプで動作する構成に
+
+---
+
+### 成果（v0.5.5最終）
 
 **完全動作:**
 - ✅ search_files_without_pattern: ContactBで3ファイル検出（期待値一致）
-- ✅ ゾンビプロセス解消: EOF受信で正常終了
+- ✅ ゾンビプロセス解消: `server.waitUntilCompleted()`でEOF正常終了
 - ✅ 本番環境分離: swift-selena-debug別名登録
-- ✅ Total tools: 19（新ツール含む）
+- ✅ LSP複数プロジェクト対応: Dictionary管理
+- ✅ LSP非同期通知処理: Content-Length正確切り出し
+- ✅ Total tools: **18**（安定版）
 
 **提供価値:**
 - Code Header未作成ファイルの一括検出
@@ -1807,13 +1861,90 @@ logger.info("Server stopped")
 - ドキュメント整備状況の可視化
 - grep -L相当の標準機能
 
+**LSP機能（残存）:**
+- list_symbols: LSP版（型情報付き）+ SwiftSyntaxフォールバック
+- get_type_hierarchy: LSP版（継承詳細）+ SwiftSyntaxフォールバック
+- 全プロジェクトタイプ（Swift Package, Xcodeプロジェクト）で動作
+
+---
+
+### 学んだ教訓（追加）
+
+#### 5. プラットフォーム制限の事前調査
+
+**失敗:**
+- find_symbol_references実装（v0.5.2-v0.5.3）
+- Xcodeプロジェクトで動作しないことを後から発見
+- 実装工数が無駄に
+
+**教訓:**
+- 新機能実装前にプラットフォーム制限を調査
+- SourceKit-LSP公式ドキュメント・Issueを確認
+- 主要ユースケース（Xcodeプロジェクト）での動作を最優先
+
+#### 6. 「動作する」の定義を明確化
+
+**失敗:**
+- 「LSP接続成功」=「全機能動作」と誤解
+- 一部API（documentSymbol）が動作 → 全て動作と思い込み
+- 実際はfind_symbol_referencesは常に0件
+
+**教訓:**
+- 接続成功 ≠ 全機能動作
+- 各APIを個別に検証
+- Swift PackageとXcodeプロジェクトで比較テスト
+
+---
+
+#### スクリプトの役割分担の明確化
+
+**問題:**
+- register-selena-to-claude-code.shから引数を削除
+- 他のプロジェクト（CCMonitor等）に登録できなくなった
+
+**原因:**
+- debug版とrelease版の役割を混同
+- 両方をSwift-Selena自体への登録と誤解
+
+**正しい理解:**
+- **debug版**: Swift-Selenaプロジェクトで開発・テスト → 引数不要
+- **release版**: 他のプロジェクト（CCMonitor等）で使用 → **引数必須**
+
+**修正:**
+```bash
+# 本番用（引数必須）
+./register-selena-to-claude-code.sh /path/to/target/project
+
+# 開発用（引数なし）
+./register-selena-to-claude-code-debug.sh
+```
+
+**実装:**
+- 引数必須に戻す
+- pushd/popdで確実にプロジェクト移動
+- README.md/README.ja.md/CLAUDE.md更新
+
+---
+
+### 実装統計（最終）
+
+**追加コード:**
+- FileSearcher.swift: +52行
+- SearchFilesWithoutPatternTool.swift: +113行（新規）
+- LSPClient.swift: +76行（receiveResponse改善）、-92行（findReferences削除）
+- LSPState.swift: 全面書き直し（複数プロジェクト対応）
+- SwiftMCPServer.swift: waitUntilCompleted追加、ルーティング削除
+- DebugRunner.swift: -70行（find_symbol_referencesテスト削除）
+
+**削除コード:**
+- FindSymbolReferencesTool.swift: 110行削除
+- 合計削除: 約270行
+
+**正味追加**: 約-30行（コード削減）
+
 ---
 
 ### 次のバージョン
-
-**v0.5.6（優先）:**
-- レスポンスバッファリング実装
-- documentSymbol/typeHierarchy安定化（非同期通知混入問題）
 
 **v0.6.0（予定）:**
 - Code Header DB
@@ -1822,7 +1953,7 @@ logger.info("Server stopped")
 
 ---
 
-**Document Version**: 1.7
+**Document Version**: 1.9
 **Created**: 2025-10-15
 **Last Updated**: 2025-10-27
 **Purpose**: 開発過程の記録と知見の共有
