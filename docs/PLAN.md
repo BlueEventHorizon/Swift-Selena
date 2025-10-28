@@ -2,7 +2,7 @@
 
 **作成日**: 2025-10-21
 **対象**: v0.5.x - v1.0
-**現在バージョン**: v0.5.3
+**現在バージョン**: v0.5.5
 
 ---
 
@@ -185,37 +185,44 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 
 ---
 
-### v0.5.5（LSP安定化・優先）
+### v0.5.5（✅ 完了 - 2025/10/27）
 
-**目標**: LSP非同期通知問題の解決とdocumentSymbol/typeHierarchy安定化
+**目標**: LSP安定化、MCP基盤修正、find_symbol_references削除判断
 
 **実装内容:**
 
-1. **ResponseBuffer実装**（最優先）
-   - Content-Lengthで1レスポンスずつ切り出し
-   - 非同期通知（method付き）と応答（id付き）を分離
-   - publishDiagnostics等を適切に処理
+1. **新機能: search_files_without_pattern**
+   - grep -L相当、「ないものを探す」検索
+   - Code Header未作成ファイル検出
+   - Import未記述ファイル発見
+   - 統計情報表示
 
-2. **documentSymbol/typeHierarchy安定化**
-   - v0.5.4で実装済みだが非同期通知問題で不安定
-   - ResponseBuffer適用で完全動作を実現
+2. **重要なバグ修正（6件）:**
+   - 正規表現マルチラインモード（`.anchorsMatchLines`追加）
+   - ゾンビプロセス（`server.waitUntilCompleted()`でEOF待機）
+   - 本番環境汚染（`swift-selena-debug`別名登録）
+   - LSP非同期通知混入（Content-Length正確処理、publishDiagnosticsスキップ）
+   - LSPState単一プロジェクト（Dictionary管理で複数プロジェクト対応）
+   - initialize_projectバックグラウンド（同期待機、LSP接続完了後にreturn）
 
-3. **get_call_hierarchy**（安定化後）
-   - 呼び出し階層の取得（誰が呼んでいるか/誰を呼んでいるか）
-   - textDocument/callHierarchyリクエスト使用
+3. **find_symbol_references削除判断:**
+   - 調査結果: Swift Package（✅動作）、Xcodeプロジェクト（❌常に0件）
+   - 原因: SourceKit-LSP Issue #730（Xcodeプロジェクト未サポート）
+   - 決断: 削除（約270行）、代替手段（find_type_usages）を推奨
+   - 理由: 動作環境が限定的、全プロジェクトタイプで動作する構成を優先
 
-2. **その他LSP機能検討**
-   - 定義ジャンプ（textDocument/definition）
-   - ホバー情報（textDocument/hover）
-   - ※必要性を実用で判断
+**重要な知見:**
+- MCP仕様: `server.waitUntilCompleted()`必須、無限ループは不要
+- LSP制限: Xcodeプロジェクトでは参照検索不可、documentSymbol/typeHierarchyは動作
+- 開発版と本番版の完全分離: 別名登録で本番環境汚染を防止
 
 **ツール総数:**
 - ビルド不可: 17個
-- ビルド可能: 19-20個（+1-2個）
+- ビルド可能: 18個（find_symbol_references削除により減少）
 
-**工数**: 1週間
+**工数**: 約3日（バグ修正、調査、判断）
 
-**リリース目標**: 2025年11月
+**詳細**: LATEST_CONVERSATION_HISTORY.md、docs/MCP_LSP_LEARNINGS.md参照
 
 ---
 
@@ -701,8 +708,8 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 - ✅ v0.5.2完了（10月21日）
 - ✅ v0.5.3完了（10月24日）
 - ✅ v0.5.4完了（10月26日）
-- v0.5.5（LSP追加機能）
-- 目標: v0.5.5リリース
+- ✅ v0.5.5完了（10月27日）
+- 次: v0.6.0（Code Header DB）開始予定
 
 ### 2026年Q1（1-3月）
 
@@ -830,8 +837,14 @@ Swift-Selenaは以下の進化を遂げる：
 **v0.5.3（✅ 完了）**:
 - LSP安定化、デバッグ機能、参照検索動作確認
 
-**v0.5.x系（2025 Q4）**:
-- SwiftSyntax + LSP、19-20ツール、ハイブリッド
+**v0.5.4（✅ 完了）**:
+- list_symbols/get_type_hierarchy強化、LSP型情報統合
+
+**v0.5.5（✅ 完了）**:
+- search_files_without_pattern実装、6つの重要バグ修正、find_symbol_references削除
+
+**v0.5.x系完了（2025 Q4）**:
+- SwiftSyntax + LSP、18ツール、ハイブリッド、全プロジェクトタイプ対応
 
 **v0.6.x系（2026 Q1）**:
 - Code Header DB、意図ベース検索、精度80-85%
@@ -846,6 +859,6 @@ Swift-Selenaは以下の進化を遂げる：
 
 ---
 
-**Document Version**: 2.2
+**Document Version**: 2.3
 **Created**: 2025-10-21
-**Last Updated**: 2025-10-26 (v0.5.4完了)
+**Last Updated**: 2025-10-28 (v0.5.5完了、CLAUDE.md更新)
