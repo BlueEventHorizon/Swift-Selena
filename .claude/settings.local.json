@@ -46,7 +46,10 @@
       "mcp__swift-selena-debug__find_symbol_references",
       "mcp__swift-selena-debug__initialize_project",
       "mcp__swift-selena-debug__get_type_hierarchy",
-      "mcp__serena__get_current_config"
+      "mcp__serena__get_current_config",
+      "Bash(git fetch:*)",
+      "Bash(git log:*)",
+      "Bash(cp:*)"
     ],
     "deny": [],
     "ask": []
