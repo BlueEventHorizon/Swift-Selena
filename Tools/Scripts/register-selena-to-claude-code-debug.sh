@@ -15,14 +15,15 @@ NC='\033[0m'
 echo -e "${CYAN}Swift Selena (DEBUG) → Claude Code 登録${NC}"
 echo "=========================================="
 
-# Swift-Selenaのパス（このスクリプトがあるディレクトリ）
+# Swift-Selenaのパス（このスクリプトの2階層上）
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-EXECUTABLE_PATH="${SCRIPT_DIR}/.build/arm64-apple-macosx/debug/Swift-Selena"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
+EXECUTABLE_PATH="${PROJECT_ROOT}/.build/arm64-apple-macosx/debug/Swift-Selena"
 
 # クリーンビルドを実行
 echo ""
 echo -e "${CYAN}クリーンビルド実行中...${NC}"
-cd "$SCRIPT_DIR"
+cd "$PROJECT_ROOT"
 swift package clean
 swift build
 BUILD_RESULT=$?
