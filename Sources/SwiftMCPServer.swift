@@ -74,8 +74,7 @@ struct SwiftMCPServer {
                 ListExtensionsTool.toolDefinition,
                 AnalyzeImportsTool.toolDefinition,
                 GetTypeHierarchyTool.toolDefinition,
-                FindTestCasesTool.toolDefinition,
-                FindTypeUsagesTool.toolDefinition
+                FindTestCasesTool.toolDefinition
             ])
 
             let lspAvailable = await lspState.isLSPAvailable()
@@ -113,9 +112,13 @@ struct SwiftMCPServer {
                 let lspStatus = lspAvailable ? "✅ LSP available - Enhanced features ready" : "ℹ️ LSP unavailable - Using SwiftSyntax only"
 
                 // LSP接続完了後にレスポンス返却
-                return CallTool.Result(content: [
-                    .text("✅ Project initialized: \(projectPath)\n\n\(lspStatus)\n\n\(projectMemory?.getStats() ?? "")")
-                ])
+                #if DEBUG
+                let stats = projectMemory?.getStats() ?? ""
+                let message = "✅ Project initialized: \(projectPath)\n\n\(lspStatus)\n\n\(stats)"
+                #else
+                let message = "✅ Project initialized: \(projectPath)\n\n\(lspStatus)"
+                #endif
+                return CallTool.Result(content: [.text(message)])
 
             case ToolNames.findFiles:
                 return try await FindFilesTool.execute(
@@ -193,13 +196,6 @@ struct SwiftMCPServer {
 
             case ToolNames.findTestCases:
                 return try await FindTestCasesTool.execute(
-                    params: params,
-                    projectMemory: projectMemory,
-                    logger: logger
-                )
-
-            case ToolNames.findTypeUsages:
-                return try await FindTypeUsagesTool.execute(
                     params: params,
                     projectMemory: projectMemory,
                     logger: logger

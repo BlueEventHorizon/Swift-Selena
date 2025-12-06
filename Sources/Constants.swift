@@ -29,7 +29,6 @@ enum ToolNames {
     static let analyzeImports = "analyze_imports"
     static let getTypeHierarchy = "get_type_hierarchy"
     static let findTestCases = "find_test_cases"
-    static let findTypeUsages = "find_type_usages"
 }
 
 /// パラメータキーの定数
