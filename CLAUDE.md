@@ -280,7 +280,7 @@ swift package clean
 #### 1. DEBUGビルドと登録（1コマンドで完了）
 
 ```bash
-cd /Users/k_terada/data/dev/_WORKING_/apps/Swift-Selena
+cd /path/to/Swift-Selena
 ./register-selena-to-claude-code-debug.sh
 ```
 
@@ -307,7 +307,7 @@ Swift-Selenaプロジェクトで：
 # 注意: DEBUG版のツール名は mcp__swift-selena-debug__* です
 
 1. mcp__swift-selena-debug__initialize_project を呼び出し
-   project_path: "/Users/k_terada/data/dev/moons/product/ContactB プロジェクト/ContactB"
+   project_path: "/path/to/your/project"
 
 2. 新しいツールを呼び出し
    mcp__swift-selena-debug__search_files_without_pattern(pattern: "^import")
@@ -316,10 +316,6 @@ Swift-Selenaプロジェクトで：
    - 返される件数は？
    - どのファイルが返される？
    - 統計情報は正しい？
-
-4. 期待値と比較
-   期待: 3件（MKLocalSearch+Async.swift, ViewState.swift, ContactSortType.swift）
-   統計: Files checked: 262, Files without pattern: 3 (1.1%)
 ```
 
 **重要**:
