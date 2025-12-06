@@ -46,12 +46,14 @@ actor LSPState {
     /// LSP接続を試みる
     ///
     /// ## 処理フロー
-    /// 1. 既存接続をチェック（同じプロジェクトなら再利用）
-    /// 2. 新規の場合、LSPClient起動を試行
-    /// 3. 成功 = LSP利用可能
-    /// 4. 失敗 = LSP利用不可（理由は問わない）
+    /// 1. Xcodeプロジェクト検出（.xcodeprojがあればLSP無効）
+    /// 2. 既存接続をチェック（同じプロジェクトなら再利用）
+    /// 3. 新規の場合、LSPClient起動を試行
+    /// 4. 成功 = LSP利用可能
+    /// 5. 失敗 = LSP利用不可（理由は問わない）
     ///
     /// ## 失敗する理由（全て同じ扱い）
+    /// - Xcodeプロジェクト（グローバルインデックス不可）
     /// - ビルド未実施
     /// - ビルドエラー
     /// - sourcekit-lsp未インストール
@@ -60,8 +62,17 @@ actor LSPState {
     /// - Parameter projectPath: プロジェクトパス
     /// - Returns: 接続成功したか
     func tryConnect(projectPath: String) async -> Bool {
+        // Xcodeプロジェクト検出: .xcodeprojがあればLSPを無効化
+        // 理由: SourceKit-LSPはXcodeプロジェクトでグローバルインデックスが動作しない（Issue #730）
+        let projectURL = URL(fileURLWithPath: projectPath)
+        if let contents = try? FileManager.default.contentsOfDirectory(at: projectURL, includingPropertiesForKeys: nil),
+           contents.contains(where: { $0.pathExtension == "xcodeproj" }) {
+            logger.info("ℹ️ Xcode project detected - LSP disabled (known limitation: Issue #730)")
+            return false
+        }
+
         // 既に同じプロジェクトに接続済みか確認
-        if let existingClient = lspClients[projectPath] {
+        if lspClients[projectPath] != nil {
             logger.info("✅ LSP already connected for: \(projectPath)")
             currentProjectPath = projectPath
             return true

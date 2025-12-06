@@ -14,7 +14,11 @@ class ProjectMemory {
     private let memoryDir: URL
     private let projectName: String
     
+    /// キャッシュフォーマットのバージョン（構造変更時にインクリメント）
+    private static let cacheVersion = 2
+
     struct Memory: Codable {
+        var cacheVersion: Int
         var lastAnalyzed: Date
         var fileIndex: [String: FileInfo]
         var fileSymbolCache: [String: [SymbolInfo]]  // ファイルパス -> シンボル一覧
@@ -83,21 +87,35 @@ class ProjectMemory {
         
         // メモリをロードまたは初期化
         let memoryFile = memoryDir.appendingPathComponent("memory.json")
-        
+
         if FileManager.default.fileExists(atPath: memoryFile.path) {
             let data = try Data(contentsOf: memoryFile)
-            self.memory = try JSONDecoder().decode(Memory.self, from: data)
+            let loaded = try JSONDecoder().decode(Memory.self, from: data)
+
+            // バージョンチェック: 古いバージョンなら再初期化
+            if loaded.cacheVersion != Self.cacheVersion {
+                self.memory = Self.createEmptyMemory()
+                try save()
+            } else {
+                self.memory = loaded
+            }
         } else {
-            self.memory = Memory(
-                lastAnalyzed: Date(),
-                fileIndex: [:],
-                fileSymbolCache: [:],
-                importCache: [:],
-                typeConformanceCache: [:],
-                notes: []
-            )
+            self.memory = Self.createEmptyMemory()
             try save()
         }
+    }
+
+    /// 空のメモリを作成
+    private static func createEmptyMemory() -> Memory {
+        Memory(
+            cacheVersion: cacheVersion,
+            lastAnalyzed: Date(),
+            fileIndex: [:],
+            fileSymbolCache: [:],
+            importCache: [:],
+            typeConformanceCache: [:],
+            notes: []
+        )
     }
 
     /// ファイルのシンボル一覧をキャッシュ

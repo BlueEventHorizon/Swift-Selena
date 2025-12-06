@@ -377,15 +377,19 @@ class LSPClient {
     /// レスポンス受信（Content-Length対応版）
     private func receiveResponse() async throws -> String {
         // v0.5.5: 非同期通知をスキップして、応答のみ取得
+        // v0.6.1: タイムアウト追加（10秒）
         let handle = outputPipe.fileHandleForReading
+        let timeoutSeconds = 10
+        var elapsedMs = 0
 
         // 非同期通知をスキップして応答（id付き）を探す
-        while true {
+        while elapsedMs < timeoutSeconds * 1000 {
             try await Task.sleep(nanoseconds: 100_000_000)  // 100ms待機
+            elapsedMs += 100
 
             guard let data = try? handle.availableData,
                   !data.isEmpty else {
-                throw LSPError.communicationFailed
+                continue  // データなし、タイムアウトまで継続
             }
 
             guard let text = String(data: data, encoding: .utf8) else {
@@ -448,8 +452,13 @@ class LSPClient {
             // バッファにデータが残っている場合、次の読み取りを待つ
             if remainingText.isEmpty {
                 try await Task.sleep(nanoseconds: 100_000_000)
+                elapsedMs += 100
             }
         }
+
+        // タイムアウト
+        logger.warning("LSP response timeout after \(timeoutSeconds) seconds")
+        throw LSPError.responseTimeout
     }
 
     /// LSP接続を切断
