@@ -2173,7 +2173,119 @@ EXECUTABLE_PATH="${PROJECT_ROOT}/.build/arm64-apple-macosx/debug/Swift-Selena"
 
 ---
 
-**Document Version**: 2.0
+## 2025-12-06 - v0.6.1開発（続き）：ツール削減とMakefile改善
+
+### 実施内容
+
+#### ツール批判的レビューと削減
+
+**背景:**
+- MCPツールが多いとコンテキストを消費（約25kトークン）
+- debug版とrelease版の両方登録で重複
+
+**Phase 1: 即座に削除（5ツール）**
+
+| ツール | 削除理由 |
+|--------|----------|
+| `add_note` | 未使用、会話履歴で代替 |
+| `search_notes` | 未使用、会話履歴で代替 |
+| `read_symbol` | Claudeの`Read`+行番号で代替 |
+| `set_analysis_mode` | 効果不明、実質未使用 |
+| `think_about_analysis` | プロンプトでありツールではない |
+
+**Phase 2: 検討後に残す判断（2ツール）**
+
+| ツール | 判断 | 理由 |
+|--------|------|------|
+| `get_type_hierarchy` | 残す | 型名で直接検索できる利便性 |
+| `find_type_usages` | 残す | search_codeより精度が高い（ノイズ半減） |
+
+**結果:**
+- **18ツール → 13ツール**（28%削減）
+- 削除コード: 約600行
+- コンテキスト削減: 約2,500トークン見込み
+
+---
+
+#### Makefile改善
+
+**変更内容:**
+- `register-release`/`unregister-release`をMakefileから削除
+- Release版はスクリプト直接実行に統一
+- `register-selena-to-claude-code.sh`をトップレベルに移動
+- `unregister-selena-from-claude-code.sh`を新規作成
+
+**最終構成:**
+```
+Swift-Selena/
+├── register-selena-to-claude-code.sh      # Release版登録
+├── unregister-selena-from-claude-code.sh  # Release版解除
+├── Makefile
+├── Tools/Scripts/
+│   ├── register-selena-to-claude-code-debug.sh
+│   └── register-mcp-to-claude-desktop.sh
+```
+
+**使い方:**
+```bash
+# Debug版
+make register-debug
+make unregister-debug
+
+# Release版
+./register-selena-to-claude-code.sh /path/to/project
+./unregister-selena-from-claude-code.sh [/path/to/project]
+```
+
+---
+
+#### CCMonitor（Xcodeプロジェクト）でのLSP動作確認
+
+**テスト結果: 全13ツール正常動作**
+
+| ツール | 結果 |
+|--------|------|
+| `list_symbols` | ✅ LSP enhanced |
+| `get_type_hierarchy` | ✅ Protocol準拠検出 |
+| `find_type_usages` | ✅ 14件検出 |
+| その他10ツール | ✅ 全て正常 |
+
+**結論:**
+- Xcodeプロジェクトでも全ツール動作
+- 削除した`find_symbol_references`のみがXcode非対応だった
+
+---
+
+### 最終ツール一覧（13個）
+
+1. `initialize_project`
+2. `find_files`
+3. `search_code`
+4. `search_files_without_pattern`
+5. `list_symbols`
+6. `find_symbol_definition`
+7. `list_property_wrappers`
+8. `list_protocol_conformances`
+9. `list_extensions`
+10. `analyze_imports`
+11. `get_type_hierarchy`
+12. `find_test_cases`
+13. `find_type_usages`
+
+---
+
+### 学んだ教訓
+
+#### ツール削減の判断基準
+
+1. **Claude標準機能で代替可能か？** → `read_symbol`は`Read`で代替
+2. **実際に使われているか？** → `add_note`は未使用
+3. **精度の違いはあるか？** → `find_type_usages`はノイズが半分で価値あり
+4. **ユースケースが異なるか？** → `get_type_hierarchy`は型名検索で独自価値
+
+---
+
+**Document Version**: 2.1
 **Created**: 2025-10-15
 **Last Updated**: 2025-12-06
 **Purpose**: 開発過程の記録と知見の共有
