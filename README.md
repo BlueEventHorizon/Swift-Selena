@@ -67,19 +67,31 @@ git clone https://github.com/BlueEventHorizon/Swift-Selena.git
 cd Swift-Selena
 
 # Build (release mode for production)
-swift build -c release -Xswiftc -Osize
+make build-release
 
-# Grant execute permission to setup scripts
-chmod +x register-mcp-to-claude-desktop.sh
-chmod +x register-selena-to-claude-code.sh
-chmod +x register-selena-to-claude-code-debug.sh
-
-# Verify executable path
-pwd
-# Example output: /Users/yourname/Swift-Selena
+# Or using swift directly:
+# swift build -c release -Xswiftc -Osize
 ```
 
 The build artifact is generated at `.build/release/Swift-Selena`.
+
+### Available Make Commands
+
+```bash
+make help  # Show all available commands
+```
+
+| Command | Description |
+|---------|-------------|
+| `make build` | Build debug version |
+| `make build-release` | Build release version |
+| `make clean` | Clean build artifacts |
+| `make register-debug` | Build & register DEBUG version to this project |
+| `make register-release TARGET=/path` | Register RELEASE version to target project |
+| `make register-desktop` | Register to Claude Desktop |
+| `make unregister-debug` | Unregister DEBUG version from this project |
+| `make unregister-release TARGET=/path` | Unregister RELEASE version from target project |
+| `make unregister-desktop` | Unregister from Claude Desktop |
 
 ## Debugging & Logging
 
@@ -117,56 +129,37 @@ tail -f ~/.swift-selena/logs/server.log
 
 ### Easy Setup (Recommended)
 
-Run the following scripts from the project root for automatic setup:
+Use make commands from the Swift-Selena project root:
 
 #### For Claude Desktop
 ```bash
-./register-mcp-to-claude-desktop.sh
+make register-desktop
 ```
-
-This script automatically:
-- Verifies executable existence
-- Backs up existing configuration
-- Adds settings to `claude_desktop_config.json`
-- Preserves existing settings (if jq is installed)
 
 #### For Claude Code
 
-To connect Swift-Selena to Claude Code:
-
 ```bash
 # For production use (register to target project)
-./register-selena-to-claude-code.sh /path/to/your/project
+make register-release TARGET=/path/to/your/project
 
 # Example:
-./register-selena-to-claude-code.sh /Users/yourname/apps/CCMonitor
+make register-release TARGET=~/apps/CCMonitor
 
 # For development/testing (register to Swift-Selena project itself)
-./register-selena-to-claude-code-debug.sh
+make register-debug
 ```
 
-This script automatically:
-- Verifies executable existence
-- Moves to target project directory (using pushd/popd)
-- Registers with `claude mcp add` (local to that project)
-- Debug version registers as `swift-selena-debug` (does not affect production `swift-selena`)
+#### Unregister
 
-**Alternative: Using makefile** (if your project has one)
-
-Add to your project's makefile:
-```make
-connect_swift-selena:
-	@if [ -n "$$SWIFT_SELENA_PATH" ]; then \
-		claude mcp add swift-selena -- $$SWIFT_SELENA_PATH/.build/release/Swift-Selena; \
-	else \
-		echo "Set SWIFT_SELENA_PATH first"; \
-	fi
-```
-
-Then:
 ```bash
-export SWIFT_SELENA_PATH=/path/to/Swift-Selena
-make connect_swift-selena
+# Unregister from Claude Desktop
+make unregister-desktop
+
+# Unregister from target project
+make unregister-release TARGET=/path/to/your/project
+
+# Unregister debug version from this project
+make unregister-debug
 ```
 
 ### Manual Setup

@@ -1,4 +1,4 @@
-.PHONY: help build build-release register-debug register-release register-desktop unregister-debug unregister-release unregister-desktop install-client-makefile clean
+.PHONY: help build build-release register-debug register-desktop unregister-debug unregister-desktop install-client-makefile clean
 
 default: help
 
@@ -12,14 +12,14 @@ help:
 	@echo ""
 	@echo "Register commands:"
 	@echo "  make register-debug     - Build & register DEBUG version to this project's Claude Code"
-	@echo "  make register-release   - Register RELEASE version to target project"
-	@echo "                            Usage: make register-release TARGET=/path/to/project"
 	@echo "  make register-desktop   - Register to Claude Desktop"
+	@echo ""
+	@echo "  For release version, use scripts directly:"
+	@echo "    ./register-selena-to-claude-code.sh /path/to/project"
+	@echo "    ./unregister-selena-from-claude-code.sh [/path/to/project]"
 	@echo ""
 	@echo "Unregister commands:"
 	@echo "  make unregister-debug   - Unregister DEBUG version from this project"
-	@echo "  make unregister-release - Unregister RELEASE version from target project"
-	@echo "                            Usage: make unregister-release TARGET=/path/to/project"
 	@echo "  make unregister-desktop - Unregister from Claude Desktop"
 	@echo ""
 	@echo "Client tools:"
@@ -39,14 +39,6 @@ clean:
 register-debug:
 	@./Tools/Scripts/register-selena-to-claude-code-debug.sh
 
-register-release:
-	@if [ -z "$(TARGET)" ]; then \
-		echo "Error: TARGET is required"; \
-		echo "Usage: make register-release TARGET=/path/to/your/project"; \
-		exit 1; \
-	fi
-	@./Tools/Scripts/register-selena-to-claude-code.sh "$(TARGET)"
-
 register-desktop:
 	@./Tools/Scripts/register-mcp-to-claude-desktop.sh
 
@@ -54,20 +46,6 @@ register-desktop:
 unregister-debug:
 	@echo "Unregistering swift-selena-debug from Claude Code..."
 	@claude mcp remove swift-selena-debug 2>/dev/null || echo "swift-selena-debug was not registered"
-	@echo "Done. Restart Claude Code to apply changes."
-
-unregister-release:
-	@if [ -z "$(TARGET)" ]; then \
-		echo "Error: TARGET is required"; \
-		echo "Usage: make unregister-release TARGET=/path/to/your/project"; \
-		exit 1; \
-	fi
-	@if [ ! -d "$(TARGET)" ]; then \
-		echo "Error: Directory not found: $(TARGET)"; \
-		exit 1; \
-	fi
-	@echo "Unregistering swift-selena from $(TARGET)..."
-	@cd "$(TARGET)" && claude mcp remove swift-selena 2>/dev/null || echo "swift-selena was not registered"
 	@echo "Done. Restart Claude Code to apply changes."
 
 unregister-desktop:

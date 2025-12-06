@@ -49,7 +49,16 @@
       "mcp__serena__get_current_config",
       "Bash(git fetch:*)",
       "Bash(git log:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "mcp__swift-selena__search_files_without_pattern",
+      "Bash(make:*)",
+      "Bash(./Tools/Scripts/register-selena-to-claude-code-debug.sh:*)",
+      "mcp__swift-selena-debug__find_files",
+      "mcp__swift-selena-debug__search_code",
+      "mcp__swift-selena-debug__find_symbol_definition",
+      "mcp__swift-selena-debug__analyze_imports",
+      "Bash(claude mcp remove:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

@@ -27,10 +27,9 @@ fi
 echo -e "${YELLOW}Swift Selena (RELEASE) → Claude Code 登録${NC}"
 echo "=========================================="
 
-# Swift-Selenaのパス（このスクリプトの2階層上）
+# Swift-Selenaのパス（このスクリプトと同じディレクトリ）
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PROJECT_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
-EXECUTABLE_PATH="${PROJECT_ROOT}/.build/release/Swift-Selena"
+EXECUTABLE_PATH="${SCRIPT_DIR}/.build/release/Swift-Selena"
 
 # 実行ファイルの存在確認
 if [ ! -f "$EXECUTABLE_PATH" ]; then

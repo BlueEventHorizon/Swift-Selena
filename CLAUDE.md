@@ -158,8 +158,8 @@ mcp__swift-selena-debug__search_files_without_pattern(pattern: "^import")
 
 ### コード変更時
 
-- [ ] **ビルド確認**: `swift build` でエラーなくビルドできるか
-- [ ] **DEBUGビルドテスト**: `./register-selena-to-claude-code-debug.sh` で動作確認
+- [ ] **ビルド確認**: `make build` でエラーなくビルドできるか
+- [ ] **DEBUGビルドテスト**: `make register-debug` で動作確認
 - [ ] **実際のMCPツールとしてテスト**: 新機能を実際に呼び出して検証
 - [ ] **ログ確認**: `tail -f ~/.swift-selena/logs/server.log` でエラーなし
 - [ ] **ドキュメント更新**: 該当するドキュメントを更新（下記参照）
@@ -226,36 +226,39 @@ mcp__swift-selena-debug__search_files_without_pattern(pattern: "^import")
 ## ビルド・実行コマンド
 
 ```bash
+# 全コマンド一覧
+make help
+
 # プロジェクトのビルド（開発用・デバッグビルド）
-swift build
+make build
 # 成果物: .build/arm64-apple-macosx/debug/Swift-Selena
 
 # 本番用リリースビルド
 # ⚠️ 警告: 絶対に勝手に実行しないこと！
 # 他のClaude Codeインスタンスが本番用Swift-Selenaを使用している可能性があります
 # 明示的な人間の指示があるまで実行禁止
-swift build -c release -Xswiftc -Osize
+make build-release
 # 成果物: .build/release/Swift-Selena
 
-# セットアップスクリプトに実行権限を付与
-chmod +x register-mcp-to-claude-desktop.sh
-chmod +x register-selena-to-claude-code.sh
-chmod +x register-selena-to-claude-code-debug.sh
-
 # Claude Desktopに登録（本番用）
-./register-mcp-to-claude-desktop.sh
+make register-desktop
 
 # Claude Codeに登録（本番用、要引数）
-./register-selena-to-claude-code.sh /path/to/your/project
+make register-release TARGET=/path/to/your/project
 
-# サーバーの実行（開発用）
-swift run
+# DEBUG版を登録（このプロジェクトに）
+make register-debug
+
+# 登録解除
+make unregister-debug
+make unregister-release TARGET=/path/to/your/project
+make unregister-desktop
+
+# ビルド成果物のクリーンアップ
+make clean
 
 # Xcodeで開く
 open .swiftpm/xcode/package.xcworkspace
-
-# ビルド成果物のクリーンアップ
-swift package clean
 ```
 
 ## DEBUGビルドでのテスト方法
@@ -280,14 +283,13 @@ swift package clean
 #### 1. DEBUGビルドと登録（1コマンドで完了）
 
 ```bash
-cd /path/to/Swift-Selena
-./register-selena-to-claude-code-debug.sh
+make register-debug
 ```
 
-このスクリプトは以下を自動実行：
-1. `swift build` でDEBUGビルド実行
-2. `.build/arm64-apple-macosx/debug/Swift-Selena` を確認
-3. Swift-Selenaプロジェクトの `.claude/mcp_config.json` に登録
+このコマンドは以下を自動実行：
+1. `swift package clean` でクリーンビルド
+2. `swift build` でDEBUGビルド実行
+3. Swift-Selenaプロジェクトの `.claude/mcp_config.json` に `swift-selena-debug` として登録
 4. ビルド日時を表示
 
 **重要**: スクリプト内でビルドを実行するため、最新のコードが必ず反映されます
@@ -342,10 +344,10 @@ tail -f ~/.swift-selena/logs/server.log
 
 ```bash
 # リリースビルド（明示的指示があった場合のみ）
-swift build -c release -Xswiftc -Osize
+make build-release
 
 # リリース版を登録（ターゲットプロジェクトを指定）
-./register-selena-to-claude-code.sh /path/to/your/project
+make register-release TARGET=/path/to/your/project
 ```
 
 ### トラブルシューティング
@@ -356,7 +358,7 @@ swift build -c release -Xswiftc -Osize
 
 **問題**: 古いバイナリが使われている
 - 確認: ビルド日時を確認 `ls -lh .build/arm64-apple-macosx/debug/Swift-Selena`
-- 解決: `swift build` で再ビルド、debug用スクリプトで再登録
+- 解決: `make register-debug` で再ビルド＆再登録
 
 **問題**: ツールは表示されるが動作しない
 - ログ確認: `tail -f ~/.swift-selena/logs/server.log`

@@ -1953,8 +1953,228 @@ logger.info("Server stopped")
 
 ---
 
-**Document Version**: 1.9
+---
+
+## 2025-12-06 - v0.6.1開発：Makefile導入とプロジェクト構造改善
+
+### 実施内容
+
+#### DebugRunnerのパス問題修正
+
+**問題発見:**
+- `list_symbols`が動作しない
+- ログ: `LSP connection failed: The operation couldn't be completed. (Swift_Selena.LSPError error 0.)`
+- 原因: DebugRunner.swiftに開発者のパスがハードコード
+
+**修正:**
+- `detectProjectPath()`メソッド追加
+- 動的にプロジェクトルートを検出
+  1. カレントディレクトリにPackage.swiftがあれば採用
+  2. 実行ファイルパスから`.build/`を検出し、その親ディレクトリを採用
+
+```swift
+private static func detectProjectPath() -> String {
+    let fileManager = FileManager.default
+    let currentDir = fileManager.currentDirectoryPath
+
+    // Package.swift確認
+    let packageSwiftPath = (currentDir as NSString).appendingPathComponent("Package.swift")
+    if fileManager.fileExists(atPath: packageSwiftPath) {
+        return currentDir
+    }
+
+    // .build/からプロジェクトルートを推定
+    let executablePath = Bundle.main.executablePath ?? ""
+    if executablePath.contains(".build/") {
+        if let range = executablePath.range(of: ".build/") {
+            let projectRoot = String(executablePath[..<range.lowerBound])
+            // ...
+        }
+    }
+    return currentDir
+}
+```
+
+**確認:**
+- `#if DEBUG`で囲まれているため、release版には影響なし
+
+---
+
+#### 個人パスの削除
+
+**問題:**
+- CLAUDE.mdやスクリプトに`/Users/k_terada/`が残存
+- 他のユーザーが使用する際の障害
+
+**修正:**
+- CLAUDE.md: `/path/to/Swift-Selena`に変更
+- register-selena-to-claude-code.sh: `/path/to/your/project`に変更
+- 作者コメント（Copyright等）は保持
+
+---
+
+#### Makefile導入とプロジェクト構造改善
+
+**背景:**
+- 元々あったMakefileはクライアントアプリ用
+- ビルド・登録コマンドが分散していた
+
+**構造変更:**
+
+```
+Swift-Selena/
+├── Makefile                 # 新規（ビルド・登録用）
+├── Tools/
+│   ├── Scripts/             # スクリプト移動先
+│   │   ├── register-selena-to-claude-code.sh
+│   │   ├── register-selena-to-claude-code-debug.sh
+│   │   └── register-mcp-to-claude-desktop.sh
+│   └── Client/
+│       └── Makefile         # 元のMakefile（クライアントアプリ用）
+```
+
+**新規Makefileコマンド:**
+
+```makefile
+make build              # デバッグビルド
+make build-release      # リリースビルド
+make register-debug     # デバッグ版登録
+make register-release TARGET=/path/to/project  # リリース版登録
+make register-desktop   # Claude Desktop登録
+make unregister-debug   # デバッグ版登録解除
+make unregister-release TARGET=/path/to/project  # リリース版登録解除
+make unregister-desktop # Claude Desktop登録解除
+make clean              # ビルド成果物クリーン
+make help               # ヘルプ表示
+```
+
+**スクリプト修正:**
+- `PROJECT_ROOT`変数導入（スクリプトから2階層上）
+- 相対パスではなく絶対パスで動作
+
+---
+
+#### ドキュメント更新
+
+**README.md / README.ja.md:**
+- makeコマンドでの操作方法に更新
+- インストール手順を簡略化
+
+**CLAUDE.md:**
+- makeコマンドでのビルド・登録手順に更新
+- DEBUGビルドテスト方法を更新
+
+**.claude/commands/create-code-headers.md:**
+- 対象ディレクトリを修正（`Tools/`, `Library/`等 → `Sources/`, `Tests/`）
+- Swift-Selenaのディレクトリ構造に適合
+
+---
+
+#### CHANGELOG.md更新
+
+**v0.6.1追加（開発中）:**
+- Makefile導入
+- スクリプトの再配置
+- DebugRunnerパス問題修正
+- ドキュメント更新
+
+**v0.6.0追加（計画中）:**
+- Code Header DB機能
+- search_code_headers
+- get_code_header_stats
+
+---
+
+### 技術的知見
+
+#### 1. #if DEBUGの活用
+
+**DebugRunner:**
+- 全体が`#if DEBUG`で囲まれている
+- release版には一切含まれない
+- 開発時のみ自動テスト実行
+
+**確認方法:**
+```bash
+# releaseビルドにDebugRunnerが含まれていないことを確認
+strings .build/release/Swift-Selena | grep DebugRunner
+# → 出力なし（正常）
+```
+
+#### 2. PROJECT_ROOTパターン
+
+**スクリプトでの使用:**
+```bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
+EXECUTABLE_PATH="${PROJECT_ROOT}/.build/arm64-apple-macosx/debug/Swift-Selena"
+```
+
+**利点:**
+- スクリプトの配置場所に依存しない
+- 相対パスの計算ミスを防止
+
+#### 3. MCPツールのコンテキスト消費
+
+**発見:**
+- MCPツールが多いとコンテキストを消費
+- debug版とrelease版の両方を登録すると約25.5kトークン
+- 重複ツール（swift-selena + swift-selena-debug）が原因
+
+**対策:**
+- 開発時はdebug版のみ登録
+- 本番使用時はrelease版のみ登録
+- 両方同時に登録しない
+
+---
+
+### 学んだ教訓
+
+#### 1. ハードコードパスの危険性
+
+**失敗:**
+- 開発者のパスをコードにハードコード
+- 他の環境で動作しない
+
+**教訓:**
+- 動的にパスを検出する仕組みを実装
+- 環境変数やBundle.mainを活用
+
+#### 2. Makefileによる操作統一
+
+**効果:**
+- 複雑なコマンドを覚えなくてよい
+- `make help`で全コマンド確認可能
+- タイプミス防止
+
+---
+
+### 実装統計
+
+**開発時間:** 約2時間
+
+**変更ファイル:**
+- Sources/DebugRunner.swift: +25行（detectProjectPath）
+- Makefile: +80行（新規）
+- Tools/Scripts/*.sh: 移動＋修正
+- README.md, README.ja.md, CLAUDE.md: 更新
+- .claude/commands/create-code-headers.md: 修正
+- CHANGELOG.md: 追記
+
+---
+
+### 次のバージョン
+
+**v0.6.0（計画中）:**
+- Code Header DB機能実装
+- search_code_headers（意図ベース検索）
+- get_code_header_stats（統計情報）
+- Apple NaturalLanguage統合
+
+---
+
+**Document Version**: 2.0
 **Created**: 2025-10-15
-**Last Updated**: 2025-10-27
+**Last Updated**: 2025-12-06
 **Purpose**: 開発過程の記録と知見の共有
 
