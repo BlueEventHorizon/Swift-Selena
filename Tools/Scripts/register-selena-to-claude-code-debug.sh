@@ -20,11 +20,11 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
 EXECUTABLE_PATH="${PROJECT_ROOT}/.build/arm64-apple-macosx/debug/Swift-Selena"
 
-# クリーンビルドを実行
+# debugディレクトリのみクリーンしてビルド
 echo ""
-echo -e "${CYAN}クリーンビルド実行中...${NC}"
+echo -e "${CYAN}DEBUGビルド実行中...${NC}"
 cd "$PROJECT_ROOT"
-swift package clean
+rm -rf .build/arm64-apple-macosx/debug
 swift build
 BUILD_RESULT=$?
 

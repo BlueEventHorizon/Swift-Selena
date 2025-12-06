@@ -30,6 +30,7 @@ build:
 	swift build
 
 build-release:
+	rm -rf .build/release
 	swift build -c release -Xswiftc -Osize
 
 clean:
