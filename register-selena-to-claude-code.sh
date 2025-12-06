@@ -19,7 +19,7 @@ if [ $# -ne 1 ]; then
     echo "  $0 <target-project-directory>"
     echo ""
     echo "例:"
-    echo "  $0 /Users/k_terada/data/dev/_WORKING_/apps/CCMonitor"
+    echo "  $0 /path/to/your/project"
     echo "  $0 ~/projects/MyApp"
     exit 1
 fi
