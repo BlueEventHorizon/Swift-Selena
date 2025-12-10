@@ -88,9 +88,12 @@ enum InitializeProjectTool {
 
         let memory = try ProjectMemory(projectPath: projectPath)
 
-        let result = CallTool.Result(content: [
-            .text("✅ Project initialized: \(projectPath)\n\n\(memory.getStats())")
-        ])
+        #if DEBUG
+        let message = "✅ Project initialized: \(projectPath)\n\n\(memory.getStats())"
+        #else
+        let message = "✅ Project initialized: \(projectPath)"
+        #endif
+        let result = CallTool.Result(content: [.text(message)])
 
         return (result, memory)
     }

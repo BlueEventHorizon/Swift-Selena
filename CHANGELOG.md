@@ -4,6 +4,56 @@ Swift-Selenaのリリース履歴
 
 ---
 
+## v0.6.1 - 2025/12/06 (開発中)
+
+### ビルド・登録システムのリファクタリング
+
+**Makefile導入:**
+- ✅ **make build** - DEBUGビルド
+- ✅ **make build-release** - RELEASEビルド
+- ✅ **make register-debug** - DEBUG版をこのプロジェクトに登録
+- ✅ **make register-release TARGET=/path** - RELEASE版をターゲットに登録
+- ✅ **make register-desktop** - Claude Desktopに登録
+- ✅ **make unregister-debug/release/desktop** - 登録解除コマンド
+- ✅ **make install-client-makefile TARGET=/path** - クライアント用Makefile配布
+
+**ファイル構成変更:**
+- `register-*.sh` → `Tools/Scripts/` に移動
+- `Makefile`（クライアント用） → `Tools/Client/` に移動
+- 新規 `Makefile` でビルド・登録を一元管理
+
+**バグ修正:**
+- ✅ **DebugRunner パス修正** - ハードコードされた `/Users/k_terada/...` を動的検出に変更
+  - `detectProjectPath()` メソッド追加
+  - カレントディレクトリまたは実行ファイルパスから自動検出
+- ✅ **ドキュメントのパス修正** - 個人パスをプレースホルダーに置換
+
+**ドキュメント更新:**
+- README.md/README.ja.md: Makeコマンド一覧、セットアップ手順更新
+- CLAUDE.md: ビルド・登録コマンドをmake形式に更新
+- `.claude/commands/create-code-headers.md`: Swift-Selena用にディレクトリ修正
+
+**ツール総数:** 18個（変更なし）
+
+---
+
+## v0.6.0 - (計画中)
+
+### Code Header DB機能（予定）
+
+**計画中の新機能:**
+- **search_code_headers** - セマンティック検索でCode Headerを検索
+- **get_code_header_stats** - Code Header統計情報
+
+**技術:**
+- NLEmbedding（Apple Natural Language）によるベクトル埋め込み
+- コサイン類似度による意味検索
+- ProjectMemoryへのキャッシュ統合
+
+**詳細**: docs/v0.6.0_implementation_plan.md、docs/requirements/REQ-004_Code_Header_DB_v0.6.x.md参照
+
+---
+
 ## v0.5.5 - 2025/10/27
 
 ### LSP安定化、MCP基盤修正、新ツール実装
@@ -369,4 +419,4 @@ Swift-Selenaのリリース履歴
 
 ---
 
-**Last Updated**: 2025-10-28
+**Last Updated**: 2025-12-06

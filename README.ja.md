@@ -67,19 +67,31 @@ git clone https://github.com/BlueEventHorizon/Swift-Selena.git
 cd Swift-Selena
 
 # ビルド（本番用リリースモード）
-swift build -c release -Xswiftc -Osize
+make build-release
 
-# セットアップスクリプトに実行権限を付与
-chmod +x register-mcp-to-claude-desktop.sh
-chmod +x register-selena-to-claude-code.sh
-chmod +x register-selena-to-claude-code-debug.sh
-
-# 実行可能ファイルのパスを確認
-pwd
-# 出力例: /Users/yourname/Swift-Selena
+# または直接swiftコマンドを使用：
+# swift build -c release -Xswiftc -Osize
 ```
 
 ビルド成果物は `.build/release/Swift-Selena` に生成されます。
+
+### 利用可能なMakeコマンド
+
+```bash
+make help  # 全コマンドを表示
+```
+
+| コマンド | 説明 |
+|---------|------|
+| `make build` | DEBUGビルド |
+| `make build-release` | RELEASEビルド |
+| `make clean` | ビルド成果物をクリーン |
+| `make register-debug` | DEBUG版をビルド＆このプロジェクトに登録 |
+| `make register-release TARGET=/path` | RELEASE版をターゲットプロジェクトに登録 |
+| `make register-desktop` | Claude Desktopに登録 |
+| `make unregister-debug` | DEBUG版をこのプロジェクトから解除 |
+| `make unregister-release TARGET=/path` | RELEASE版をターゲットから解除 |
+| `make unregister-desktop` | Claude Desktopから解除 |
 
 ## デバッグ・ログ機能
 
@@ -117,56 +129,37 @@ tail -f ~/.swift-selena/logs/server.log
 
 ### 簡単セットアップ（推奨）
 
-プロジェクトルートで以下のスクリプトを実行すると、自動的に設定が完了します。
+Swift-Selenaプロジェクトルートでmakeコマンドを使用します：
 
 #### Claude Desktopの場合
 ```bash
-./register-mcp-to-claude-desktop.sh
+make register-desktop
 ```
-
-このスクリプトは以下を自動実行します：
-- 実行ファイルの存在確認
-- 既存設定のバックアップ
-- `claude_desktop_config.json`に設定を追加
-- 既存の設定を保持（jqがインストールされている場合）
 
 #### Claude Codeの場合
 
-Swift-SelenaをClaude Codeに接続するには：
-
 ```bash
 # 本番用（ターゲットプロジェクトに登録）
-./register-selena-to-claude-code.sh /path/to/your/project
+make register-release TARGET=/path/to/your/project
 
 # 例:
-./register-selena-to-claude-code.sh /Users/yourname/apps/CCMonitor
+make register-release TARGET=~/apps/CCMonitor
 
 # 開発・テスト用（Swift-Selenaプロジェクト自体に登録）
-./register-selena-to-claude-code-debug.sh
+make register-debug
 ```
 
-このスクリプトは以下を自動実行します：
-- 実行ファイルの存在確認
-- ターゲットプロジェクトディレクトリに移動（pushd/popd使用）
-- `claude mcp add`で登録（そのプロジェクトのみ有効）
-- Debug版は`swift-selena-debug`として別名登録（本番用`swift-selena`に影響なし）
+#### 登録解除
 
-**別の方法：makefileを使用**（プロジェクトにmakefileがある場合）
-
-プロジェクトのmakefileに追加：
-```make
-connect_swift-selena:
-	@if [ -n "$$SWIFT_SELENA_PATH" ]; then \
-		claude mcp add swift-selena -- $$SWIFT_SELENA_PATH/.build/release/Swift-Selena; \
-	else \
-		echo "SWIFT_SELENA_PATHを設定してください"; \
-	fi
-```
-
-使用方法：
 ```bash
-export SWIFT_SELENA_PATH=/path/to/Swift-Selena
-make connect_swift-selena
+# Claude Desktopから解除
+make unregister-desktop
+
+# ターゲットプロジェクトから解除
+make unregister-release TARGET=/path/to/your/project
+
+# DEBUG版をこのプロジェクトから解除
+make unregister-debug
 ```
 
 ### 手動セットアップ

@@ -6,9 +6,9 @@
 /create-code-headers                              # 全ファイル対象
 /create-code-headers --update                     # 全ファイル上書き
 /create-code-headers --changed                    # git変更ファイルのみ
-/create-code-headers DI/*                         # DIディレクトリ配下のみ
-/create-code-headers Tools/Core/*.swift           # 特定パターン
-/create-code-headers StreamManager.swift MockAssertion.swift  # 個別ファイル指定
+/create-code-headers Sources/Tools/*              # Toolsディレクトリ配下のみ
+/create-code-headers Sources/LSP/*.swift          # 特定パターン
+/create-code-headers ProjectMemory.swift FileSearcher.swift  # 個別ファイル指定
 ```
 
 **モード**:
@@ -40,9 +40,9 @@
 
 **例**:
 ```
-DI/* → Glob("DI/*.swift")
-Tools/Core/StreamManager → Tools/Core/StreamManager.swift
-Tools/**/*.swift → そのままGlob実行
+Sources/Tools/* → Glob("Sources/Tools/*.swift")
+Sources/LSP/LSPClient → Sources/LSP/LSPClient.swift
+Sources/**/*.swift → そのままGlob実行
 ```
 
 #### --changed の場合
@@ -61,12 +61,8 @@ git status --porcelain
 
 **対象ディレクトリ**:
 ```
-Tools/**/*.swift
-Library/**/*.swift
-Domain/**/*.swift
-App/**/*.swift
-Infrastructure/**/*.swift
-DI/**/*.swift
+Sources/**/*.swift
+Tests/**/*.swift
 ```
 
 **実行**:

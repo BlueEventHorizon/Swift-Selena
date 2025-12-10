@@ -74,11 +74,25 @@ enum FindSymbolDefinitionTool: MCPTool {
         var foundSymbols: [(file: String, symbol: SwiftSyntaxAnalyzer.SymbolInfo)] = []
 
         for file in swiftFiles {
-            let symbols = try SwiftSyntaxAnalyzer.listSymbols(filePath: file)
+            // キャッシュから取得を試みる
+            let symbols: [SwiftSyntaxAnalyzer.SymbolInfo]
+            if let cached = memory.getCachedFileSymbols(filePath: file) {
+                // キャッシュヒット: ProjectMemory.SymbolInfo → SwiftSyntaxAnalyzer.SymbolInfo に変換
+                symbols = cached.map { SwiftSyntaxAnalyzer.SymbolInfo(name: $0.name, kind: $0.kind, line: $0.line) }
+            } else {
+                // キャッシュミス: 解析してキャッシュに保存
+                symbols = try SwiftSyntaxAnalyzer.listSymbols(filePath: file)
+                let cacheData = symbols.map { ProjectMemory.Memory.SymbolInfo(name: $0.name, kind: $0.kind, line: $0.line) }
+                memory.cacheFileSymbols(filePath: file, symbols: cacheData)
+            }
+
             for symbol in symbols where symbol.name == symbolName {
                 foundSymbols.append((file: file, symbol: symbol))
             }
         }
+
+        // キャッシュを保存
+        try? memory.save()
 
         if foundSymbols.isEmpty {
             return CallTool.Result(content: [.text("Symbol '\(symbolName)' not found in project")])

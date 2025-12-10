@@ -59,7 +59,8 @@ actor DebugRunner {
         logger.info("🔧 DebugRunner: ========================================")
 
         // テスト対象プロジェクト（Swift-Selena自身でテスト）
-        let testProjectPath = "/Users/k_terada/data/dev/_WORKING_/apps/Swift-Selena"
+        // 実行時のカレントディレクトリまたは実行ファイルの場所から動的に取得
+        let testProjectPath = Self.detectProjectPath()
 
         do {
             // ProjectMemory初期化
@@ -111,7 +112,8 @@ actor DebugRunner {
     private func testDocumentSymbol(projectMemory: ProjectMemory) async throws {
         logger.info("🔧 Test v0.5.4: documentSymbol API")
 
-        let fullPath = "/Users/k_terada/data/dev/_WORKING_/apps/Swift-Selena/Sources/ProjectMemory.swift"
+        let projectPath = Self.detectProjectPath()
+        let fullPath = (projectPath as NSString).appendingPathComponent("Sources/ProjectMemory.swift")
 
         let filePath: MCP.Value = .string(fullPath)
 
@@ -170,5 +172,48 @@ actor DebugRunner {
 
 enum DebugRunnerError: Error {
     case lspNotAvailable
+}
+
+// MARK: - Private Helpers
+
+extension DebugRunner {
+    /// プロジェクトパスを動的に検出
+    ///
+    /// 優先順位:
+    /// 1. カレントディレクトリにPackage.swiftがある場合はカレントディレクトリ
+    /// 2. 実行ファイルのパスから推測（.build/debug/Swift-Selena → プロジェクトルート）
+    /// 3. フォールバック: カレントディレクトリ
+    private static func detectProjectPath() -> String {
+        let fileManager = FileManager.default
+        let currentDir = fileManager.currentDirectoryPath
+
+        // カレントディレクトリにPackage.swiftがあるか確認
+        let packageSwiftPath = (currentDir as NSString).appendingPathComponent("Package.swift")
+        if fileManager.fileExists(atPath: packageSwiftPath) {
+            return currentDir
+        }
+
+        // 実行ファイルのパスから推測
+        // 例: /path/to/project/.build/arm64-apple-macosx/debug/Swift-Selena
+        //     → /path/to/project
+        let executablePath = Bundle.main.executablePath ?? ""
+        if executablePath.contains(".build/") {
+            // .build/ より前の部分を取得
+            if let range = executablePath.range(of: ".build/") {
+                let projectRoot = String(executablePath[..<range.lowerBound])
+                let trimmedPath = projectRoot.hasSuffix("/")
+                    ? String(projectRoot.dropLast())
+                    : projectRoot
+                // Package.swiftが存在するか確認
+                let packagePath = (trimmedPath as NSString).appendingPathComponent("Package.swift")
+                if fileManager.fileExists(atPath: packagePath) {
+                    return trimmedPath
+                }
+            }
+        }
+
+        // フォールバック: カレントディレクトリ
+        return currentDir
+    }
 }
 #endif

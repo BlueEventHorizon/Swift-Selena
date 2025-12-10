@@ -19,7 +19,7 @@ if [ $# -ne 1 ]; then
     echo "  $0 <target-project-directory>"
     echo ""
     echo "例:"
-    echo "  $0 /Users/k_terada/data/dev/_WORKING_/apps/CCMonitor"
+    echo "  $0 /path/to/your/project"
     echo "  $0 ~/projects/MyApp"
     exit 1
 fi
@@ -27,7 +27,7 @@ fi
 echo -e "${YELLOW}Swift Selena (RELEASE) → Claude Code 登録${NC}"
 echo "=========================================="
 
-# Swift-Selenaのパス（このスクリプトがあるディレクトリ）
+# Swift-Selenaのパス（このスクリプトと同じディレクトリ）
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 EXECUTABLE_PATH="${SCRIPT_DIR}/.build/release/Swift-Selena"
 

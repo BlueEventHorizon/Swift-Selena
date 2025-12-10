@@ -14,10 +14,14 @@ class ProjectMemory {
     private let memoryDir: URL
     private let projectName: String
     
+    /// キャッシュフォーマットのバージョン（構造変更時にインクリメント）
+    private static let cacheVersion = 2
+
     struct Memory: Codable {
+        var cacheVersion: Int
         var lastAnalyzed: Date
         var fileIndex: [String: FileInfo]
-        var symbolCache: [String: [SymbolInfo]]
+        var fileSymbolCache: [String: [SymbolInfo]]  // ファイルパス -> シンボル一覧
         var importCache: [String: [ImportInfo]]
         var typeConformanceCache: [String: TypeConformanceInfo]
         var notes: [Note]
@@ -25,13 +29,11 @@ class ProjectMemory {
         struct FileInfo: Codable {
             let path: String
             let lastModified: Date
-            let symbolCount: Int
         }
 
         struct SymbolInfo: Codable {
             let name: String
             let kind: String
-            let filePath: String
             let line: Int
         }
 
@@ -85,54 +87,79 @@ class ProjectMemory {
         
         // メモリをロードまたは初期化
         let memoryFile = memoryDir.appendingPathComponent("memory.json")
-        
+
         if FileManager.default.fileExists(atPath: memoryFile.path) {
             let data = try Data(contentsOf: memoryFile)
-            self.memory = try JSONDecoder().decode(Memory.self, from: data)
+            let loaded = try JSONDecoder().decode(Memory.self, from: data)
+
+            // バージョンチェック: 古いバージョンなら再初期化
+            if loaded.cacheVersion != Self.cacheVersion {
+                self.memory = Self.createEmptyMemory()
+                try save()
+            } else {
+                self.memory = loaded
+            }
         } else {
-            self.memory = Memory(
-                lastAnalyzed: Date(),
-                fileIndex: [:],
-                symbolCache: [:],
-                importCache: [:],
-                typeConformanceCache: [:],
-                notes: []
-            )
+            self.memory = Self.createEmptyMemory()
             try save()
         }
     }
-    
-    /// シンボルをキャッシュ
-    func cacheSymbol(name: String, kind: String, filePath: String, line: Int) {
-        let symbol = Memory.SymbolInfo(
-            name: name,
-            kind: kind,
-            filePath: filePath,
-            line: line
+
+    /// 空のメモリを作成
+    private static func createEmptyMemory() -> Memory {
+        Memory(
+            cacheVersion: cacheVersion,
+            lastAnalyzed: Date(),
+            fileIndex: [:],
+            fileSymbolCache: [:],
+            importCache: [:],
+            typeConformanceCache: [:],
+            notes: []
         )
-        
-        if memory.symbolCache[name] == nil {
-            memory.symbolCache[name] = []
+    }
+
+    /// ファイルのシンボル一覧をキャッシュ
+    func cacheFileSymbols(filePath: String, symbols: [Memory.SymbolInfo]) {
+        // ファイルインデックスも更新
+        if let attributes = try? FileManager.default.attributesOfItem(atPath: filePath),
+           let modificationDate = attributes[.modificationDate] as? Date {
+            memory.fileIndex[filePath] = Memory.FileInfo(
+                path: filePath,
+                lastModified: modificationDate
+            )
         }
-        memory.symbolCache[name]?.append(symbol)
+        memory.fileSymbolCache[filePath] = symbols
     }
-    
-    /// キャッシュからシンボル検索
-    func findCachedSymbol(name: String) -> [Memory.SymbolInfo]? {
-        return memory.symbolCache[name]
+
+    /// キャッシュからファイルのシンボル一覧を取得
+    func getCachedFileSymbols(filePath: String) -> [Memory.SymbolInfo]? {
+        guard !isFileModified(path: filePath) else {
+            return nil
+        }
+        return memory.fileSymbolCache[filePath]
     }
-    
-    /// ファイルをインデックス
-    func indexFile(path: String, symbolCount: Int) {
+
+    /// 全ファイルのキャッシュ済みシンボルを取得（変更されたファイルは除外）
+    func getAllCachedSymbols() -> [String: [Memory.SymbolInfo]] {
+        var validCache: [String: [Memory.SymbolInfo]] = [:]
+        for (filePath, symbols) in memory.fileSymbolCache {
+            if !isFileModified(path: filePath) {
+                validCache[filePath] = symbols
+            }
+        }
+        return validCache
+    }
+
+    /// ファイルをインデックス（内部用）
+    private func indexFile(path: String) {
         guard let attributes = try? FileManager.default.attributesOfItem(atPath: path),
               let modificationDate = attributes[.modificationDate] as? Date else {
             return
         }
-        
+
         memory.fileIndex[path] = Memory.FileInfo(
             path: path,
-            lastModified: modificationDate,
-            symbolCount: symbolCount
+            lastModified: modificationDate
         )
     }
     
@@ -172,7 +199,14 @@ class ProjectMemory {
 
     /// キャッシュから型情報を取得
     func getCachedTypeConformance(typeName: String) -> Memory.TypeConformanceInfo? {
-        return memory.typeConformanceCache[typeName]
+        guard let cached = memory.typeConformanceCache[typeName] else {
+            return nil
+        }
+        // ファイルが変更されていたらキャッシュ無効
+        guard !isFileModified(path: cached.filePath) else {
+            return nil
+        }
+        return cached
     }
 
     /// 全型情報を取得
@@ -200,24 +234,23 @@ class ProjectMemory {
     
     /// 統計情報を取得
     func getStats() -> String {
-        let totalFiles = memory.fileIndex.count
-        let totalSymbols = memory.symbolCache.values.reduce(0) { $0 + $1.count }
-        let totalNotes = memory.notes.count
-
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
+        #if DEBUG
+        // デバッグ時: 実際に使用されているキャッシュ情報を表示
+        let symbolCacheCount = memory.fileSymbolCache.count
+        let importCacheCount = memory.importCache.count
+        let typeCacheCount = memory.typeConformanceCache.count
 
         return """
-        📊 プロジェクト統計
+        📊 デバッグ統計
 
         プロジェクト名: \(projectName)
-        最終解析: \(formatter.string(from: memory.lastAnalyzed))
-
-        インデックス済みファイル: \(totalFiles)
-        キャッシュ済みシンボル: \(totalSymbols)
-        保存されたメモ: \(totalNotes)
+        シンボルキャッシュ: \(symbolCacheCount)ファイル
+        インポートキャッシュ: \(importCacheCount)ファイル
+        型情報キャッシュ: \(typeCacheCount)件
         """
+        #else
+        return ""
+        #endif
     }
 
     /// プロジェクトパスをハッシュ化（短い一意な識別子を生成）
@@ -242,7 +275,10 @@ class ProjectMemory {
     
     /// キャッシュをクリア
     func clearCache() throws {
-        memory.symbolCache.removeAll()
+        memory.fileSymbolCache.removeAll()
+        memory.importCache.removeAll()
+        memory.typeConformanceCache.removeAll()
+        memory.fileIndex.removeAll()
         try save()
     }
 }

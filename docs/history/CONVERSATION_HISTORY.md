@@ -463,16 +463,16 @@ Code Header: "国際電話番号の表示用フォーマット"
 
 **決定:**
 
-**Phase 1（v0.6.0）**: Apple NaturalLanguage
+**Phase 1（v0.7.0）**: Apple NaturalLanguage
 - 形態素解析（キーワード抽出）
 - 助詞除去、名詞・動詞の識別
 - オンデバイス、追加コストゼロ
 
-**Phase 2（v0.6.1）**: 類義語辞書
+**Phase 2（v0.7.1）**: 類義語辞書
 - 手動辞書 + 使用ログ学習
 - 「綺麗に」→「フォーマット」等
 
-**Phase 3（v0.7.0）**: CreateML ベクトル検索
+**Phase 3（v0.8.0）**: CreateML ベクトル検索
 - 意味的類似度検索
 - 日本語精度の検証が前提
 
@@ -1571,7 +1571,7 @@ pkill -9 -f Swift-Selena
 - **必須**: documentSymbol/typeHierarchy安定化
 - get_call_hierarchy（その後）
 
-**v0.6.0（予定）:**
+**v0.7.0（予定）:**
 - Code Header DB
 - 意図ベース検索
 
@@ -1946,15 +1946,347 @@ logger.info("Server stopped")
 
 ### 次のバージョン
 
-**v0.6.0（予定）:**
+**v0.7.0（予定）:**
 - Code Header DB
 - 意図ベース検索
 - Apple NaturalLanguage統合
 
 ---
 
-**Document Version**: 1.9
+---
+
+## 2025-12-06 - v0.6.1開発：Makefile導入とプロジェクト構造改善
+
+### 実施内容
+
+#### DebugRunnerのパス問題修正
+
+**問題発見:**
+- `list_symbols`が動作しない
+- ログ: `LSP connection failed: The operation couldn't be completed. (Swift_Selena.LSPError error 0.)`
+- 原因: DebugRunner.swiftに開発者のパスがハードコード
+
+**修正:**
+- `detectProjectPath()`メソッド追加
+- 動的にプロジェクトルートを検出
+  1. カレントディレクトリにPackage.swiftがあれば採用
+  2. 実行ファイルパスから`.build/`を検出し、その親ディレクトリを採用
+
+```swift
+private static func detectProjectPath() -> String {
+    let fileManager = FileManager.default
+    let currentDir = fileManager.currentDirectoryPath
+
+    // Package.swift確認
+    let packageSwiftPath = (currentDir as NSString).appendingPathComponent("Package.swift")
+    if fileManager.fileExists(atPath: packageSwiftPath) {
+        return currentDir
+    }
+
+    // .build/からプロジェクトルートを推定
+    let executablePath = Bundle.main.executablePath ?? ""
+    if executablePath.contains(".build/") {
+        if let range = executablePath.range(of: ".build/") {
+            let projectRoot = String(executablePath[..<range.lowerBound])
+            // ...
+        }
+    }
+    return currentDir
+}
+```
+
+**確認:**
+- `#if DEBUG`で囲まれているため、release版には影響なし
+
+---
+
+#### 個人パスの削除
+
+**問題:**
+- CLAUDE.mdやスクリプトに`/Users/k_terada/`が残存
+- 他のユーザーが使用する際の障害
+
+**修正:**
+- CLAUDE.md: `/path/to/Swift-Selena`に変更
+- register-selena-to-claude-code.sh: `/path/to/your/project`に変更
+- 作者コメント（Copyright等）は保持
+
+---
+
+#### Makefile導入とプロジェクト構造改善
+
+**背景:**
+- 元々あったMakefileはクライアントアプリ用
+- ビルド・登録コマンドが分散していた
+
+**構造変更:**
+
+```
+Swift-Selena/
+├── Makefile                 # 新規（ビルド・登録用）
+├── Tools/
+│   ├── Scripts/             # スクリプト移動先
+│   │   ├── register-selena-to-claude-code.sh
+│   │   ├── register-selena-to-claude-code-debug.sh
+│   │   └── register-mcp-to-claude-desktop.sh
+│   └── Client/
+│       └── Makefile         # 元のMakefile（クライアントアプリ用）
+```
+
+**新規Makefileコマンド:**
+
+```makefile
+make build              # デバッグビルド
+make build-release      # リリースビルド
+make register-debug     # デバッグ版登録
+make register-release TARGET=/path/to/project  # リリース版登録
+make register-desktop   # Claude Desktop登録
+make unregister-debug   # デバッグ版登録解除
+make unregister-release TARGET=/path/to/project  # リリース版登録解除
+make unregister-desktop # Claude Desktop登録解除
+make clean              # ビルド成果物クリーン
+make help               # ヘルプ表示
+```
+
+**スクリプト修正:**
+- `PROJECT_ROOT`変数導入（スクリプトから2階層上）
+- 相対パスではなく絶対パスで動作
+
+---
+
+#### ドキュメント更新
+
+**README.md / README.ja.md:**
+- makeコマンドでの操作方法に更新
+- インストール手順を簡略化
+
+**CLAUDE.md:**
+- makeコマンドでのビルド・登録手順に更新
+- DEBUGビルドテスト方法を更新
+
+**.claude/commands/create-code-headers.md:**
+- 対象ディレクトリを修正（`Tools/`, `Library/`等 → `Sources/`, `Tests/`）
+- Swift-Selenaのディレクトリ構造に適合
+
+---
+
+#### CHANGELOG.md更新
+
+**v0.6.1追加（開発中）:**
+- Makefile導入
+- スクリプトの再配置
+- DebugRunnerパス問題修正
+- ドキュメント更新
+
+**v0.7.0追加（計画中）:**
+- Code Header DB機能
+- search_code_headers
+- get_code_header_stats
+
+---
+
+### 技術的知見
+
+#### 1. #if DEBUGの活用
+
+**DebugRunner:**
+- 全体が`#if DEBUG`で囲まれている
+- release版には一切含まれない
+- 開発時のみ自動テスト実行
+
+**確認方法:**
+```bash
+# releaseビルドにDebugRunnerが含まれていないことを確認
+strings .build/release/Swift-Selena | grep DebugRunner
+# → 出力なし（正常）
+```
+
+#### 2. PROJECT_ROOTパターン
+
+**スクリプトでの使用:**
+```bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
+EXECUTABLE_PATH="${PROJECT_ROOT}/.build/arm64-apple-macosx/debug/Swift-Selena"
+```
+
+**利点:**
+- スクリプトの配置場所に依存しない
+- 相対パスの計算ミスを防止
+
+#### 3. MCPツールのコンテキスト消費
+
+**発見:**
+- MCPツールが多いとコンテキストを消費
+- debug版とrelease版の両方を登録すると約25.5kトークン
+- 重複ツール（swift-selena + swift-selena-debug）が原因
+
+**対策:**
+- 開発時はdebug版のみ登録
+- 本番使用時はrelease版のみ登録
+- 両方同時に登録しない
+
+---
+
+### 学んだ教訓
+
+#### 1. ハードコードパスの危険性
+
+**失敗:**
+- 開発者のパスをコードにハードコード
+- 他の環境で動作しない
+
+**教訓:**
+- 動的にパスを検出する仕組みを実装
+- 環境変数やBundle.mainを活用
+
+#### 2. Makefileによる操作統一
+
+**効果:**
+- 複雑なコマンドを覚えなくてよい
+- `make help`で全コマンド確認可能
+- タイプミス防止
+
+---
+
+### 実装統計
+
+**開発時間:** 約2時間
+
+**変更ファイル:**
+- Sources/DebugRunner.swift: +25行（detectProjectPath）
+- Makefile: +80行（新規）
+- Tools/Scripts/*.sh: 移動＋修正
+- README.md, README.ja.md, CLAUDE.md: 更新
+- .claude/commands/create-code-headers.md: 修正
+- CHANGELOG.md: 追記
+
+---
+
+### 次のバージョン
+
+**v0.7.0（計画中）:**
+- Code Header DB機能実装
+- search_code_headers（意図ベース検索）
+- get_code_header_stats（統計情報）
+- Apple NaturalLanguage統合
+
+---
+
+## 2025-12-06 - v0.6.1開発（続き）：ツール削減とMakefile改善
+
+### 実施内容
+
+#### ツール批判的レビューと削減
+
+**背景:**
+- MCPツールが多いとコンテキストを消費（約25kトークン）
+- debug版とrelease版の両方登録で重複
+
+**Phase 1: 即座に削除（5ツール）**
+
+| ツール | 削除理由 |
+|--------|----------|
+| `add_note` | 未使用、会話履歴で代替 |
+| `search_notes` | 未使用、会話履歴で代替 |
+| `read_symbol` | Claudeの`Read`+行番号で代替 |
+| `set_analysis_mode` | 効果不明、実質未使用 |
+| `think_about_analysis` | プロンプトでありツールではない |
+
+**Phase 2: 検討後に残す判断（2ツール）**
+
+| ツール | 判断 | 理由 |
+|--------|------|------|
+| `get_type_hierarchy` | 残す | 型名で直接検索できる利便性 |
+| `find_type_usages` | 残す | search_codeより精度が高い（ノイズ半減） |
+
+**結果:**
+- **18ツール → 13ツール**（28%削減）
+- 削除コード: 約600行
+- コンテキスト削減: 約2,500トークン見込み
+
+---
+
+#### Makefile改善
+
+**変更内容:**
+- `register-release`/`unregister-release`をMakefileから削除
+- Release版はスクリプト直接実行に統一
+- `register-selena-to-claude-code.sh`をトップレベルに移動
+- `unregister-selena-from-claude-code.sh`を新規作成
+
+**最終構成:**
+```
+Swift-Selena/
+├── register-selena-to-claude-code.sh      # Release版登録
+├── unregister-selena-from-claude-code.sh  # Release版解除
+├── Makefile
+├── Tools/Scripts/
+│   ├── register-selena-to-claude-code-debug.sh
+│   └── register-mcp-to-claude-desktop.sh
+```
+
+**使い方:**
+```bash
+# Debug版
+make register-debug
+make unregister-debug
+
+# Release版
+./register-selena-to-claude-code.sh /path/to/project
+./unregister-selena-from-claude-code.sh [/path/to/project]
+```
+
+---
+
+#### CCMonitor（Xcodeプロジェクト）でのLSP動作確認
+
+**テスト結果: 全13ツール正常動作**
+
+| ツール | 結果 |
+|--------|------|
+| `list_symbols` | ✅ LSP enhanced |
+| `get_type_hierarchy` | ✅ Protocol準拠検出 |
+| `find_type_usages` | ✅ 14件検出 |
+| その他10ツール | ✅ 全て正常 |
+
+**結論:**
+- Xcodeプロジェクトでも全ツール動作
+- 削除した`find_symbol_references`のみがXcode非対応だった
+
+---
+
+### 最終ツール一覧（13個）
+
+1. `initialize_project`
+2. `find_files`
+3. `search_code`
+4. `search_files_without_pattern`
+5. `list_symbols`
+6. `find_symbol_definition`
+7. `list_property_wrappers`
+8. `list_protocol_conformances`
+9. `list_extensions`
+10. `analyze_imports`
+11. `get_type_hierarchy`
+12. `find_test_cases`
+13. `find_type_usages`
+
+---
+
+### 学んだ教訓
+
+#### ツール削減の判断基準
+
+1. **Claude標準機能で代替可能か？** → `read_symbol`は`Read`で代替
+2. **実際に使われているか？** → `add_note`は未使用
+3. **精度の違いはあるか？** → `find_type_usages`はノイズが半分で価値あり
+4. **ユースケースが異なるか？** → `get_type_hierarchy`は型名検索で独自価値
+
+---
+
+**Document Version**: 2.1
 **Created**: 2025-10-15
-**Last Updated**: 2025-10-27
+**Last Updated**: 2025-12-06
 **Purpose**: 開発過程の記録と知見の共有
 
