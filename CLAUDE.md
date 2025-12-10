@@ -58,6 +58,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - 単純置換などはOK
 - 手抜きしない（全力で作業に向き合ってください）
 
+### 4. Git操作の制限
+
+**PR作成と情報取得以外のgit操作は、明示的に指示されない限り実行しない。**
+
+**許可される操作（指示なしでOK）:**
+- `git status`, `git log`, `git diff` - 情報取得
+- `git remote -v`, `git branch` - 情報取得
+- PR作成（`/create-pr`コマンド経由）
+
+**指示が必要な操作:**
+- `git commit` - コミット
+- `git push` - プッシュ
+- `git checkout`, `git switch` - ブランチ切り替え
+- `git merge`, `git rebase` - マージ・リベース
+- `git stash` - スタッシュ
+- その他の変更を伴う操作
+
 ---
 
 ## よくある失敗パターンと対策

@@ -40,17 +40,6 @@
 - **`find_test_cases`** - XCTestケースとテストメソッドを検出
 - **`find_type_usages`** - 型の使用箇所を検出（変数宣言、関数パラメータ、戻り値型）
 
-### 効率的な読み取り
-- **`read_symbol`** - シンボル単位で読み取り（関数、クラス、構造体等）
-
-### 分析モード
-- **`set_analysis_mode`** - 分析モード設定（SwiftUI/Architecture/Testing/Refactoring/General）
-- **`think_about_analysis`** - 分析進捗の振り返り
-
-### プロジェクトメモ
-- **`add_note`** - 設計決定や重要事項をメモとして保存
-- **`search_notes`** - 保存したメモを検索
-
 ## インストール
 
 ### 必要要件
@@ -87,11 +76,15 @@ make help  # 全コマンドを表示
 | `make build-release` | RELEASEビルド |
 | `make clean` | ビルド成果物をクリーン |
 | `make register-debug` | DEBUG版をビルド＆このプロジェクトに登録 |
-| `make register-release TARGET=/path` | RELEASE版をターゲットプロジェクトに登録 |
 | `make register-desktop` | Claude Desktopに登録 |
 | `make unregister-debug` | DEBUG版をこのプロジェクトから解除 |
-| `make unregister-release TARGET=/path` | RELEASE版をターゲットから解除 |
 | `make unregister-desktop` | Claude Desktopから解除 |
+
+Release版の登録・解除はスクリプトを直接実行:
+```bash
+./register-selena-to-claude-code.sh /path/to/project
+./unregister-selena-from-claude-code.sh [/path/to/project]
+```
 
 ## デバッグ・ログ機能
 
@@ -230,10 +223,10 @@ Claudeに「このSwiftプロジェクトを解析して」と依頼
 → list_property_wrappers で検出
 ```
 
-3. **メモを保存**
+3. **コード構造を解析**
 ```
-「このViewControllerはログイン画面専用とメモして」
-→ add_note で保存
+「ViewControllerの型階層を表示して」
+→ get_type_hierarchy で継承関係を表示
 ```
 
 ### 実践例

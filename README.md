@@ -40,17 +40,6 @@
 - **`find_test_cases`** - Detect XCTest test cases and test methods
 - **`find_type_usages`** - Find where a type is used (variable declarations, function parameters, return types)
 
-### Efficient Reading
-- **`read_symbol`** - Read specific symbol (function, class, struct, etc.)
-
-### Analysis Modes
-- **`set_analysis_mode`** - Set analysis mode (SwiftUI/Architecture/Testing/Refactoring/General)
-- **`think_about_analysis`** - Reflect on analysis progress
-
-### Project Notes
-- **`add_note`** - Save design decisions and important notes
-- **`search_notes`** - Search saved notes
-
 ## Installation
 
 ### Requirements
@@ -87,11 +76,15 @@ make help  # Show all available commands
 | `make build-release` | Build release version |
 | `make clean` | Clean build artifacts |
 | `make register-debug` | Build & register DEBUG version to this project |
-| `make register-release TARGET=/path` | Register RELEASE version to target project |
 | `make register-desktop` | Register to Claude Desktop |
 | `make unregister-debug` | Unregister DEBUG version from this project |
-| `make unregister-release TARGET=/path` | Unregister RELEASE version from target project |
 | `make unregister-desktop` | Unregister from Claude Desktop |
+
+For release version registration, use scripts directly:
+```bash
+./register-selena-to-claude-code.sh /path/to/project
+./unregister-selena-from-claude-code.sh [/path/to/project]
+```
 
 ## Debugging & Logging
 
@@ -230,10 +223,10 @@ Ask Claude: "Analyze this Swift project"
 → list_property_wrappers detects them
 ```
 
-3. **Save notes**
+3. **Analyze code structure**
 ```
-"Note that this ViewController is for the login screen"
-→ add_note saves it
+"Show me the type hierarchy for ViewController"
+→ get_type_hierarchy displays inheritance
 ```
 
 ### Practical Examples
