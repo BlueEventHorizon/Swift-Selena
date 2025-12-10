@@ -69,4 +69,14 @@ make unregister-debug
 
 ---
 
+## 次のバージョン
+
+**v0.7.0（計画中）:**
+- Code Header DB機能
+- search_code_headers（意図ベース検索）
+- get_code_header_stats（統計情報）
+- Apple NaturalLanguage統合（Phase 1）
+
+---
+
 **参考**: `docs/history/CONVERSATION_HISTORY.md` - 詳細な開発履歴

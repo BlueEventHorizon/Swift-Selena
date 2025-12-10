@@ -463,16 +463,16 @@ Code Header: "国際電話番号の表示用フォーマット"
 
 **決定:**
 
-**Phase 1（v0.6.0）**: Apple NaturalLanguage
+**Phase 1（v0.7.0）**: Apple NaturalLanguage
 - 形態素解析（キーワード抽出）
 - 助詞除去、名詞・動詞の識別
 - オンデバイス、追加コストゼロ
 
-**Phase 2（v0.6.1）**: 類義語辞書
+**Phase 2（v0.7.1）**: 類義語辞書
 - 手動辞書 + 使用ログ学習
 - 「綺麗に」→「フォーマット」等
 
-**Phase 3（v0.7.0）**: CreateML ベクトル検索
+**Phase 3（v0.8.0）**: CreateML ベクトル検索
 - 意味的類似度検索
 - 日本語精度の検証が前提
 
@@ -1571,7 +1571,7 @@ pkill -9 -f Swift-Selena
 - **必須**: documentSymbol/typeHierarchy安定化
 - get_call_hierarchy（その後）
 
-**v0.6.0（予定）:**
+**v0.7.0（予定）:**
 - Code Header DB
 - 意図ベース検索
 
@@ -1946,7 +1946,7 @@ logger.info("Server stopped")
 
 ### 次のバージョン
 
-**v0.6.0（予定）:**
+**v0.7.0（予定）:**
 - Code Header DB
 - 意図ベース検索
 - Apple NaturalLanguage統合
@@ -2078,7 +2078,7 @@ make help               # ヘルプ表示
 - DebugRunnerパス問題修正
 - ドキュメント更新
 
-**v0.6.0追加（計画中）:**
+**v0.7.0追加（計画中）:**
 - Code Header DB機能
 - search_code_headers
 - get_code_header_stats
@@ -2165,7 +2165,7 @@ EXECUTABLE_PATH="${PROJECT_ROOT}/.build/arm64-apple-macosx/debug/Swift-Selena"
 
 ### 次のバージョン
 
-**v0.6.0（計画中）:**
+**v0.7.0（計画中）:**
 - Code Header DB機能実装
 - search_code_headers（意図ベース検索）
 - get_code_header_stats（統計情報）
