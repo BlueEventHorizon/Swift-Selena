@@ -26,7 +26,10 @@
       "mcp__swift-selena-debug__initialize_project",
       "mcp__swift-selena-debug__list_available_tools",
       "mcp__swift-selena-debug__get_tool_schema",
-      "mcp__swift-selena-debug__execute_tool"
+      "mcp__swift-selena-debug__execute_tool",
+      "Bash(make build:*)",
+      "Bash(swift --version:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

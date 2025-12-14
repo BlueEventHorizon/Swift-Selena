@@ -92,6 +92,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `git stash` - スタッシュ
 - その他の変更を伴う操作
 
+### 6. Swiftバージョンの確認
+
+**SwiftSyntax関連の作業では、必ず現在のSwiftバージョンを確認する。**
+
+Swiftのバージョンによって言語仕様やSwiftSyntaxのAPIが変わります。
+
+**確認コマンド:**
+```bash
+swift --version
+```
+
+**バージョン別の重要な変更:**
+| バージョン | 追加された構文/機能 |
+|-----------|-------------------|
+| Swift 5.5 | `actor`, `async/await`, `AsyncSequence` |
+| Swift 5.9 | Macros, Parameter packs |
+| Swift 6.0 | 完全なconcurrency safety（Sendable強制） |
+
+**失敗例:**
+- ❌ Swift 5.5で追加された`actor`をSymbolVisitorでサポートし忘れ → `ActorDeclSyntax`未対応
+- ❌ SwiftSyntax APIの変更を見落とし
+
+**推奨手順:**
+1. 作業開始時に `swift --version` で確認
+2. 新しい構文を扱う場合、その構文がいつ追加されたか確認
+3. SwiftSyntaxの対応ノード（`ActorDeclSyntax`等）を確認
+
 ---
 
 ## よくある失敗パターンと対策
