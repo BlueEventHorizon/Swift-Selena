@@ -27,7 +27,14 @@ struct SwiftMCPServer {
         }
 
         let logger = Logger(label: AppConstants.loggerLabel)
+
+        // v0.6.3: メタツールモード判定
+        // デフォルト: メタツールモード（4ツールのみ公開）
+        // SWIFT_SELENA_LEGACY=1: 従来モード（全ツール公開）
+        let useLegacyMode = ProcessInfo.processInfo.environment[EnvironmentKeys.legacyMode] == "1"
+
         logger.info("Starting Swift MCP Server (Filesystem + SwiftSyntax + LSP)...")
+        logger.info("Mode: \(useLegacyMode ? "Legacy (all tools)" : "Meta Tools (reduced token usage)")")
         logger.info("Log file: \(logFilePath)")
         logger.info("Monitor with: tail -f \(logFilePath)")
 
@@ -56,26 +63,40 @@ struct SwiftMCPServer {
         logger.info("🔧 DebugRunner enabled - automatic tests will start in 5 seconds")
         #endif
 
-        // ツールリスト（v0.5.1: 動的生成対応）
+        // ツールリスト（v0.6.3: メタツールモード対応）
         await server.withMethodHandler(ListTools.self) { _ in
-            logger.info("ListTools handler called")
+            logger.info("ListTools handler called (legacy_mode: \(useLegacyMode))")
             var tools: [Tool] = []
 
-            // SwiftSyntaxツール（常に利用可能）
-            tools.append(contentsOf: [
-                InitializeProjectTool.toolDefinition,
-                FindFilesTool.toolDefinition,
-                SearchCodeTool.toolDefinition,
-                SearchFilesWithoutPatternTool.toolDefinition,
-                ListSymbolsTool.toolDefinition,
-                FindSymbolDefinitionTool.toolDefinition,
-                ListPropertyWrappersTool.toolDefinition,
-                ListProtocolConformancesTool.toolDefinition,
-                ListExtensionsTool.toolDefinition,
-                AnalyzeImportsTool.toolDefinition,
-                GetTypeHierarchyTool.toolDefinition,
-                FindTestCasesTool.toolDefinition
-            ])
+            if useLegacyMode {
+                // 従来モード: 全12ツールを公開
+                tools.append(contentsOf: [
+                    InitializeProjectTool.toolDefinition,
+                    FindFilesTool.toolDefinition,
+                    SearchCodeTool.toolDefinition,
+                    SearchFilesWithoutPatternTool.toolDefinition,
+                    ListSymbolsTool.toolDefinition,
+                    FindSymbolDefinitionTool.toolDefinition,
+                    ListPropertyWrappersTool.toolDefinition,
+                    ListProtocolConformancesTool.toolDefinition,
+                    ListExtensionsTool.toolDefinition,
+                    AnalyzeImportsTool.toolDefinition,
+                    GetTypeHierarchyTool.toolDefinition,
+                    FindTestCasesTool.toolDefinition
+                ])
+            } else {
+                // v0.6.3 メタツールモード: 4ツールのみ公開（トークン削減）
+                // - initialize_project: 常に直接公開
+                // - list_available_tools: ツール一覧取得
+                // - get_tool_schema: ツール定義取得
+                // - execute_tool: ツール実行
+                tools.append(contentsOf: [
+                    InitializeProjectTool.toolDefinition,
+                    ListAvailableToolsTool.toolDefinition,
+                    GetToolSchemaTool.toolDefinition,
+                    ExecuteToolTool.toolDefinition
+                ])
+            }
 
             let lspAvailable = await lspState.isLSPAvailable()
             logger.info("LSP status: \(lspAvailable ? "available" : "not available")")
@@ -84,11 +105,39 @@ struct SwiftMCPServer {
             return ListTools.Result(tools: tools)
         }
 
-        // ツール実行
+        // ツール実行（v0.6.3: メタツール対応）
         await server.withMethodHandler(CallTool.self) { params in
             logger.info("Tool called: \(params.name)")
 
             switch params.name {
+            // ========================================
+            // メタツール（v0.6.3: コード実行パターン）
+            // ========================================
+            case MetaToolNames.listAvailableTools:
+                return try await ListAvailableToolsTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
+
+            case MetaToolNames.getToolSchema:
+                return try await GetToolSchemaTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    logger: logger
+                )
+
+            case MetaToolNames.executeTool:
+                return try await ExecuteToolTool.execute(
+                    params: params,
+                    projectMemory: projectMemory,
+                    lspState: lspState,
+                    logger: logger
+                )
+
+            // ========================================
+            // 標準ツール
+            // ========================================
             case ToolNames.initializeProject:
                 guard let args = params.arguments,
                       let projectPathValue = args[ParameterKeys.projectPath] else {

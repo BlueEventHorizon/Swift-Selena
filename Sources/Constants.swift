@@ -10,7 +10,7 @@ import Foundation
 /// アプリケーション全体の定数
 enum AppConstants {
     static let name = "Swift-Selena"
-    static let version = "0.5.5"
+    static let version = "0.6.3"
     static let loggerLabel = "swift-selena"
     static let storageDirectory = ".swift-selena"
 }
@@ -29,6 +29,25 @@ enum ToolNames {
     static let analyzeImports = "analyze_imports"
     static let getTypeHierarchy = "get_type_hierarchy"
     static let findTestCases = "find_test_cases"
+}
+
+/// メタツール名の定数（v0.6.3: コード実行パターン）
+enum MetaToolNames {
+    static let listAvailableTools = "list_available_tools"
+    static let getToolSchema = "get_tool_schema"
+    static let executeTool = "execute_tool"
+}
+
+/// メタツール用パラメータキーの定数
+enum MetaParameterKeys {
+    static let toolName = "tool_name"
+    static let params = "params"
+}
+
+/// 環境変数キーの定数
+enum EnvironmentKeys {
+    /// SWIFT_SELENA_LEGACY=1 で従来モード（全ツール公開）
+    static let legacyMode = "SWIFT_SELENA_LEGACY"
 }
 
 /// パラメータキーの定数
