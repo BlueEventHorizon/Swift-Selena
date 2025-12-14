@@ -57,6 +57,37 @@ class SymbolVisitor: SyntaxVisitor {
         return .visitChildren
     }
 
+    override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
+        let location = node.startLocation(converter: converter)
+        symbols.append(SwiftSyntaxAnalyzer.SymbolInfo(
+            name: node.name.text,
+            kind: "Actor",
+            line: location.line
+        ))
+        return .visitChildren
+    }
+
+    // Swift 5.9+: Macro declarations
+    override func visit(_ node: MacroDeclSyntax) -> SyntaxVisitorContinueKind {
+        let location = node.startLocation(converter: converter)
+        symbols.append(SwiftSyntaxAnalyzer.SymbolInfo(
+            name: node.name.text,
+            kind: "Macro",
+            line: location.line
+        ))
+        return .visitChildren
+    }
+
+    override func visit(_ node: TypeAliasDeclSyntax) -> SyntaxVisitorContinueKind {
+        let location = node.startLocation(converter: converter)
+        symbols.append(SwiftSyntaxAnalyzer.SymbolInfo(
+            name: node.name.text,
+            kind: "TypeAlias",
+            line: location.line
+        ))
+        return .visitChildren
+    }
+
     override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
         let location = node.startLocation(converter: converter)
         symbols.append(SwiftSyntaxAnalyzer.SymbolInfo(

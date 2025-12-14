@@ -27,9 +27,13 @@ help:
 
 # ビルド
 build:
+	@echo "Clearing symbol cache (analysis logic may have changed)..."
+	@rm -f ~/.swift-selena/clients/*/projects/*/memory.json 2>/dev/null || true
 	swift build
 
 build-release:
+	@echo "Clearing symbol cache (analysis logic may have changed)..."
+	@rm -f ~/.swift-selena/clients/*/projects/*/memory.json 2>/dev/null || true
 	rm -rf .build/release
 	swift build -c release -Xswiftc -Osize
 
