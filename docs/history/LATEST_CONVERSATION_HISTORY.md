@@ -1,81 +1,102 @@
-# 最新開発履歴サマリー（v0.6.1）
+# 最新開発履歴サマリー（v0.6.3）
 
-**作成日**: 2025-12-06
+**作成日**: 2025-12-15
 **対象**: 次のClaude Codeセッション用
-**Document Version**: 2.1
+**Document Version**: 3.0
 
 ---
 
-## v0.6.1 主要変更
+## v0.6.3 主要変更
 
-### ツール削減: 18個 → 13個（28%削減）
+### メタツールパターン適用（Anthropicコード実行パターン）
 
-**削除したツール（5個）:**
-- `add_note` / `search_notes` - 未使用
-- `read_symbol` - Claudeの`Read`で代替可能
-- `set_analysis_mode` / `think_about_analysis` - 効果不明
+**背景:**
+- Anthropic公式ブログの「コード実行パターン」を適用
+- MCPサーバーのトークン消費削減（150k → 2k の事例）
 
-**残したツール（13個）:**
-`initialize_project`, `find_files`, `search_code`, `search_files_without_pattern`, `list_symbols`, `find_symbol_definition`, `list_property_wrappers`, `list_protocol_conformances`, `list_extensions`, `analyze_imports`, `get_type_hierarchy`, `find_test_cases`, `find_type_usages`
+**変更内容:**
+- 従来12ツール公開 → 4ツールのみ公開
+- トークン消費約63%削減
 
-### Makefile・スクリプト構成
+**新しい4ツール:**
+| ツール | 説明 |
+|--------|------|
+| `initialize_project` | プロジェクト初期化（直接公開） |
+| `list_available_tools` | 利用可能ツール一覧（名前と説明のみ） |
+| `get_tool_schema` | 特定ツールのJSON Schema取得 |
+| `execute_tool` | ツール実行 |
 
-```
-Swift-Selena/
-├── register-selena-to-claude-code.sh      # Release版登録
-├── unregister-selena-from-claude-code.sh  # Release版解除
-├── Makefile
-├── Tools/Scripts/
-│   ├── register-selena-to-claude-code-debug.sh
-│   └── register-mcp-to-claude-desktop.sh
-```
-
-**使い方:**
+**環境変数でモード切替:**
 ```bash
-# Debug版
-make register-debug
-make unregister-debug
+# メタツールモード（デフォルト）
+# → 4ツールのみ公開
 
-# Release版（スクリプト直接実行）
-./register-selena-to-claude-code.sh /path/to/project
-./unregister-selena-from-claude-code.sh [/path/to/project]
+# 従来モード
+SWIFT_SELENA_LEGACY=1
+# → 全12ツール公開
+```
+
+---
+
+### 新規ファイル（Sources/Tools/Meta/）
+
+```
+Sources/Tools/Meta/
+├── MetaToolRegistry.swift      # ツール一覧管理
+├── ListAvailableToolsTool.swift # ツール一覧返却
+├── GetToolSchemaTool.swift      # スキーマ取得
+└── ExecuteToolTool.swift        # ツール実行
 ```
 
 ---
 
 ## 重要な知見
 
-### ツール削減の判断基準
-1. Claude標準機能で代替可能か？
-2. 実際に使われているか？
-3. 精度の違いはあるか？（`find_type_usages`は`search_code`よりノイズ半減）
-4. ユースケースが異なるか？
+### メタツール方式のメリット
+1. **トークン削減**: 12ツール → 4ツールで約63%削減
+2. **スケーラビリティ**: ツール追加してもトークン消費が増えない
+3. **動的ロード**: 必要なスキーマのみ取得可能
 
-### Xcodeプロジェクト対応
-- 13ツール全て正常動作（CCMonitorで検証済み）
-- 削除した`find_symbol_references`のみがXcode非対応だった
+### 環境変数フォールバック
+- 既存ユーザーは`SWIFT_SELENA_LEGACY=1`で従来通り使用可能
+- 互換性を維持しつつ移行可能
 
-### MCPコンテキスト消費
-- debug版とrelease版の両方登録で約25kトークン消費
-- 開発時はdebug版のみ、本番時はrelease版のみ推奨
+### MCP Value型の注意点
+- `.data`ケースはタプル型`(mimeType: String?, Data)`
+- MCP SDK 0.10.2の仕様に対応
 
 ---
 
 ## 現在の構成
 
-- **ツール数**: 13
-- **バージョン**: 0.6.1（開発中）
-- **ブランチ**: feature/0_6_1
+- **ツール数**: 4（メタツールモード）/ 12（従来モード）
+- **バージョン**: 0.6.3
+- **ブランチ**: main
 
 ---
 
-## 次のバージョン
+## バージョン履歴
+
+| バージョン | 主な変更 |
+|-----------|---------|
+| 0.6.3 | メタツールパターン適用 |
+| 0.6.2 | 権限・履歴修正 |
+| 0.6.1 | ツール削減（18→13）、Makefile導入 |
+| 0.5.5 | LSP統合、ファイルロギング |
+
+---
+
+## 次のバージョン計画
 
 **v0.7.0（計画中）:**
-- Code Header DB機能
-- search_code_headers（意図ベース検索）
-- get_code_header_stats（統計情報）
-- Apple NaturalLanguage統合（Phase 1）
+- ベクトル検索（CreateML/CoreML統合）
+- NLEmbeddingでテキストベクトル化
+- セマンティック検索オプション
+
+**v0.8.0（計画中）:**
+- 統計・分析機能
+- コード品質メトリクス
+- レポート生成
 
 ---
 

@@ -2285,8 +2285,238 @@ make unregister-debug
 
 ---
 
-**Document Version**: 2.1
+---
+
+## 2025-12-15 - v0.6.3開発：Anthropicコード実行パターン適用
+
+### 実施内容
+
+#### Anthropicの「コード実行パターン」調査
+
+**背景:**
+- Anthropic公式ブログの記事を参照
+- MCPサーバーのトークン消費削減技術
+- 150,000トークン → 2,000トークン（98.7%削減）の事例
+
+**従来方式の問題:**
+- 全ツール定義を毎回ListToolsで返す
+- 12ツール × 250トークン = 約3,000トークン
+- ツール数増加でトークン消費が線形増加
+
+**新方式（コード実行パターン）:**
+- 最小限のメタツールのみ公開
+- 必要なツール定義を動的ロード
+- トークン消費を大幅削減
+
+---
+
+#### メタツール方式の設計と実装
+
+**設計方針:**
+- 4ツールのみ公開（従来12ツール → 4ツール）
+- `initialize_project`: 常に直接公開（必須ツール）
+- `list_available_tools`: ツール一覧（名前と説明のみ）
+- `get_tool_schema`: 特定ツールのJSON Schema取得
+- `execute_tool`: ツール実行
+
+**期待効果:**
+- Before: 12ツール × 250トークン = 約3,000トークン
+- After: 4ツール × 300トークン = 約1,200トークン
+- **削減率: 約63%**
+
+---
+
+#### 新規ファイル作成（4ファイル）
+
+**Sources/Tools/Meta/ディレクトリ:**
+
+1. **MetaToolRegistry.swift**
+   - 全ツールの簡易リスト（名前 + 1行説明）
+   - カテゴリ別グループ化（Search & Files, Symbols, SwiftUI, Analysis）
+   - ツール名からTool定義を取得する関数
+
+2. **ListAvailableToolsTool.swift**
+   - パラメータなし
+   - 11ツールの名前と説明を返す
+   - カテゴリ別にフォーマット
+
+3. **GetToolSchemaTool.swift**
+   - パラメータ: tool_name
+   - 指定ツールの完全JSON Schemaを返す
+   - MCP Value型を人間可読形式にフォーマット
+
+4. **ExecuteToolTool.swift**
+   - パラメータ: tool_name, params
+   - 指定ツールを実行し結果を返す
+   - LSP強化版ツール（list_symbols, get_type_hierarchy）にも対応
+
+---
+
+#### Constants.swift変更
+
+**追加した定数:**
+```swift
+// メタツール名
+enum MetaToolNames {
+    static let listAvailableTools = "list_available_tools"
+    static let getToolSchema = "get_tool_schema"
+    static let executeTool = "execute_tool"
+}
+
+// メタツール用パラメータキー
+enum MetaParameterKeys {
+    static let toolName = "tool_name"
+    static let params = "params"
+}
+
+// 環境変数キー
+enum EnvironmentKeys {
+    static let legacyMode = "SWIFT_SELENA_LEGACY"
+}
+```
+
+---
+
+#### SwiftMCPServer.swift変更
+
+**モード切替機能:**
+```swift
+let useLegacyMode = ProcessInfo.processInfo.environment[EnvironmentKeys.legacyMode] == "1"
+```
+
+**ListToolsハンドラ:**
+- メタツールモード（デフォルト）: 4ツールのみ返す
+- 従来モード（SWIFT_SELENA_LEGACY=1）: 12ツール全て返す
+
+**CallToolハンドラ:**
+- メタツール3種類の呼び出し処理を追加
+- 従来ツールも引き続き対応
+
+---
+
+### テスト結果
+
+**全11ツール execute_tool経由でテスト完了:**
+
+| ツール | 結果 |
+|--------|------|
+| find_files | ✅ 15ファイル発見 |
+| search_code | ✅ 19マッチ |
+| search_files_without_pattern | ✅ 36ファイル |
+| list_symbols | ✅ 8シンボル |
+| find_symbol_definition | ✅ MetaToolRegistry発見 |
+| list_property_wrappers | ✅ 10個検出 |
+| list_protocol_conformances | ✅ 動作確認 |
+| list_extensions | ✅ 4 Extension検出 |
+| analyze_imports | ✅ 44ファイル解析 |
+| get_type_hierarchy | ✅ MCPTool階層取得 |
+| find_test_cases | ✅ 3クラス、13テスト |
+
+**メタツールテスト:**
+- `list_available_tools`: 11ツール一覧を正常返却
+- `get_tool_schema`: find_filesのスキーマ取得成功
+- `execute_tool`: 全ツール実行可能
+
+---
+
+### 技術的知見
+
+#### 1. MCP Value型のフォーマット
+
+**GetToolSchemaTool.swiftで実装:**
+```swift
+private static func formatValue(_ value: Value, indent: Int) -> String {
+    switch value {
+    case .string(let str): return "\"\(str)\""
+    case .object(let dict): // 階層的にフォーマット
+    case .array(let arr): // 配列をフォーマット
+    case .data(let mimeType, let bytes): // データ情報
+    // ...
+    }
+}
+```
+
+**注意点:**
+- `.data`ケースはタプル型`(mimeType: String?, Data)`
+- MCP SDK 0.10.2の仕様変更に対応
+
+#### 2. 環境変数によるモード切替
+
+**フォールバック機構:**
+- `SWIFT_SELENA_LEGACY=1`: 従来モード（全12ツール公開）
+- 未設定/`0`: メタツールモード（4ツールのみ公開）
+- 既存ユーザーへの影響を最小化
+
+#### 3. ExecuteToolの実装パターン
+
+**LSP強化版ツールの対応:**
+```swift
+case ToolNames.listSymbols:
+    return try await ListSymbolsTool.executeWithLSP(
+        params: params,
+        projectMemory: projectMemory,
+        lspState: lspState,
+        logger: logger
+    )
+```
+
+---
+
+### 学んだ教訓
+
+#### 1. トークン消費の重要性
+
+**問題:**
+- MCPツールが多いとコンテキストを消費
+- 長期的なスケーラビリティの制限
+
+**解決:**
+- メタツール方式で動的ロード
+- 必要なツールのみスキーマ取得
+
+#### 2. 段階的移行の設計
+
+**実装:**
+- 環境変数で従来モードにフォールバック可能
+- 既存ユーザーは`SWIFT_SELENA_LEGACY=1`で従来通り使用可能
+- 新規ユーザーはメタツールモードでトークン削減
+
+---
+
+### 実装統計
+
+**開発時間:** 約2時間
+
+**追加コード:**
+- MetaToolRegistry.swift: 145行
+- ListAvailableToolsTool.swift: 55行
+- GetToolSchemaTool.swift: 124行
+- ExecuteToolTool.swift: 205行
+- Constants.swift: +18行
+- SwiftMCPServer.swift: +50行
+
+**合計:** 約600行追加
+
+---
+
+### 成果
+
+**v0.6.3達成:**
+- ✅ メタツール方式実装完了
+- ✅ 4ツール公開（initialize_project + 3メタツール）
+- ✅ 全11ツールがexecute_tool経由で実行可能
+- ✅ SWIFT_SELENA_LEGACY=1で従来モード切替可能
+- ✅ DEBUGビルドでテスト完了
+
+**提供価値:**
+- トークン消費約63%削減
+- 将来のツール追加時もトークン消費が増えない
+- 動的ツールロードによる柔軟性
+
+---
+
+**Document Version**: 2.2
 **Created**: 2025-10-15
-**Last Updated**: 2025-12-06
+**Last Updated**: 2025-12-15
 **Purpose**: 開発過程の記録と知見の共有
 
