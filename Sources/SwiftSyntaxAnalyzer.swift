@@ -77,6 +77,23 @@ enum SwiftSyntaxAnalyzer {
         }
     }
 
+    /// Swift Testing (@Test, @Suite) 情報
+    struct SwiftTestInfo {
+        let suiteName: String
+        let suiteDisplayName: String
+        let suiteKind: String  // Struct, Class, Enum
+        let filePath: String
+        let line: Int
+        let hasSuiteAttribute: Bool
+        let testMethods: [TestMethod]
+
+        struct TestMethod {
+            let name: String
+            let displayName: String
+            let line: Int
+        }
+    }
+
     // MARK: - Public Methods
 
     /// ファイル内の全シンボルを抽出
@@ -266,5 +283,32 @@ enum SwiftSyntaxAnalyzer {
         }
 
         return testCases
+    }
+
+    /// Swift Testingテストを検出（@Test, @Suite）
+    static func findSwiftTests(projectPath: String) throws -> [SwiftTestInfo] {
+        let swiftFiles = try FileSearcher.findFiles(in: projectPath, pattern: "*.swift")
+
+        var testSuites: [SwiftTestInfo] = []
+
+        for file in swiftFiles {
+            do {
+                let content = try String(contentsOfFile: file)
+                let sourceFile = Parser.parse(source: content)
+
+                let visitor = SwiftTestingVisitor(
+                    converter: SourceLocationConverter(fileName: file, tree: sourceFile),
+                    filePath: file
+                )
+                visitor.walk(sourceFile)
+
+                testSuites.append(contentsOf: visitor.testSuites)
+            } catch {
+                // ファイル読み込みエラーをスキップ
+                continue
+            }
+        }
+
+        return testSuites
     }
 }

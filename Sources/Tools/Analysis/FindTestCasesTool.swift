@@ -9,20 +9,21 @@ import Foundation
 import MCP
 import Logging
 
-/// XCTestケース検出ツール
+/// テストケース検出ツール
 ///
 /// ## 目的
-/// プロジェクト内のXCTestクラスとテストメソッドを自動検出
+/// プロジェクト内のXCTestとSwift Testingの両方のテストを自動検出
 ///
 /// ## 効果
 /// - XCTestCaseを継承するテストクラスを全て発見
-/// - 各テストクラスに含まれるtest*メソッドを列挙
+/// - Swift Testing (@Test, @Suite) のテストを全て発見
+/// - 各テストに含まれるテストメソッドを列挙
 /// - テストカバレッジの調査を支援
 ///
 /// ## 処理内容
 /// - プロジェクト内の全Swiftファイルを走査
 /// - SwiftSyntaxでXCTestCase継承クラスを検出
-/// - `test`で始まるメソッドを抽出
+/// - SwiftSyntaxで@Testアトリビュートを検出
 /// - ファイルパスと行番号を記録
 ///
 /// ## 使用シーン
@@ -33,13 +34,21 @@ import Logging
 ///
 /// ## 使用例
 /// find_test_cases()
-/// → XCTest Cases (12 classes):
-///   [TestClass] UserManagerTests
-///     File: UserManagerTests.swift:10
-///     Test methods (5):
-///       └─ testCreateUser (line 15)
-///       └─ testDeleteUser (line 25)
+/// → Test Cases Summary:
+///   XCTest: 2 classes, 3 methods
+///   Swift Testing: 5 suites, 25 methods
 ///
+///   === XCTest Cases (2 classes) ===
+///   [TestClass] AppUITests
+///     File: AppUITests.swift:10
+///     Test methods (2):
+///       └─ testExample (line 15)
+///
+///   === Swift Testing (@Test) (5 suites) ===
+///   [Struct] StreamManagerTests
+///     File: StreamManagerTests.swift:13
+///     @Test methods (8):
+///       └─ broadcastToMultipleSubscribers (line 17)
 ///
 /// ## パフォーマンス（全ファイル処理する場合）
 /// - 340ファイルのプロジェクトで約2-3秒
@@ -48,7 +57,7 @@ enum FindTestCasesTool: MCPTool {
     static var toolDefinition: Tool {
         Tool(
             name: ToolNames.findTestCases,
-            description: "Find XCTest test cases and methods in the project",
+            description: "Find test cases (XCTest and Swift Testing @Test) in the project",
             inputSchema: .object([
                 "type": .string("object"),
                 "properties": .object([:])
@@ -63,29 +72,79 @@ enum FindTestCasesTool: MCPTool {
     ) async throws -> CallTool.Result {
         let memory = try ToolHelpers.requireProjectMemory(projectMemory)
 
-        let testCases = try SwiftSyntaxAnalyzer.findTestCases(projectPath: memory.projectPath)
+        // XCTestとSwift Testingの両方を検出
+        let xcTestCases = try SwiftSyntaxAnalyzer.findTestCases(projectPath: memory.projectPath)
+        let swiftTests = try SwiftSyntaxAnalyzer.findSwiftTests(projectPath: memory.projectPath)
 
-        if testCases.isEmpty {
-            return CallTool.Result(content: [.text("No XCTest cases found in project")])
+        if xcTestCases.isEmpty && swiftTests.isEmpty {
+            return CallTool.Result(content: [.text("No test cases found in project")])
         }
 
-        var result = "XCTest Cases (\(testCases.count) classes):\n\n"
+        // サマリー
+        let xcTestMethodCount = xcTestCases.reduce(0) { $0 + $1.testMethods.count }
+        let swiftTestMethodCount = swiftTests.reduce(0) { $0 + $1.testMethods.count }
 
-        for testClass in testCases {
-            let fileName = (testClass.filePath as NSString).lastPathComponent
-            result += "[TestClass] \(testClass.className)\n"
-            result += "  File: \(fileName):\(testClass.line)\n"
+        var result = "Test Cases Summary:\n"
+        if !xcTestCases.isEmpty {
+            result += "  XCTest: \(xcTestCases.count) classes, \(xcTestMethodCount) methods\n"
+        }
+        if !swiftTests.isEmpty {
+            result += "  Swift Testing: \(swiftTests.count) suites, \(swiftTestMethodCount) methods\n"
+        }
+        result += "\n"
 
-            if !testClass.testMethods.isEmpty {
-                result += "  Test methods (\(testClass.testMethods.count)):\n"
-                for method in testClass.testMethods {
-                    result += "    └─ \(method.name) (line \(method.line))\n"
+        // XCTest結果
+        if !xcTestCases.isEmpty {
+            result += "=== XCTest Cases (\(xcTestCases.count) classes) ===\n\n"
+
+            for testClass in xcTestCases {
+                let fileName = (testClass.filePath as NSString).lastPathComponent
+                result += "[TestClass] \(testClass.className)\n"
+                result += "  File: \(fileName):\(testClass.line)\n"
+
+                if !testClass.testMethods.isEmpty {
+                    result += "  Test methods (\(testClass.testMethods.count)):\n"
+                    for method in testClass.testMethods {
+                        result += "    └─ \(method.name) (line \(method.line))\n"
+                    }
+                } else {
+                    result += "  No test methods found\n"
                 }
-            } else {
-                result += "  No test methods found\n"
+                result += "\n"
             }
+        }
 
-            result += "\n"
+        // Swift Testing結果
+        if !swiftTests.isEmpty {
+            result += "=== Swift Testing (@Test) (\(swiftTests.count) suites) ===\n\n"
+
+            for suite in swiftTests {
+                let fileName = (suite.filePath as NSString).lastPathComponent
+                let suiteLabel = suite.hasSuiteAttribute ? "@Suite" : ""
+                result += "[\(suite.suiteKind)] \(suite.suiteName)"
+                if suite.suiteDisplayName != suite.suiteName {
+                    result += " \"\(suite.suiteDisplayName)\""
+                }
+                if !suiteLabel.isEmpty {
+                    result += " \(suiteLabel)"
+                }
+                result += "\n"
+                result += "  File: \(fileName):\(suite.line)\n"
+
+                if !suite.testMethods.isEmpty {
+                    result += "  @Test methods (\(suite.testMethods.count)):\n"
+                    for method in suite.testMethods {
+                        if method.displayName != method.name {
+                            result += "    └─ \(method.name) \"\(method.displayName)\" (line \(method.line))\n"
+                        } else {
+                            result += "    └─ \(method.name) (line \(method.line))\n"
+                        }
+                    }
+                } else {
+                    result += "  No @Test methods found\n"
+                }
+                result += "\n"
+            }
         }
 
         return CallTool.Result(content: [.text(result)])
