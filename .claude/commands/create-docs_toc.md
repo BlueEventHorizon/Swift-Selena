@@ -151,19 +151,19 @@ description: {この文書の目的を1行で}
 ### ワークフロー
 
 #### 要件定義書を作成する（既存アプリから）
-1. `format/spec_format.md`
+1. `templates/spec_format.md`
 2. `workflow/plan/import_app_workflow.md`
 
 #### 要件定義書を作成する（Figmaから）
-1. `format/spec_format.md`
+1. `templates/spec_format.md`
 2. `workflow/plan/import_figma_workflow.md`
 
 #### 設計書を作成する
-1. `format/design_format.md`
+1. `templates/design_format.md`
 2. `workflow/plan/design_workflow.md`
 
 #### 計画書を作成する
-1. `format/plan_format.md`
+1. `templates/plan_format.md`
 2. `workflow/plan/planning_workflow.md`
 
 #### タスクを実行する（Claude）
@@ -176,7 +176,7 @@ description: {この文書の目的を1行で}
 1. `workflow/refactoring/library_creator_workflow.md`
 
 #### Code Headerを追加する
-1. `format/code_header_format.md`
+1. `templates/code_header_format.md`
 
 ### 原則・禁止事項を確認する
 
@@ -208,7 +208,7 @@ description: {この文書の目的を1行で}
 |---------|------|
 ...（対象ディレクトリの全ファイルを列挙）
 
-### format/（文書フォーマット）
+### templates/（文書テンプレート）
 
 | ファイル | 目的 |
 |---------|------|

@@ -67,9 +67,70 @@
   - 理由: Bashスクリプトでロジック再実装してもテストにならない
   - 正解: `mcp__swift-selena-debug__execute_tool`で実際に呼び出す
 
+### ドキュメント構造 [★★★★☆]
+
+- **docs/再編成による汎用/固有の分離**
+  - 対象: `docs/` ディレクトリ全体
+  - 理由: MCPサーバーテンプレート化のため、汎用知識と固有実装を分離する必要
+  - 正解: `docs/mcp-guide/`（汎用）、`docs/swift-selena/`（固有）、`docs/templates/`（フォーマット）
+
 ---
 
 ## 詳細履歴
+
+### 2025-12-26: docs/ディレクトリ再編成計画 [★★★★☆]
+
+#### 問題
+
+MCPサーバーのテンプレート化を検討した結果、docs/内で以下の課題が判明:
+- MCP汎用知識とSwift-Selena固有の内容が混在
+- テンプレートとして再利用可能な部分が不明確
+- ルート直下にファイルが散在（`PLAN.md`, `v0.6.0_implementation_plan.md`等）
+
+#### ユーザー指摘（原文）
+
+> 「2つ作って統合する方が大変そうだけどね」
+> 「設計文書の整理になるなら、のdocs/を改善すれば良いと思う。分離するのはもっと先で良いね？」
+
+#### 結論
+
+テンプレートプロジェクトを別に作るのではなく、まずdocs/を整理。
+汎用部分が明確になってから分離する。
+
+#### 変更内容
+
+- **docs/DOCS_REORGANIZATION_PLAN.md**: 新規作成（再編成計画）
+
+新しいディレクトリ構造:
+```
+docs/
+├── mcp-guide/          # 汎用MCPガイド（テンプレート化可能）
+├── swift-selena/       # プロジェクト固有
+│   ├── design/
+│   ├── requirements/
+│   └── plans/
+├── templates/          # format/をリネーム
+└── history/            # 変更なし
+```
+
+#### 影響分析
+
+| カテゴリ | 影響 |
+|---------|------|
+| シェルスクリプト | なし |
+| Makefile | なし |
+| JSON設定 | なし |
+| CLAUDE.md | なし |
+| `.claude/commands/` | `create-docs_toc.md`のみ（5箇所のパス変更） |
+
+**create-docs_toc.mdの変更箇所**:
+- `format/spec_format.md` → `templates/requirements_format.md`
+- `format/design_format.md` → `templates/design_format.md`
+- `format/plan_format.md` → `templates/plan_format.md`
+- `format/code_header_format.md` → `templates/code_header_format.md`
+- `### format/（文書フォーマット）` → `### templates/（文書テンプレート）`
+
+---
 
 ### 2025-12-17: Swift Testing対応 [★★★★☆]
 
