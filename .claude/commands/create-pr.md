@@ -26,7 +26,8 @@ create-pr [ベースブランチ]
 2. **GitHub情報取得**
    - `project/info/github_info.md` が存在すれば情報取得する
    または
-   - `git remote get-url origin`から自動抽出
+   - `git remote`でリモート名を取得し、`git remote get-url <リモート名>`から自動抽出
+   - 注: リモート名は`origin`とは限らない（例: `moons`）
 
 3. **PR情報準備**
    - コミット履歴・変更ファイル取得（`git log`, `git diff`）
