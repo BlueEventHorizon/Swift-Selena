@@ -1,23 +1,33 @@
 # AI検索用の文書検索インデックスを生成する
 
-ToCは「人が読む目次」ではなく、**AIや検索エンジンがドキュメント構造を理解し、関連文書を特定するためのインデックス**として設計する。
+docs_tocは**AIがタスク実行時に必要な文書を特定するためのインデックス**として設計する。
 
 ---
 
-## 重要な注意事項 [CRITICAL]
+## 重要な設計原則 [CRITICAL]
 
-**このドキュメント内の全ての具体例（ファイルパス、ディレクトリ名、ファイル名等）は架空の例です。**
+### AIの実際の行動パターン
+- タスクを与えられる → 必要な文書を読む → 実装する
+- 「キーワードで検索」はしない
+- 「このタスクで何を読むべきか」が重要
 
-- 実際の出力内容は、対象ディレクトリの構成に応じて動的に生成されます
-- `{プレースホルダー}`形式は実際の値に置き換えられます
-- ファイル構成が変わっても、このコマンド仕様を修正する必要はありません
+### タスクの粒度
+- main_plan.mdのタスク粒度に合わせる
+- 例：「ContactService実装」「ContactListView実装」
+- 「ViewStateパターンを使う」のような細分化は不要（View/ViewModel実装の中で使うテクニック）
+
+### 不要なもの
+- キーワードインデックス（AIはキーワードで検索しない）
+- タグ別インデックス（同上）
+- 文書間の関係性マップ（タスク別リファレンスで十分）
+- 各文書の「主なトピック」詳細（文書を読めば分かる）
 
 ---
 
 ## 引数
 
 ```
-create-docs_toc -target <対象ディレクトリ> [-except <除外ディレクトリ>] [-format <md|json|both>]
+create-docs_toc -target <対象ディレクトリ>
 ```
 
 ### パラメータ
@@ -25,42 +35,185 @@ create-docs_toc -target <対象ディレクトリ> [-except <除外ディレク�
 | パラメータ | 必須 | 説明 | デフォルト値 | 例 |
 |----------|------|------|------------|-----|
 | `-target` | 必須 | ToC生成対象のディレクトリ | なし | `-target docs/` |
-| `-except` | 任意 | 除外するディレクトリ（複数指定可） | なし | `-except docs/readme/` |
-| `-format` | 任意 | 出力形式（md, json, both） | `md` | `-format both` |
 
 ### 使用例
 
 ```bash
 # 基本的な使い方
-create-docs_toc -target {対象ディレクトリ}/
-
-# 特定ディレクトリを除外
-create-docs_toc -target {対象ディレクトリ}/ -except {除外ディレクトリ1}/
-
-# 複数のディレクトリを除外
-create-docs_toc -target {対象ディレクトリ}/ -except {除外ディレクトリ1}/ -except {除外ディレクトリ2}/
-
-# JSON形式も出力
-create-docs_toc -target {対象ディレクトリ}/ -format both
-
-# 実際の例（このプロジェクトの場合）
 create-docs_toc -target docs/
-create-docs_toc -target project/ -format both
 ```
 
 ---
 
 ## 成果物
 
-### Markdown形式（デフォルト）
 - **ファイル名**: `<target_dir>/docs_toc.md`
 - **例**: `docs/docs_toc.md`
-- **用途**: 人間とAI両方が読みやすい詳細版
 
-### JSON形式（オプション）
-- **ファイル名**: `<target_dir>/docs_toc.json`
-- **例**: `docs/docs_toc.json`
-- **用途**: プログラムからの検索・解析用軽量版
+---
+
+## 出力構造
+
+### 必須セクション構成
+
+```markdown
+# 開発文書検索インデックス
+
+---
+name: 開発文書検索インデックス
+description: {この文書の目的を1行で}
+---
+
+## Critical Requirements（必読文書）
+
+**全タスクで必ず参照すること** [CRITICAL]
+
+| 文書 | 目的 |
+|-----|------|
+| `rules/project_rule.md` | プロジェクト開始時・タスク開始前に基本ルールを確認する |
+| `rules/common/architecture_rule.md` | アーキテクチャ設計・実装前にレイヤー構成を確認する |
+| `rules/common/coding_rule.md` | コード記述前に規約を確認する |
+
+---
+
+## 状況別ガイド
+
+### 開発開始時
+1. `rules/project_rule.md`
+2. 本ファイル（docs_toc.md）を通読
+3. `project/project_toc.md`（存在する場合）
+
+### タスク実行時（Claude）
+1. `workflow/dev/task_orchestration_guide.md`
+
+### タスク実行時（Agent）
+1. `workflow/dev/task_execution_workflow.md`
+
+---
+
+## タスク別リファレンス
+
+**Critical Requirementsに加えて、以下を参照**
+
+### Domain層
+
+#### Serviceを実装する
+1. `rules/domain/domain_core.md`
+2. `rules/domain/unit_test.md`
+3. `rules/domain/domain_factory.md`
+
+#### Entity/Enumを定義する
+1. `rules/domain/domain_core.md`
+
+#### DataStore Protocolを実装する
+1. `rules/domain/domain_protocol_mock.md`
+2. `rules/domain/stream_manager_usage.md`
+
+#### Repository Protocolを実装する
+1. `rules/domain/domain_protocol_mock.md`
+
+#### Mockを実装する
+1. `rules/domain/domain_protocol_mock.md`
+2. `rules/domain/domain_factory.md`
+
+#### Unit Testを書く（TDD）
+1. `rules/domain/unit_test.md`
+2. `rules/domain/domain_protocol_mock.md`
+
+### UI層
+
+#### View/ViewModelを実装する
+1. `rules/ui/ui_core.md`
+2. `rules/ui/design_token.md`
+
+#### UIComponent/ViewModifierを作成する
+1. `rules/ui/ui_components.md`
+2. `rules/ui/design_token.md`
+
+#### デザイントークンを設定する
+1. `rules/ui/design_token.md`
+
+### Infrastructure層
+
+#### DataStore実装を作成する
+1. `rules/infrastructure/stream_manager_best_practices.md`
+2. `rules/domain/stream_manager_usage.md`
+
+#### Repository実装を作成する
+1. `rules/common/architecture_rule.md`
+
+### DI層
+
+#### Resolverを実装する
+1. `rules/di/di.md`
+2. `rules/domain/domain_factory.md`
+
+### ワークフロー
+
+#### 要件定義書を作成する（既存アプリから）
+1. `format/spec_format.md`
+2. `workflow/plan/import_app_workflow.md`
+
+#### 要件定義書を作成する（Figmaから）
+1. `format/spec_format.md`
+2. `workflow/plan/import_figma_workflow.md`
+
+#### 設計書を作成する
+1. `format/design_format.md`
+2. `workflow/plan/design_workflow.md`
+
+#### 計画書を作成する
+1. `format/plan_format.md`
+2. `workflow/plan/planning_workflow.md`
+
+#### タスクを実行する（Claude）
+1. `workflow/dev/task_orchestration_guide.md`
+
+#### タスクを実行する（Agent）
+1. `workflow/dev/task_execution_workflow.md`
+
+#### コードをライブラリ化する
+1. `workflow/refactoring/library_creator_workflow.md`
+
+#### Code Headerを追加する
+1. `format/code_header_format.md`
+
+### 原則・禁止事項を確認する
+
+#### 開発原則を確認する
+1. `rules/common/principles_of_software_development.md`
+
+#### やってはいけないことを確認する
+1. `rules/common/bad_practices.md`
+2. `rules/ui/bad_practices_ui.md`
+
+#### MCP活用方法を確認する
+1. `rules/common/develop_with_agent_rule.md`
+
+---
+
+## 全文書一覧
+
+### rules/（開発ルール）
+
+| ファイル | 目的 |
+|---------|------|
+| `project_rule.md` | プロジェクト開始時にAI対話・開発の基本ルールを確認する |
+| `common/architecture_rule.md` | 5層Clean Architectureの構成・依存関係を理解する |
+...（対象ディレクトリの全ファイルを列挙）
+
+### workflow/（ワークフロー）
+
+| ファイル | 目的 |
+|---------|------|
+...（対象ディレクトリの全ファイルを列挙）
+
+### format/（文書フォーマット）
+
+| ファイル | 目的 |
+|---------|------|
+...（対象ディレクトリの全ファイルを列挙）
+```
 
 ---
 
@@ -73,13 +226,7 @@ create-docs_toc -target project/ -format both
    Glob("{target}/**/*.md") で全マークダウンファイルを取得
    ```
 
-2. **除外処理**
-   ```
-   -except で指定されたディレクトリ配下のファイルを除外
-   除外判定: ファイルパスが除外ディレクトリで始まるかチェック
-   ```
-
-3. **ファイルリストの作成**
+2. **ファイルリストの作成**
    ```
    処理対象のファイルパスリストを作成
    ディレクトリ構造順にソート
@@ -92,287 +239,27 @@ create-docs_toc -target project/ -format both
 1. **基本情報の抽出**
    - `Read()` でファイル内容を読み込み
    - H1タイトル（`# タイトル名`）を抽出
-   - ファイルパス、更新日時を取得
+   - 冒頭の概要から「目的」を1行で要約
 
-2. **内容の分析**
-   - 冒頭の概要（H1直後の段落）を抽出
-   - 主要なセクション見出し（H2, H3）をリスト化
-   - `**関連文書**` セクションから関連ファイルリンクを抽出
+### Phase 3: ToC構造の作成
 
-3. **キーワード抽出**
-   - 見出しと本文から主要なキーワードを抽出
-   - 例：Architecture, Domain, UI, Service, ViewModel, Mock, Test, etc.
+1. **Critical Requirements**: 最重要の3文書を固定で記載
+2. **状況別ガイド**: 固定構造で記載
+3. **タスク別リファレンス**: main_plan.mdのタスク粒度に合わせて構築
+4. **全文書一覧**: ディレクトリ別の表形式で列挙
 
-### Phase 3: ToC構造の作成（Markdown版）
-
-以下のセクションを含むMarkdownを生成：
-
-#### 1. ヘッダー情報
-
-```markdown
-
----
-name: {開発などの文書の目的をいれる}文書検索インデックス
-description: {この文書で、上記の目的のために何を提供するのか、200文字以内で解説}
----
-
-## このTOCの使い方
-
-1. **Quick Reference**: 最重要文書を特定（常に参照すべき文書、実装時に参照する文書）
-2. **カテゴリ別概要**: 開発工程ごとの文書分類（rules/workflow/format）
-3. **キーワードインデックス**: 具体的な実装内容を検索（Service実装、Entity定義、Mock実装、データフロー等）
-4. **ディレクトリ別詳細目次**: 全文書の要約と主要トピック
-5. **文書間の関係性マップ**: 要件定義→設計→計画→実装の流れ
-6. **タグ別インデックス**: 実装層別検索（#Domain, #UI, #Infrastructure, #Architecture等）
-
----
-
-```
-
-**[CRITICAL]**: 「このTOCの使い方」セクションは必ず含めること。TOC自体が自己説明的であることが重要。
-
-#### 2. Quick Reference（最重要文書）
-
-```markdown
-## Quick Reference（最重要文書）
-
-### 常に参照すべき文書
-| 文書 | 用途 | 参照タイミング |
-|-----|------|--------------|
-| `rules/project_rule.md` | AI対話・開発の基本ルール | プロジェクト開始時 |
-| `rules/common/architecture_rule.md` | 5層Clean Architecture | 実装前・設計時 |
-...
-
-### 実装時に参照
-| 実装層 | 文書 | 用途 |
-|-------|-----|------|
-| **Domain層** | `rules/domain/domain_core.md` | Service/Entity/Enum実装の必須要件 |
-| **UI層** | `rules/ui/ui_core.md` | View/ViewModel実装、DI、AsyncStream管理 |
-...
-
-### ワークフロー実行時に参照
-| フェーズ | 文書 | 用途 |
-|---------|-----|------|
-| **要件定義** | `workflow/plan/import_app_workflow.md` | 既存アプリからの要件抽出 |
-| **設計** | `workflow/plan/design_workflow.md` | 要件から設計書を作成 |
-...
-```
-
-#### 3. 文書カテゴリー概要（表形式）
-
-```markdown
-## 文書カテゴリー概要
-
-| カテゴリ | ディレクトリ | 目的 | 主な対象者 |
-|---------|------------|------|----------|
-| **プロジェクトルール** | `rules/` | AI対話・開発の基本ルール | 全員（最優先） |
-| **共通開発ルール** | `rules/common/` | アーキテクチャ、コーディング規約 | 全員（実装前必読） |
-...
-```
-
-#### 4. キーワードインデックス
-
-```markdown
-## キーワードインデックス
-
-### アーキテクチャ関連
-- **Clean Architecture**: `rules/common/architecture_rule.md`
-- **DI層・依存性注入**: `rules/di/di.md`, `rules/domain/domain_factory.md`
-
-### データフロー・状態管理
-- **StreamManager**: `rules/domain/stream_manager_usage.md`
-...
-```
-
-#### 5. ディレクトリ別詳細目次
-
-```markdown
-## ディレクトリ別詳細目次
-
-### 1. {カテゴリディレクトリ}/ - {カテゴリ説明}
-
-#### {ファイル名}.md - {タイトル}
-**要約**: {1-2行の要約文}
-**主なトピック**:
-- {トピック1の説明}
-- {トピック2の説明}
-- {トピック3の説明}
-
-**関連文書**: `{related1.md}`, `{related2.md}`
-```
-
-#### 6. 文書間の関係性マップ
-
-```markdown
-## 文書間の関係性マップ
-
-### {ワークフロー名}
-
-{開始文書}
-    ↓
-{中間文書}
-    ↓
-{終了文書}
-...
-```
-
-#### 7. タグ別インデックス
-
-```markdown
-## タグ別インデックス
-
-### #{タグ名}
-- `{文書パス1}`
-- `{文書パス2}`
-...
-```
-
-#### 8. 更新履歴
-```markdown
-## 更新履歴
-
-| 日付 | バージョン | 作成者 | 変更内容 |
-|------|-----------|--------|----------|
-| YYYY-MM-DD | 1.0 | Claude | 初版作成 |
-```
-
-### Phase 4: ToC構造の作成（JSON版）
-
-`-format json` または `-format both` の場合のみ生成：
-
-```json
-{
-  "metadata": {
-    "version": "1.0",
-    "generated_at": "YYYY-MM-DDTHH:MM:SS+09:00",
-    "target_dir": "{対象ディレクトリ}",
-    "excluded_dirs": ["{除外ディレクトリ配列}"]
-  },
-  "categories": {
-    "{カテゴリ名}": {
-      "path": "{カテゴリパス}/",
-      "description": "{カテゴリ説明}",
-      "files": []
-    }
-  },
-  "documents": [
-    {
-      "path": "{文書の相対パス}",
-      "title": "{文書タイトル}",
-      "summary": "{1-2行の要約}",
-      "keywords": ["{キーワード配列}"],
-      "related": ["{関連文書パス配列}"]
-    }
-  ],
-  "keyword_index": {
-    "{キーワード}": [
-      "{文書パス1}",
-      "{文書パス2}"
-    ]
-  }
-}
-```
-
-### Phase 5: ファイル出力
+### Phase 4: ファイル出力
 
 1. **Markdown版の出力**
    - `Write()` で `{target}/docs_toc.md` に保存
-   - 常に生成される
 
-2. **JSON版の出力**（オプション）
-   - `-format json` または `-format both` の場合のみ
-   - `Write()` で `{target}/docs_toc.json` に保存
-
-3. **完了報告**
+2. **完了報告**
    ```
    ToC生成完了
    - 対象: {target}
-   - 除外: {except}
    - 処理ファイル数: N件
-   - 出力: docs_toc.md [, docs_toc.json]
+   - 出力: docs_toc.md
    ```
-
----
-
-## 出力構造の例
-
-生成される主な構成要素：
-- ヘッダー情報（name, description, generated_at）
-- このTOCの使い方
-- Quick Reference（最重要文書）
-- 文書カテゴリー概要
-- キーワードインデックス
-- ディレクトリ別詳細目次
-- 文書間の関係性マップ
-- タグ別インデックス
-- 更新履歴
-
----
-
-## JSON構造の詳細
-
-### 設計方針
-- **シンプル性**: 複雑なネスト構造を避ける
-- **検索性**: キーワードからファイルパスの逆引きを容易にする
-- **メンテナンス性**: 手動編集も可能な読みやすい構造
-
-### 必須フィールド
-
-#### metadata
-```json
-{
-  "version": "1.0",
-  "generated_at": "ISO8601形式の日時",
-  "target_dir": "対象ディレクトリパス",
-  "excluded_dirs": ["除外ディレクトリ配列"]
-}
-```
-
-#### documents配列
-```json
-[
-  {
-    "path": "相対パス",
-    "title": "文書タイトル",
-    "summary": "要約文（1-2行）",
-    "keywords": ["キーワード配列"],
-    "related": ["関連文書パス配列"]
-  }
-]
-```
-
-#### keyword_index
-```json
-{
-  "キーワード": ["ファイルパス配列"]
-}
-```
-
-### 非推奨フィールド
-- `relations` with score: スコア計算は実装困難、精度不明
-- `layer` 配列: keywords で代用可能
-- 複雑なネスト構造: メンテナンス困難
-
----
-
-## 実装例
-
-```markdown
-実行コマンド:
-/create-docs_toc -target docs/ -except docs/readme/
-
-処理フロー:
-1. Glob("docs/**/*.md") でN件のファイル取得
-2. -except指定の配下ファイルを除外
-3. 各ファイルを Read() で分析
-4. ToC構造を構築
-5. Write("{target}/docs_toc.md", content)
-6. 完了報告
-
-出力:
-{target}/docs_toc.md が生成される
-（-format both の場合は {target}/docs_toc.json も生成）
-```
 
 ---
 
@@ -380,94 +267,42 @@ description: {この文書で、上記の目的のために何を提供するの
 
 ### 必ず守るべき原則
 
-1. **既存アーキテクチャを変更しない**
-   - ToCは参照するのみ
-   - ルール文書の内容を改変しない
-   - DI・Factory・Protocol設計方針に触れない
+1. **タスク粒度の維持**
+   - main_plan.mdのタスク粒度に合わせる
+   - 「Serviceを実装する」「View/ViewModelを実装する」など
+   - 細分化しすぎない（ViewStateパターン、SharedDataパターン等は独立タスクにしない）
 
-2. **ファイル単位で処理**
-   - 同一層の複数文書を統合しない
-   - 1ファイル = 1アイテムとして扱う
+2. **シンプルさの維持**
+   - キーワードインデックスは作成しない
+   - タグ別インデックスは作成しない
+   - 文書間の関係性マップは作成しない
+   - 「主なトピック」詳細は記載しない
 
 3. **相対パスを使用**
    - 絶対パスは使用しない
    - target ディレクトリからの相対パス
 
-4. **日本語と英語の混在**
+4. **日本語で記述**
    - タイトル・説明は日本語
-   - キーワード・タグは英語
    - ファイルパスは変更しない
-
-### パフォーマンス考慮
-
-- 大量ファイル（100件以上）の場合は進捗を報告
-- Read() 実行時にエラーハンドリング
-- 処理時間の目安：30ファイル約2-3分
-
-### エラーハンドリング
-
-```markdown
-ファイル読み込みエラー:
-- エラーファイルをスキップ
-- エラー内容をログ出力
-- 処理は続行
-
-除外ディレクトリが存在しない:
-- 警告を表示
-- 処理は続行
-
-対象ディレクトリが存在しない:
-- エラーを表示
-- 処理を中断
-```
 
 ### 既存ToC更新時の考慮事項
 
-- **既存の`docs/docs_toc.md`が機能している場合は、破壊的変更を避ける**
-- **表のフォーマット変更時は、既存の参照箇所への影響を確認**
-- **セクション追加・削除時は、AIの学習済みパターンとの整合性を検証**
-- **段階的な改善を推奨**（一度に大きく変更しない）
-
----
-
-## バージョン管理
-
-### ToC自体の更新
-
-- ToC生成後、git commit は自動実行しない
-- 人間がレビューしてからコミット
-- 更新日時は自動で記録
-
-### 差分確認
-
-既存の docs_toc.md がある場合：
-1. 既存ファイルを docs_toc.md.old にリネーム
-2. 新しい docs_toc.md を生成
-3. 差分を表示して確認を促す
-
----
-
-## 拡張オプション（将来）
-
-現在は実装しないが、将来的に追加可能な機能：
-
-- `-depth <N>`: ディレクトリの深さ制限
-- `-pattern <glob>`: ファイル名パターンフィルタ
-- `-update`: 既存ToCの差分更新のみ
-- `-verbose`: 詳細ログ出力
-- `-dry-run`: 実行せず処理内容を表示
+- 既存の構造を尊重する
+- 大幅な変更は避ける
+- 段階的な改善を推奨
 
 ---
 
 ## 生成AIへの実行例
 
 ```
-コマンド: /create-docs_toc -target {対象ディレクトリ}/ -except {除外ディレクトリ}/
+コマンド: /create-docs_toc -target docs/
 
 期待される動作:
-1. {対象ディレクトリ}/ 配下の全.mdファイルを取得
-2. {除外ディレクトリ}/ 配下を除外（指定時）
-3. 各ファイルを分析してToC構造を作成
-4. {対象ディレクトリ}/docs_toc.md に出力
+1. docs/ 配下の全.mdファイルを取得
+2. 各ファイルを分析
+3. Critical Requirements + 状況別ガイド + タスク別リファレンス + 全文書一覧 の構造で作成
+4. docs/docs_toc.md に出力
 5. 完了報告
 ```
