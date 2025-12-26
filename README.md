@@ -18,7 +18,7 @@
 - **Swift Testing Support**: Detects both XCTest and Swift Testing (@Test, @Suite) test cases
 - **SwiftUI Support**: Automatically detects Property Wrappers (@State, @Binding, etc.)
 - **Fast Search**: Filesystem-based search for fast performance even on large projects
-- **Project Memory**: Persists analysis results and notes across sessions
+- **Smart Caching**: Caches analysis results for fast repeated queries
 - **Multi-Client Support**: Use with Claude Code and Claude Desktop simultaneously
 
 ## Provided Tools
@@ -53,7 +53,6 @@ Swift-Selena uses a **Meta Tool Mode** that exposes only 4 tools to Claude, redu
 - **`analyze_imports`** - Analyze import dependencies across the project (module usage statistics, cached)
 - **`get_type_hierarchy`** - Get type inheritance hierarchy (superclass, subclasses, conforming types, cached)
 - **`find_test_cases`** - Detect XCTest and Swift Testing (@Test, @Suite) test cases
-- **`find_type_usages`** - Find where a type is used (variable declarations, function parameters, return types)
 
 ## Installation
 
@@ -289,7 +288,7 @@ Result: Found 15 do-catch blocks
 
 ## Data Storage
 
-Analysis results and notes are stored in the following directory:
+Analysis cache is stored in the following directory:
 
 ```
 ~/.swift-selena/

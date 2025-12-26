@@ -18,7 +18,7 @@
 - **Swift Testing対応**: XCTestとSwift Testing（@Test, @Suite）の両方を検出
 - **SwiftUI対応**: Property Wrapper（@State, @Binding等）を自動検出
 - **高速検索**: ファイルシステムベースの検索で大規模プロジェクトでも高速
-- **プロジェクト記憶**: 解析結果とメモを永続化し、セッション間で共有
+- **スマートキャッシュ**: 解析結果をキャッシュし、繰り返しクエリを高速化
 - **複数クライアント対応**: Claude CodeとClaude Desktopを同時使用可能
 
 ## 提供ツール
@@ -53,7 +53,6 @@ Swift-Selenaは**メタツールモード**を採用しており、Claudeには4
 - **`analyze_imports`** - プロジェクト全体のImport依存関係を解析（モジュール使用統計、キャッシュ利用）
 - **`get_type_hierarchy`** - 型の継承階層を取得（スーパークラス、サブクラス、Protocol準拠型、キャッシュ利用）
 - **`find_test_cases`** - XCTestとSwift Testing（@Test, @Suite）のテストケースを検出
-- **`find_type_usages`** - 型の使用箇所を検出（変数宣言、関数パラメータ、戻り値型）
 
 ## インストール
 
@@ -289,7 +288,7 @@ Claude: search_code を実行（正規表現: do\s*\{）
 
 ## データ保存場所
 
-解析結果とメモは以下のディレクトリに保存されます:
+解析キャッシュは以下のディレクトリに保存されます:
 
 ```
 ~/.swift-selena/
