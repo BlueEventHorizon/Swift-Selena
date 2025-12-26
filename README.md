@@ -14,6 +14,8 @@
 
 - **Build-Free**: Works even with build errors through SwiftSyntax-based static analysis
 - **LSP Integration**: Advanced features with SourceKit-LSP when project is buildable (v0.5.1+)
+- **Meta Tool Mode**: Reduces context window usage with dynamic tool loading (v0.6.2+)
+- **Swift Testing Support**: Detects both XCTest and Swift Testing (@Test, @Suite) test cases
 - **SwiftUI Support**: Automatically detects Property Wrappers (@State, @Binding, etc.)
 - **Fast Search**: Filesystem-based search for fast performance even on large projects
 - **Project Memory**: Persists analysis results and notes across sessions
@@ -21,23 +23,36 @@
 
 ## Provided Tools
 
-### Project Management
-- **`initialize_project`** - Initialize a project (must be called first)
+### Meta Tool Mode (v0.6.2+)
 
-### File Search
+Swift-Selena uses a **Meta Tool Mode** that exposes only 4 tools to Claude, reducing context window usage. The actual analysis tools are loaded dynamically on demand.
+
+**Exposed Tools:**
+- **`initialize_project`** - Initialize a project (must be called first)
+- **`list_available_tools`** - List all available analysis tools with descriptions
+- **`get_tool_schema`** - Get the JSON schema for a specific tool
+- **`execute_tool`** - Execute any analysis tool by name
+
+### Available Analysis Tools (via execute_tool)
+
+#### File Search
 - **`find_files`** - Search files by wildcard pattern (e.g., `*ViewModel.swift`)
 - **`search_code`** - Search code content using regex
 - **`search_files_without_pattern`** - Search files WITHOUT a pattern (grep -L equivalent)
 
-### SwiftSyntax Analysis
+#### Symbol Analysis
 - **`list_symbols`** - List all symbols (Class, Struct, Function, etc.)
 - **`find_symbol_definition`** - Find symbol definitions across the project
+
+#### SwiftUI Analysis
 - **`list_property_wrappers`** - Detect SwiftUI Property Wrappers (@State, @Binding, etc.)
 - **`list_protocol_conformances`** - Analyze protocol conformances and inheritance (UITableViewDelegate, ObservableObject, etc.)
 - **`list_extensions`** - Analyze extensions (extended type, protocol conformance, members)
+
+#### Code Analysis
 - **`analyze_imports`** - Analyze import dependencies across the project (module usage statistics, cached)
 - **`get_type_hierarchy`** - Get type inheritance hierarchy (superclass, subclasses, conforming types, cached)
-- **`find_test_cases`** - Detect XCTest test cases and test methods
+- **`find_test_cases`** - Detect XCTest and Swift Testing (@Test, @Suite) test cases
 - **`find_type_usages`** - Find where a type is used (variable declarations, function parameters, return types)
 
 ## Installation
@@ -349,7 +364,9 @@ Will be rebuilt on next `initialize_project` execution.
 
 ### For Developers
 - **[CLAUDE.md](CLAUDE.md)** - Project overview and commands for Claude Code
-- **[Swift-Selena Design](docs/Swift-Selena%20Design.md)** - Architecture and design principles
+- **[System Architecture](docs/swift-selena/design/DES-101_System_Architecture.md)** - Architecture and design principles
+- **[MCP Implementation Guide](docs/mcp-guide/MCP-Implementation-Guide.md)** - MCP server implementation guide
+- **[MCP Best Practices](docs/mcp-guide/MCP-Best-Practices.md)** - Best practices and common pitfalls
 
 ## Contributing
 
