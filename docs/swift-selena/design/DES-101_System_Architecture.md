@@ -525,31 +525,23 @@ graph TB
 
 ```
 Sources/
-├── SwiftMCPServer.swift          # エントリポイント
-├── Constants.swift                # 定数定義
-├── ProjectMemory.swift            # 永続化
-├── SwiftSyntaxAnalyzer.swift     # AST解析
-├── FileSearcher.swift             # ファイル検索
-├── DebugRunner.swift              # デバッグ用 v0.5.4+
+├── SwiftMCPServer.swift          # エントリポイント (Generic)
+├── Constants.swift                # 定数定義 (Generic)
 │
-├── LSP/                           # v0.5.1+
-│   ├── LSPState.swift             # 接続管理 v0.5.4+
-│   └── LSPClient.swift            # 通信実装
-│
-├── Logging/                       # v0.5.3+
+├── Logging/                       # v0.5.3+ (Generic)
 │   └── FileLogHandler.swift       # ファイルログ
 │
-├── Tools/                         # 18 tools
-│   ├── ToolProtocol.swift         # MCPTool protocol
+├── Tools/                         # ツール群
+│   ├── ToolProtocol.swift         # MCPTool protocol (Generic)
 │   ├── Project/
 │   │   └── InitializeProjectTool.swift
 │   ├── FileSystem/
 │   │   ├── FindFilesTool.swift
-│   │   └── SearchCodeTool.swift
+│   │   ├── SearchCodeTool.swift
+│   │   └── SearchFilesWithoutPatternTool.swift
 │   ├── Symbols/
 │   │   ├── ListSymbolsTool.swift
-│   │   ├── FindSymbolDefinitionTool.swift
-│   │   └── ReadSymbolTool.swift
+│   │   └── FindSymbolDefinitionTool.swift
 │   ├── SwiftUI/
 │   │   ├── ListPropertyWrappersTool.swift
 │   │   ├── ListProtocolConformancesTool.swift
@@ -557,25 +549,34 @@ Sources/
 │   ├── Analysis/
 │   │   ├── AnalyzeImportsTool.swift
 │   │   ├── GetTypeHierarchyTool.swift
-│   │   ├── FindTestCasesTool.swift
-│   │   └── FindTypeUsagesTool.swift
-│   ├── LSP/
-│   │   └── FindSymbolReferencesTool.swift
-│   ├── Notes/
-│   │   ├── AddNoteTool.swift
-│   │   └── SearchNotesTool.swift
-│   └── Prompts/
-│       ├── SetAnalysisModeTool.swift
-│       └── ThinkAboutAnalysisTool.swift
+│   │   └── FindTestCasesTool.swift
+│   └── Meta/
+│       ├── ExecuteToolTool.swift
+│       ├── GetToolSchemaTool.swift
+│       ├── ListAvailableToolsTool.swift
+│       └── MetaToolRegistry.swift
 │
-└── Visitors/                      # SwiftSyntax Visitors
-    ├── SymbolVisitor.swift
-    ├── PropertyWrapperVisitor.swift
-    ├── ExtensionVisitor.swift
-    ├── TypeConformanceVisitor.swift
-    ├── ImportVisitor.swift
-    ├── TypeUsageVisitor.swift
-    └── XCTestVisitor.swift
+└── Selena/                        # Swift-Selena固有 (Project-specific)
+    ├── Core/
+    │   ├── ProjectMemory.swift    # 永続化
+    │   ├── SwiftSyntaxAnalyzer.swift  # AST解析
+    │   └── FileSearcher.swift     # ファイル検索
+    ├── Cache/
+    │   ├── CacheManager.swift
+    │   ├── CacheGarbageCollector.swift
+    │   └── FileCacheEntry.swift
+    ├── LSP/                       # v0.5.1+
+    │   ├── LSPState.swift         # 接続管理
+    │   └── LSPClient.swift        # 通信実装
+    ├── Visitors/                  # SwiftSyntax Visitors
+    │   ├── SymbolVisitor.swift
+    │   ├── PropertyWrapperVisitor.swift
+    │   ├── ExtensionVisitor.swift
+    │   ├── TypeConformanceVisitor.swift
+    │   ├── ImportVisitor.swift
+    │   ├── SwiftTestingVisitor.swift
+    │   └── XCTestVisitor.swift
+    └── DebugRunner.swift          # デバッグ用
 ```
 
 ---

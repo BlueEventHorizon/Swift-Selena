@@ -316,7 +316,7 @@ search_code("\\[Code Header Format\\]")
 
 ## 13. 関連ドキュメント
 
-- `docs/format/code_header_format.md` - フォーマット仕様
+- `docs/templates/code_header_format.md` - フォーマット仕様
 - `.claude/agents/code-header-generator.md` - Agent定義
 - `.claude/commands/create-code-headers.md` - Command定義
 - `project/tool_design/DES-004_swift_toc_generation_design.md` - 前身設計

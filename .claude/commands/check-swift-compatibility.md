@@ -21,7 +21,7 @@ grep "swift-syntax" Package.swift
 
 現在対応しているDeclSyntax一覧:
 ```bash
-grep -o "[A-Z][a-zA-Z]*DeclSyntax" Sources/Visitors/SymbolVisitor.swift | sort -u
+grep -o "[A-Z][a-zA-Z]*DeclSyntax" Sources/Selena/Visitors/SymbolVisitor.swift | sort -u
 ```
 
 ### 4. SwiftSyntaxで利用可能なDeclSyntax確認

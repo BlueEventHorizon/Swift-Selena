@@ -1,9 +1,11 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `Sources/` hosts all Swift code, split by component (e.g., `Sources/Tools/` for each MCP tool, `Sources/LSP/` for LSPState & LSPClient, `Sources/Support/` for logging and shared helpers).
+- `Sources/` hosts all Swift code, split into generic (template-able) and project-specific parts:
+  - Generic: `SwiftMCPServer.swift`, `Constants.swift`, `Logging/`, `Tools/ToolProtocol.swift`
+  - Project-specific: `Selena/` (Core/, Cache/, LSP/, Visitors/, DebugRunner.swift), `Tools/<Category>/`
 - `Tests/` mirrors the source layout; add new suites beside their production counterparts to keep fixtures close to the code they exercise.
-- `docs/` contains requirements, design specs (DES-###), and operational notes; refer to the format guides under `docs/format/` before editing or adding documents.
+- `docs/` contains requirements, design specs (DES-###), and operational notes; refer to the format guides under `docs/templates/` before editing or adding documents.
 - Utility assets include `register-selena-to-claude-code.sh` (release registration) and `register-selena-to-claude-code-debug.sh` (debug self‑registration); keep them in sync with README instructions.
 
 ## Build, Test, and Development Commands
@@ -15,8 +17,8 @@
 ## Coding Style & Naming Conventions
 - Follow standard Swift style: 4‑space indentation, `UpperCamelCase` for types, `lowerCamelCase` for methods/properties, and `SCREAMING_SNAKE_CASE` for constants only when necessary.
 - Keep tools small and isolate shared behavior behind protocols such as `MCPTool`; new tool files live under `Sources/Tools/<Category>/<ToolName>Tool.swift`.
-- Every Swift file must carry the Code Header Format block (`docs/format/code_header_format.md`); regenerate headers via Claude before committing structural changes.
-- Documentation uses the DES/REQ numbering rules in `docs/format/*.md`; maintain mermaid diagrams whenever diagrams already exist.
+- Every Swift file must carry the Code Header Format block (`docs/templates/code_header_format.md`); regenerate headers via Claude before committing structural changes.
+- Documentation uses the DES/REQ numbering rules in `docs/templates/*.md`; maintain mermaid diagrams whenever diagrams already exist.
 
 ## Testing Guidelines
 - Use XCTest for unit coverage and rely on the in‑process `DebugRunner` (enabled in DEBUG builds) to exercise LSP flows; keep deterministic test sequences when editing it.

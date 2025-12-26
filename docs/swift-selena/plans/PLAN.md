@@ -232,7 +232,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 
 **実装内容:**
 
-1. **CodeHeaderParser**（Sources/CodeHeaderParser.swift）
+1. **CodeHeaderParser**（Sources/Selena/Core/CodeHeaderParser.swift）
    - [Code Header Format]マーカー検出
    - 目的・主要機能・含まれる型・関連型を抽出
    - エラー耐性のあるパース
@@ -362,7 +362,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 
 **実装内容:**
 
-1. **CommentVisitor**（Sources/Visitors/CommentVisitor.swift）
+1. **CommentVisitor**（Sources/Selena/Visitors/CommentVisitor.swift）
    - Triviaからコメント抽出
    - コメント種別識別（LineComment/DocComment/BlockComment）
 
