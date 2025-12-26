@@ -7,7 +7,7 @@
 /create-code-headers --update                     # 全ファイル上書き
 /create-code-headers --changed                    # git変更ファイルのみ
 /create-code-headers Sources/Tools/*              # Toolsディレクトリ配下のみ
-/create-code-headers Sources/LSP/*.swift          # 特定パターン
+/create-code-headers Sources/Selena/LSP/*.swift   # 特定パターン
 /create-code-headers ProjectMemory.swift FileSearcher.swift  # 個別ファイル指定
 ```
 
@@ -41,7 +41,7 @@
 **例**:
 ```
 Sources/Tools/* → Glob("Sources/Tools/*.swift")
-Sources/LSP/LSPClient → Sources/LSP/LSPClient.swift
+Sources/Selena/LSP/LSPClient → Sources/Selena/LSP/LSPClient.swift
 Sources/**/*.swift → そのままGlob実行
 ```
 

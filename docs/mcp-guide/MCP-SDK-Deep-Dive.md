@@ -2556,7 +2556,7 @@ final class ServerTests: XCTestCase {
 
 ### サンプルコード
 
-- [Swift-Selena実装例](../Sources/SwiftMCPServer.swift)
+- [Swift-Selena実装例](../../Sources/SwiftMCPServer.swift)
 - [公式サンプル](https://github.com/modelcontextprotocol/swift-sdk/tree/main/Examples)
 
 ---
