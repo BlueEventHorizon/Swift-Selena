@@ -14,6 +14,8 @@
 
 - **ビルド不要**: SwiftSyntaxベースの静的解析により、ビルドエラーがあっても動作
 - **LSP統合**: ビルド可能時はSourceKit-LSPで高度な機能を提供（v0.5.1+）
+- **メタツールモード**: 動的ツールロードでコンテキストウィンドウ使用量を削減（v0.6.2+）
+- **Swift Testing対応**: XCTestとSwift Testing（@Test, @Suite）の両方を検出
 - **SwiftUI対応**: Property Wrapper（@State, @Binding等）を自動検出
 - **高速検索**: ファイルシステムベースの検索で大規模プロジェクトでも高速
 - **プロジェクト記憶**: 解析結果とメモを永続化し、セッション間で共有
@@ -21,23 +23,36 @@
 
 ## 提供ツール
 
-### プロジェクト管理
-- **`initialize_project`** - プロジェクトを初期化（最初に必ず実行）
+### メタツールモード（v0.6.2+）
 
-### ファイル検索
+Swift-Selenaは**メタツールモード**を採用しており、Claudeには4つのツールのみを公開します。これによりコンテキストウィンドウの使用量を削減します。実際の解析ツールはオンデマンドで動的にロードされます。
+
+**公開ツール:**
+- **`initialize_project`** - プロジェクトを初期化（最初に必ず実行）
+- **`list_available_tools`** - 利用可能な解析ツール一覧と説明を表示
+- **`get_tool_schema`** - 特定ツールのJSONスキーマを取得
+- **`execute_tool`** - 解析ツールを名前で実行
+
+### 利用可能な解析ツール（execute_tool経由）
+
+#### ファイル検索
 - **`find_files`** - ワイルドカードパターンでファイル検索（例: `*ViewModel.swift`）
 - **`search_code`** - 正規表現でコード内容を検索
 - **`search_files_without_pattern`** - パターンにマッチしないファイルを検索（grep -L相当）
 
-### SwiftSyntax解析
+#### シンボル解析
 - **`list_symbols`** - Class, Struct, Function等のシンボル一覧
 - **`find_symbol_definition`** - プロジェクト全体でシンボル定義を検索
+
+#### SwiftUI解析
 - **`list_property_wrappers`** - SwiftUI Property Wrapper（@State, @Binding等）を検出
 - **`list_protocol_conformances`** - Protocol準拠と継承関係を解析（UITableViewDelegate, ObservableObject等）
 - **`list_extensions`** - Extension解析（拡張対象の型、プロトコル準拠、メンバー一覧）
+
+#### コード解析
 - **`analyze_imports`** - プロジェクト全体のImport依存関係を解析（モジュール使用統計、キャッシュ利用）
 - **`get_type_hierarchy`** - 型の継承階層を取得（スーパークラス、サブクラス、Protocol準拠型、キャッシュ利用）
-- **`find_test_cases`** - XCTestケースとテストメソッドを検出
+- **`find_test_cases`** - XCTestとSwift Testing（@Test, @Suite）のテストケースを検出
 - **`find_type_usages`** - 型の使用箇所を検出（変数宣言、関数パラメータ、戻り値型）
 
 ## インストール
@@ -349,7 +364,9 @@ rm -rf ~/.swift-selena/
 
 ### 開発者向け
 - **[CLAUDE.md](CLAUDE.md)** - プロジェクト概要とClaude Code用コマンド
-- **[Swift-Selena Design](docs/Swift-Selena%20Design.md)** - アーキテクチャと設計思想
+- **[システムアーキテクチャ](docs/swift-selena/design/DES-101_System_Architecture.md)** - アーキテクチャと設計思想
+- **[MCP実装ガイド](docs/mcp-guide/MCP-Implementation-Guide.md)** - MCPサーバー実装ガイド
+- **[MCPベストプラクティス](docs/mcp-guide/MCP-Best-Practices.md)** - ベストプラクティスとよくある失敗
 
 ## コントリビューション
 
