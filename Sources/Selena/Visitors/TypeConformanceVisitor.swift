@@ -114,8 +114,31 @@ class TypeConformanceVisitor: SyntaxVisitor {
             // ここでは全てプロトコルとして扱い、必要に応じてスーパークラスを分離
             if index == 0 && type.first?.isUppercase == true {
                 // 一般的なプロトコル名でなければスーパークラスとして扱う
-                let commonProtocols = ["View", "ObservableObject", "Identifiable", "Codable",
-                                     "Equatable", "Hashable", "Comparable", "CustomStringConvertible"]
+                // Note: Swift標準ライブラリ、SwiftUI、Combine、Concurrencyのプロトコルを網羅
+                let commonProtocols: Set<String> = [
+                    // SwiftUI
+                    "View", "ObservableObject", "Observable", "PreviewProvider", "App", "Scene",
+                    // Concurrency (Swift 5.5+)
+                    "Sendable", "Actor",
+                    // Standard Library - Core
+                    "Identifiable", "Codable", "Encodable", "Decodable",
+                    "Equatable", "Hashable", "Comparable",
+                    "CustomStringConvertible", "CustomDebugStringConvertible",
+                    "Error", "LocalizedError",
+                    "RawRepresentable", "CaseIterable",
+                    // Standard Library - Collections
+                    "Sequence", "Collection", "IteratorProtocol", "BidirectionalCollection",
+                    "RandomAccessCollection", "MutableCollection", "RangeReplaceableCollection",
+                    // Standard Library - Literals
+                    "ExpressibleByStringLiteral", "ExpressibleByIntegerLiteral",
+                    "ExpressibleByFloatLiteral", "ExpressibleByBooleanLiteral",
+                    "ExpressibleByArrayLiteral", "ExpressibleByDictionaryLiteral",
+                    "ExpressibleByNilLiteral",
+                    // Combine
+                    "Publisher", "Subscriber", "Cancellable",
+                    // Foundation
+                    "NSCopying", "NSCoding", "NSSecureCoding",
+                ]
                 if !commonProtocols.contains(type) && !type.contains("Delegate") && !type.contains("Protocol") {
                     superclass = type
                     continue
