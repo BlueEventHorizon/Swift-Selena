@@ -234,6 +234,9 @@ enum SwiftSyntaxAnalyzer {
     private static func buildTypeConformanceCache(projectPath: String, projectMemory: ProjectMemory) throws {
         let swiftFiles = try FileSearcher.findFiles(in: projectPath, pattern: "*.swift")
 
+        // Class定義をクリアして再収集
+        projectMemory.clearClassDefinitions()
+
         for file in swiftFiles {
             do {
                 let conformances = try listTypeConformances(filePath: file)
@@ -247,6 +250,11 @@ enum SwiftSyntaxAnalyzer {
                         protocols: conformance.protocols
                     )
                     projectMemory.cacheTypeConformance(typeName: conformance.typeName, typeInfo: cacheData)
+
+                    // Class定義を収集
+                    if conformance.typeKind == "Class" {
+                        projectMemory.addClassDefinition(conformance.typeName)
+                    }
                 }
             } catch {
                 // ファイル読み込みエラーをスキップ

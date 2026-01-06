@@ -15,7 +15,7 @@ class ProjectMemory {
     private let projectName: String
     
     /// キャッシュフォーマットのバージョン（構造変更時にインクリメント）
-    private static let cacheVersion = 2
+    private static let cacheVersion = 3
 
     struct Memory: Codable {
         var cacheVersion: Int
@@ -24,6 +24,7 @@ class ProjectMemory {
         var fileSymbolCache: [String: [SymbolInfo]]  // ファイルパス -> シンボル一覧
         var importCache: [String: [ImportInfo]]
         var typeConformanceCache: [String: TypeConformanceInfo]
+        var classDefinitions: Set<String>  // プロジェクト内で定義されたClass名
         var notes: [Note]
 
         struct FileInfo: Codable {
@@ -114,6 +115,7 @@ class ProjectMemory {
             fileSymbolCache: [:],
             importCache: [:],
             typeConformanceCache: [:],
+            classDefinitions: [],
             notes: []
         )
     }
@@ -212,6 +214,28 @@ class ProjectMemory {
     /// 全型情報を取得
     func getAllTypeConformances() -> [String: Memory.TypeConformanceInfo] {
         return memory.typeConformanceCache
+    }
+
+    /// Class定義を追加
+    func addClassDefinition(_ className: String) {
+        memory.classDefinitions.insert(className)
+    }
+
+    /// Class定義を一括追加
+    func addClassDefinitions(_ classNames: [String]) {
+        for name in classNames {
+            memory.classDefinitions.insert(name)
+        }
+    }
+
+    /// Class定義を取得
+    func getClassDefinitions() -> Set<String> {
+        return memory.classDefinitions
+    }
+
+    /// Class定義をクリア
+    func clearClassDefinitions() {
+        memory.classDefinitions.removeAll()
     }
 
     /// メモを追加
