@@ -363,9 +363,9 @@ rm -rf ~/.swift-selena/
 
 ### 開発者向け
 - **[CLAUDE.md](CLAUDE.md)** - プロジェクト概要とClaude Code用コマンド
-- **[システムアーキテクチャ](docs/swift-selena/design/DES-101_System_Architecture.md)** - アーキテクチャと設計思想
-- **[MCP実装ガイド](docs/mcp-guide/MCP-Implementation-Guide.md)** - MCPサーバー実装ガイド
-- **[MCPベストプラクティス](docs/mcp-guide/MCP-Best-Practices.md)** - ベストプラクティスとよくある失敗
+- **[システムアーキテクチャ](project/main/design/DES-101_System_Architecture.md)** - アーキテクチャと設計思想
+- **[MCP実装ガイド](project/main/mcp-guide/MCP-Implementation-Guide.md)** - MCPサーバー実装ガイド
+- **[MCPベストプラクティス](project/main/mcp-guide/MCP-Best-Practices.md)** - ベストプラクティスとよくある失敗
 
 ## コントリビューション
 

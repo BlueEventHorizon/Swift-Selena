@@ -363,9 +363,9 @@ Will be rebuilt on next `initialize_project` execution.
 
 ### For Developers
 - **[CLAUDE.md](CLAUDE.md)** - Project overview and commands for Claude Code
-- **[System Architecture](docs/swift-selena/design/DES-101_System_Architecture.md)** - Architecture and design principles
-- **[MCP Implementation Guide](docs/mcp-guide/MCP-Implementation-Guide.md)** - MCP server implementation guide
-- **[MCP Best Practices](docs/mcp-guide/MCP-Best-Practices.md)** - Best practices and common pitfalls
+- **[System Architecture](project/main/design/DES-101_System_Architecture.md)** - Architecture and design principles
+- **[MCP Implementation Guide](project/main/mcp-guide/MCP-Implementation-Guide.md)** - MCP server implementation guide
+- **[MCP Best Practices](project/main/mcp-guide/MCP-Best-Practices.md)** - Best practices and common pitfalls
 
 ## Contributing
 
