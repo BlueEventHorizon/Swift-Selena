@@ -355,23 +355,9 @@ Will be rebuilt on next `initialize_project` execution.
 - **CryptoKit** - Project path hashing
 - **swift-log** - Logging
 
-## Documentation
-
-### For Users
-- [README (English)](README.md) - This file
-- [README (Japanese)](README.ja.md) - 日本語版
-
-### For Developers
-- **[CLAUDE.md](CLAUDE.md)** - Project overview and commands for Claude Code
-- **[System Architecture](docs/swift-selena/design/DES-101_System_Architecture.md)** - Architecture and design principles
-- **[MCP Implementation Guide](docs/mcp-guide/MCP-Implementation-Guide.md)** - MCP server implementation guide
-- **[MCP Best Practices](docs/mcp-guide/MCP-Best-Practices.md)** - Best practices and common pitfalls
-
 ## Contributing
 
 Issues and Pull Requests are welcome!
-
-For detailed developer information, see [CLAUDE.md](CLAUDE.md).
 
 ## License
 

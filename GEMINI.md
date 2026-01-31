@@ -1,0 +1,2 @@
+# GEMINI.md
+@./CLAUDE.md
