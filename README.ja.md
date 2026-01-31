@@ -355,23 +355,9 @@ rm -rf ~/.swift-selena/
 - **CryptoKit** - プロジェクトパスのハッシュ化
 - **swift-log** - ロギング
 
-## ドキュメント
-
-### ユーザー向け
-- [README (English)](README.md) - 英語版
-- [README (Japanese)](README.ja.md) - このファイル
-
-### 開発者向け
-- **[CLAUDE.md](CLAUDE.md)** - プロジェクト概要とClaude Code用コマンド
-- **[システムアーキテクチャ](project/main/design/DES-101_System_Architecture.md)** - アーキテクチャと設計思想
-- **[MCP実装ガイド](project/main/mcp-guide/MCP-Implementation-Guide.md)** - MCPサーバー実装ガイド
-- **[MCPベストプラクティス](project/main/mcp-guide/MCP-Best-Practices.md)** - ベストプラクティスとよくある失敗
-
 ## コントリビューション
 
 Issue、Pull Requestを歓迎します！
-
-開発者向けの詳細な情報は[CLAUDE.md](CLAUDE.md)を参照してください。
 
 ## ライセンス
 
