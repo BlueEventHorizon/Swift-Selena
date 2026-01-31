@@ -7,3 +7,9 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 .serena/
+/.claude
+/CLAUDE.md
+/AGENTS.md
+/docs
+/meta
+/project
