@@ -1,1 +1,1 @@
-../../../moons/PrivateEnvironments/Swift-Selena/privates/AGENTS.md
+/Users/moons/data/dev/PrivateEnvironments/Swift-Selena/privates/AGENTS.md
