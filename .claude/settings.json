@@ -1,0 +1,41 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/afplay --volume 0.3 /System/Library/Sounds/Glass.aiff"
+          },
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"処理が完了しました\" with title \"Claude Code\" sound name \"Glass\"'"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/afplay --volume 0.5 /System/Library/Sounds/Blow.aiff"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "str_replace_editor",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/afplay --volume 0.1 /System/Library/Sounds/Tink.aiff"
+          }
+        ]
+      }
+    ]
+  }
+}
