@@ -147,10 +147,10 @@ make register-desktop
 
 ```bash
 # For production use (register to target project)
-make register-release TARGET=/path/to/your/project
+./register-selena-to-claude-code.sh /path/to/your/project
 
 # Example:
-make register-release TARGET=~/apps/CCMonitor
+./register-selena-to-claude-code.sh ~/apps/CCMonitor
 
 # For development/testing (register to Swift-Selena project itself)
 make register-debug
@@ -163,7 +163,7 @@ make register-debug
 make unregister-desktop
 
 # Unregister from target project
-make unregister-release TARGET=/path/to/your/project
+./unregister-selena-from-claude-code.sh /path/to/your/project
 
 # Unregister debug version from this project
 make unregister-debug
