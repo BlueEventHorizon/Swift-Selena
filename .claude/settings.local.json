@@ -42,7 +42,8 @@
       "mcp__swift-selena__get_tool_schema",
       "Skill(create-project_toc)",
       "WebSearch",
-      "Skill(next-doc-id)"
+      "Skill(next-doc-id)",
+      "Skill(forge:help)"
     ],
     "deny": [
       "Bash(sudo:*)",

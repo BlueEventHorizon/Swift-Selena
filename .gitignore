@@ -8,3 +8,5 @@ DerivedData/
 .netrc
 .serena/
 /meta/
+__pycache__
+.claude/doc-advisor/config.yaml.old
