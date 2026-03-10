@@ -147,10 +147,10 @@ make register-desktop
 
 ```bash
 # 本番用（ターゲットプロジェクトに登録）
-make register-release TARGET=/path/to/your/project
+./register-selena-to-claude-code.sh /path/to/your/project
 
 # 例:
-make register-release TARGET=~/apps/CCMonitor
+./register-selena-to-claude-code.sh ~/apps/CCMonitor
 
 # 開発・テスト用（Swift-Selenaプロジェクト自体に登録）
 make register-debug
@@ -163,7 +163,7 @@ make register-debug
 make unregister-desktop
 
 # ターゲットプロジェクトから解除
-make unregister-release TARGET=/path/to/your/project
+./unregister-selena-from-claude-code.sh /path/to/your/project
 
 # DEBUG版をこのプロジェクトから解除
 make unregister-debug
@@ -340,6 +340,35 @@ rm -rf ~/.swift-selena/
 
 次回`initialize_project`実行時に再構築されます。
 
+## 高度な設定
+
+### レガシーモード（全ツール直接公開）
+
+デフォルトでは Swift-Selena は**メタツールモード**（v0.6.2+）を使用します。メタツールを経由せず全12の解析ツールを直接公開したい場合は、`SWIFT_SELENA_LEGACY=1` 環境変数を設定してください：
+
+#### Claude Desktop
+```json
+{
+  "mcpServers": {
+    "swift-selena": {
+      "command": "/path/to/Swift-Selena/.build/release/Swift-Selena",
+      "env": {
+        "MCP_CLIENT_ID": "claude-desktop",
+        "SWIFT_SELENA_LEGACY": "1"
+      }
+    }
+  }
+}
+```
+
+#### Claude Code
+```bash
+claude mcp add swift-selena -e SWIFT_SELENA_LEGACY=1 -- /path/to/Swift-Selena/.build/release/Swift-Selena
+```
+
+レガシーモードでは、以下12個のツールが直接公開されます：
+`initialize_project`、`find_files`、`search_code`、`search_files_without_pattern`、`list_symbols`、`find_symbol_definition`、`list_property_wrappers`、`list_protocol_conformances`、`list_extensions`、`analyze_imports`、`get_type_hierarchy`、`find_test_cases`
+
 ## アーキテクチャ
 
 ### コアコンポーネント
@@ -353,7 +382,7 @@ rm -rf ~/.swift-selena/
 - **[MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)** (0.10.2) - MCPプロトコル実装
 - **[SwiftSyntax](https://github.com/apple/swift-syntax)** (602.0.0) - 構文解析
 - **CryptoKit** - プロジェクトパスのハッシュ化
-- **swift-log** - ロギング
+- **swift-log** (MCP Swift SDK経由) - ロギング
 
 ## コントリビューション
 

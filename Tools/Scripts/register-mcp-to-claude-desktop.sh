@@ -23,7 +23,7 @@ if [ ! -f "$EXECUTABLE_PATH" ]; then
     echo -e "${RED}エラー: Swift-Selena が見つかりません${NC}"
     echo "パス: $EXECUTABLE_PATH"
     echo ""
-    echo "まず 'swift build' を実行してください"
+    echo "まず 'make build-release' を実行してください"
     exit 1
 fi
 
@@ -49,7 +49,7 @@ if [ -f "$CONFIG_FILE" ]; then
     if command -v jq &> /dev/null; then
         # jqで既存の設定を保持しつつswift-selenaを追加/更新
         jq --arg path "$EXECUTABLE_PATH" \
-            '.mcpServers."swift-selena" = {"command": $path}' \
+            '.mcpServers."swift-selena" = {"command": $path, "env": {"MCP_CLIENT_ID": "claude-desktop"}}' \
             "$CONFIG_FILE" > "${CONFIG_FILE}.tmp"
         mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
         echo -e "${GREEN}✓${NC} 設定ファイルを更新しました（既存設定を保持）"
@@ -62,7 +62,10 @@ if [ -f "$CONFIG_FILE" ]; then
         echo "以下を追加してください："
         echo ""
         echo '  "swift-selena": {'
-        echo "    \"command\": \"$EXECUTABLE_PATH\""
+        echo "    \"command\": \"$EXECUTABLE_PATH\","
+        echo '    "env": {'
+        echo '      "MCP_CLIENT_ID": "claude-desktop"'
+        echo '    }'
         echo '  }'
         exit 1
     fi
@@ -74,7 +77,10 @@ else
 {
   "mcpServers": {
     "swift-selena": {
-      "command": "$EXECUTABLE_PATH"
+      "command": "$EXECUTABLE_PATH",
+      "env": {
+        "MCP_CLIENT_ID": "claude-desktop"
+      }
     }
   }
 }
