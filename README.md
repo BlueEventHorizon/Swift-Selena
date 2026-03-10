@@ -340,6 +340,35 @@ rm -rf ~/.swift-selena/
 
 Will be rebuilt on next `initialize_project` execution.
 
+## Advanced Configuration
+
+### Legacy Mode (All Tools Exposed)
+
+By default, Swift-Selena uses **Meta Tool Mode** (v0.6.2+). If you prefer to have all 12 analysis tools exposed directly without meta tool indirection, set the `SWIFT_SELENA_LEGACY=1` environment variable:
+
+#### Claude Desktop
+```json
+{
+  "mcpServers": {
+    "swift-selena": {
+      "command": "/path/to/Swift-Selena/.build/release/Swift-Selena",
+      "env": {
+        "MCP_CLIENT_ID": "claude-desktop",
+        "SWIFT_SELENA_LEGACY": "1"
+      }
+    }
+  }
+}
+```
+
+#### Claude Code
+```bash
+claude mcp add swift-selena -e SWIFT_SELENA_LEGACY=1 -- /path/to/Swift-Selena/.build/release/Swift-Selena
+```
+
+In legacy mode, the following 12 tools are exposed directly:
+`initialize_project`, `find_files`, `search_code`, `search_files_without_pattern`, `list_symbols`, `find_symbol_definition`, `list_property_wrappers`, `list_protocol_conformances`, `list_extensions`, `analyze_imports`, `get_type_hierarchy`, `find_test_cases`
+
 ## Architecture
 
 ### Core Components
@@ -353,7 +382,7 @@ Will be rebuilt on next `initialize_project` execution.
 - **[MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)** (0.10.2) - MCP protocol implementation
 - **[SwiftSyntax](https://github.com/apple/swift-syntax)** (602.0.0) - Syntax parsing
 - **CryptoKit** - Project path hashing
-- **swift-log** - Logging
+- **swift-log** (via MCP Swift SDK) - Logging
 
 ## Contributing
 

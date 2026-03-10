@@ -65,19 +65,36 @@ docs/
 ```
 Sources/
 ├── SwiftMCPServer.swift     # MCPサーバーエントリーポイント
-├── Constants.swift          # 定数定義
+├── Constants.swift          # 定数定義・環境変数キー
 ├── Logging/                 # ロギング機能
 ├── Selena/                  # コア解析エンジン
-│   ├── FileSearcher         # ファイル検索
-│   ├── SwiftSyntaxAnalyzer  # AST解析
-│   └── ProjectMemory        # キャッシュ管理
+│   ├── Core/                # コア機能
+│   │   ├── FileSearcher.swift       # ファイルシステムベースの高速検索
+│   │   ├── SwiftSyntaxAnalyzer.swift# AST解析（シンボル・型・Import等）
+│   │   └── ProjectMemory.swift      # 解析結果のキャッシュ管理（永続化）
+│   ├── Cache/               # キャッシュ管理
+│   │   ├── CacheManager.swift
+│   │   ├── CacheGarbageCollector.swift
+│   │   └── FileCacheEntry.swift
+│   ├── LSP/                 # SourceKit-LSP統合（ビルド可能時）
+│   │   ├── LSPClient.swift
+│   │   └── LSPState.swift
+│   ├── Visitors/            # SwiftSyntax訪問者（7種）
+│   │   ├── SymbolVisitor.swift
+│   │   ├── ImportVisitor.swift
+│   │   ├── PropertyWrapperVisitor.swift
+│   │   ├── TypeConformanceVisitor.swift
+│   │   ├── ExtensionVisitor.swift
+│   │   ├── XCTestVisitor.swift
+│   │   └── SwiftTestingVisitor.swift
+│   └── DebugRunner.swift    # デバッグ用自動実行（DEBUG時のみ）
 └── Tools/                   # MCPツール実装
-    ├── Analysis/            # コード解析ツール
-    ├── FileSystem/          # ファイル操作ツール
-    ├── Meta/                # メタツール（list_available_tools等）
-    ├── Project/             # プロジェクト管理ツール
-    ├── SwiftUI/             # SwiftUI解析ツール
-    ├── Symbols/             # シンボル解析ツール
+    ├── Analysis/            # コード解析ツール（3ツール）
+    ├── FileSystem/          # ファイル操作ツール（3ツール）
+    ├── Meta/                # メタツール（3ツール + MetaToolRegistry）
+    ├── Project/             # プロジェクト管理ツール（1ツール）
+    ├── SwiftUI/             # SwiftUI解析ツール（3ツール）
+    ├── Symbols/             # シンボル解析ツール（2ツール）
     └── ToolProtocol.swift   # ツール共通プロトコル
 ```
 
@@ -160,14 +177,17 @@ swift build -c release
   - `FileSystem/` - ファイル操作（find_files, search_code等）
   - `Symbols/` - シンボル解析（list_symbols, find_symbol_definition等）
   - `SwiftUI/` - SwiftUI固有解析（property wrappers, protocol conformances等）
-  - `Meta/` - メタツール（list_available_tools, get_tool_schema等）
+  - `Meta/` - メタツール（list_available_tools, get_tool_schema, execute_tool）＋MetaToolRegistry（レジストリ）
   - `Project/` - プロジェクト管理（initialize_project等）
 - **エラーハンドリング**: 解析エラーは適切なエラーメッセージとしてMCP応答に含める
 
 ### Sources/Selena/ - コア解析エンジン制約
-- **FileSearcher**: ファイルシステムベースの高速検索
-- **SwiftSyntaxAnalyzer**: SwiftSyntaxによる静的解析（ビルド不要）
-- **ProjectMemory**: 解析結果のキャッシュ管理（永続化対応）
+- **Core/FileSearcher**: ファイルシステムベースの高速検索
+- **Core/SwiftSyntaxAnalyzer**: SwiftSyntaxによる静的解析（ビルド不要）、Visitors/配下のVisitorを使用
+- **Core/ProjectMemory**: 解析結果のキャッシュ管理（永続化対応）
+- **Cache/**: CacheManager・CacheGarbageCollector によるキャッシュライフサイクル管理
+- **LSP/**: LSPClient・LSPState による SourceKit-LSP 統合（ビルド可能時のみ利用）
+- **Visitors/**: SwiftSyntax の SyntaxVisitor サブクラス群（シンボル・Import・型解析等）
 
 ### Code Header Format [MANDATORY]
 - **ALWAYS add/update Code Header Format** when creating/modifying Swift files
