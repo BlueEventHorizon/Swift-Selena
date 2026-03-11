@@ -49,7 +49,7 @@ import Logging
 /// - textDocument/referencesリクエスト
 /// - レスポンス受信・解析
 /// - エラーハンドリング完全実装
-class LSPClient {
+actor LSPClient {
     private let process: Process
     private let logger: Logger
     private let projectPath: String

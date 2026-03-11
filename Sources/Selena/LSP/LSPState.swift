@@ -117,7 +117,7 @@ actor LSPState {
     /// 特定プロジェクトのLSP接続を切断
     func disconnect(projectPath: String) async {
         if let client = lspClients[projectPath] {
-            client.disconnect()
+            await client.disconnect()
             logger.info("LSP disconnected for: \(projectPath)")
             lspClients.removeValue(forKey: projectPath)
         }
@@ -129,7 +129,7 @@ actor LSPState {
     /// 全てのLSP接続を切断
     func disconnectAll() async {
         for (projectPath, client) in lspClients {
-            client.disconnect()
+            await client.disconnect()
             logger.info("LSP disconnected for: \(projectPath)")
         }
         lspClients.removeAll()
