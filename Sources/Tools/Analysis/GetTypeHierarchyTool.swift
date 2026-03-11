@@ -82,7 +82,7 @@ enum GetTypeHierarchyTool: MCPTool {
             errorMessage: ErrorMessages.missingTypeName
         )
 
-        guard let hierarchy = try SwiftSyntaxAnalyzer.getTypeHierarchy(
+        guard let hierarchy = try await SwiftSyntaxAnalyzer.getTypeHierarchy(
             typeName: typeName,
             projectPath: memory.projectPath,
             projectMemory: memory
@@ -141,7 +141,7 @@ enum GetTypeHierarchyTool: MCPTool {
         )
 
         // まず SwiftSyntax で型の位置を取得
-        guard let hierarchy = try SwiftSyntaxAnalyzer.getTypeHierarchy(
+        guard let hierarchy = try await SwiftSyntaxAnalyzer.getTypeHierarchy(
             typeName: typeName,
             projectPath: memory.projectPath,
             projectMemory: memory

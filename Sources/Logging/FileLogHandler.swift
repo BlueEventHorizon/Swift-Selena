@@ -62,6 +62,14 @@ struct FileLogHandler: LogHandler {
         set { metadata[key] = newValue }
     }
 
+    // ログ出力用DateFormatter（毎回生成を避けるためstatic letでキャッシュ）
+    private static let logFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+        return formatter
+    }()
+
     func log(
         level: Logger.Level,
         message: Logger.Message,
@@ -72,10 +80,7 @@ struct FileLogHandler: LogHandler {
         line: UInt
     ) {
         // v0.5.4: 日本時間（JST）でタイムスタンプ表示
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
-        let timestamp = formatter.string(from: Date())
+        let timestamp = Self.logFormatter.string(from: Date())
 
         let levelIcon: String
 

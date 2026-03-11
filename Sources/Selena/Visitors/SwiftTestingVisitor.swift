@@ -14,10 +14,6 @@ class SwiftTestingVisitor: SyntaxVisitor {
     let converter: SourceLocationConverter
     let filePath: String
 
-    // 現在処理中のSuite情報
-    private var currentSuite: (name: String, kind: String, line: Int)?
-    private var currentTests: [SwiftSyntaxAnalyzer.SwiftTestInfo.TestMethod] = []
-
     init(converter: SourceLocationConverter, filePath: String) {
         self.converter = converter
         self.filePath = filePath

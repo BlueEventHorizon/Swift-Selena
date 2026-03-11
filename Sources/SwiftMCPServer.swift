@@ -162,7 +162,7 @@ struct SwiftMCPServer {
 
                 // LSP接続完了後にレスポンス返却
                 #if DEBUG
-                let stats = projectMemory?.getStats() ?? ""
+                let stats = await projectMemory?.getStats() ?? ""
                 let message = "✅ Project initialized: \(projectPath)\n\n\(lspStatus)\n\n\(stats)"
                 #else
                 let message = "✅ Project initialized: \(projectPath)\n\n\(lspStatus)"

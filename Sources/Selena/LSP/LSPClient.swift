@@ -4,6 +4,28 @@
 //
 //  Created on 2025/10/21.
 //
+//  [Code Header Format]
+//
+//  目的
+//  - SourceKit-LSPプロセスを起動し、JSON-RPC over stdin/stdoutで通信
+//  - LSPレスポンスをバイト単位バッファ（Data）で管理し、マルチバイト文字を正確に処理
+//
+//  主要機能
+//  - LSPプロセス起動・初期化（initialize + initialized通知）
+//  - textDocument/didOpen通知送信
+//  - textDocument/documentSymbol・prepareTypeHierarchy リクエスト送信と結果取得
+//  - Content-Lengthバイト数に基づくレスポンス切り出し（非同期通知スキップ対応）
+//
+//  含まれる型
+//  - LSPClient: LSP通信クライアント本体
+//  - LSPLocation: ファイルパスと行番号の位置情報
+//  - LSPDocumentSymbol: ドキュメントシンボル情報
+//  - LSPTypeHierarchy: 型階層情報
+//  - LSPError: LSP通信エラー種別
+//
+//  関連型
+//  - Pipe, Process, FileHandle（プロセス間通信）
+//
 
 import Foundation
 import Logging
@@ -156,6 +178,8 @@ class LSPClient {
 
     private var messageId = 2  // Initialize=1を使ったので2から
     private var openedFiles = Set<String>()  // v0.5.3: 開いたファイルを記録
+    /// 受信バッファ（Data型でバイト単位管理、分断受信に対応）
+    private var receiveBuffer = Data()
 
     /// textDocument/didOpen通知を送信
     ///
@@ -172,19 +196,39 @@ class LSPClient {
             return
         }
 
-        let didOpenNotification = """
-        {"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file://\(filePath)","languageId":"swift","version":1,"text":"\(fileContent.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n"))"}}}
-        """
+        // Codable構造体でJSONを安全に組み立てる（文字列補間によるエスケープ漏れを防止）
+        let notification = DidOpenNotification(
+            params: .init(
+                textDocument: .init(
+                    uri: "file://\(filePath)",
+                    languageId: "swift",
+                    version: 1,
+                    text: fileContent
+                )
+            )
+        )
 
-        let contentLength = didOpenNotification.utf8.count
-        let message = "Content-Length: \(contentLength)\r\n\r\n\(didOpenNotification)"
+        // JSONEncoderでエンコード（特殊文字のエスケープはEncoderが自動処理）
+        let jsonData: Data
+        do {
+            jsonData = try JSONEncoder().encode(notification)
+        } catch {
+            throw LSPError.encodingFailed
+        }
 
-        guard let data = message.data(using: .utf8) else {
+        guard let jsonString = String(data: jsonData, encoding: .utf8) else {
+            throw LSPError.encodingFailed
+        }
+
+        // Content-LengthはJSONバイト列のcountを使用
+        let header = "Content-Length: \(jsonData.count)\r\n\r\n"
+
+        guard let messageData = (header + jsonString).data(using: .utf8) else {
             throw LSPError.encodingFailed
         }
 
         do {
-            try inputPipe.fileHandleForWriting.write(contentsOf: data)
+            try inputPipe.fileHandleForWriting.write(contentsOf: messageData)
             openedFiles.insert(filePath)
             logger.debug("Sent textDocument/didOpen for \(filePath)")
         } catch {
@@ -194,6 +238,36 @@ class LSPClient {
 
         // didOpenのレスポンスはない（通知なので）、少し待機
         try await Task.sleep(nanoseconds: 100_000_000)  // 0.1秒
+    }
+
+    // MARK: - didOpen用Codable構造体
+
+    /// textDocument/didOpen通知のJSON構造
+    private struct DidOpenNotification: Encodable {
+        /// JSON-RPCバージョン
+        let jsonrpc: String = "2.0"
+        /// メソッド名
+        let method: String = "textDocument/didOpen"
+        /// 通知パラメータ
+        let params: DidOpenParams
+
+        /// didOpenパラメータ
+        struct DidOpenParams: Encodable {
+            /// 開くテキストドキュメントの情報
+            let textDocument: TextDocumentItem
+        }
+
+        /// テキストドキュメント情報
+        struct TextDocumentItem: Encodable {
+            /// ドキュメントURI（file://スキーム）
+            let uri: String
+            /// 言語識別子
+            let languageId: String
+            /// バージョン番号
+            let version: Int
+            /// ドキュメントの全テキスト内容
+            let text: String
+        }
     }
 
     /// ドキュメントシンボルを取得（textDocument/documentSymbol）
@@ -374,42 +448,47 @@ class LSPClient {
         return nil
     }
 
-    /// レスポンス受信（Content-Length対応版）
+    /// レスポンス受信（Content-Length対応・バイト単位バッファ版）
+    ///
+    /// ## 修正内容（バイト単位対応）
+    /// - バッファを `Data` 型で管理し、`Content-Length`（バイト数）と正確に比較
+    /// - マルチバイト文字（日本語パス等）を含む JSON でも正しく動作
+    /// - 分断受信に対応するため、`receiveBuffer` インスタンス変数に未処理データを保持
     private func receiveResponse() async throws -> String {
         // v0.5.5: 非同期通知をスキップして、応答のみ取得
         // v0.6.1: タイムアウト追加（10秒）
+        // v0.6.x: バッファをDataで管理してバイト単位処理に修正
         let handle = outputPipe.fileHandleForReading
         let timeoutSeconds = 10
         var elapsedMs = 0
 
+        // ヘッダとボディの区切りバイト列
+        let separator = "\r\n\r\n".data(using: .utf8)!
+
         // 非同期通知をスキップして応答（id付き）を探す
         while elapsedMs < timeoutSeconds * 1000 {
-            try await Task.sleep(nanoseconds: 100_000_000)  // 100ms待機
-            elapsedMs += 100
-
-            guard let data = try? handle.availableData,
-                  !data.isEmpty else {
-                continue  // データなし、タイムアウトまで継続
+            // 新たに到着したデータをバッファに追記
+            let arrived = handle.availableData
+            if !arrived.isEmpty {
+                receiveBuffer.append(arrived)
             }
 
-            guard let text = String(data: data, encoding: .utf8) else {
-                throw LSPError.communicationFailed
-            }
-
-            // Content-Lengthで1メッセージずつ切り出し
-            var remainingText = text
-
-            while !remainingText.isEmpty {
-                // Content-Lengthヘッダーを探す
-                guard let headerEnd = remainingText.range(of: "\r\n\r\n") else {
+            // バッファから完結したメッセージを取り出せる限りループ
+            while true {
+                // ヘッダ終端（\r\n\r\n）をData上で検索
+                guard let separatorRange = receiveBuffer.range(of: separator) else {
                     break  // ヘッダー不完全、次の読み取りを待つ
                 }
 
-                let headerPart = String(remainingText[..<headerEnd.lowerBound])
+                // ヘッダ部分をStringに変換してContent-Lengthを取得
+                let headerData = receiveBuffer[receiveBuffer.startIndex..<separatorRange.lowerBound]
+                guard let headerText = String(data: headerData, encoding: .utf8) else {
+                    throw LSPError.communicationFailed
+                }
 
-                // Content-Lengthをパース
+                // Content-Lengthの値（バイト数）を取得
                 var contentLength: Int?
-                for line in headerPart.split(separator: "\r\n") {
+                for line in headerText.split(separator: "\r\n") {
                     if line.hasPrefix("Content-Length: ") {
                         let lengthStr = line.replacingOccurrences(of: "Content-Length: ", with: "")
                         contentLength = Int(lengthStr.trimmingCharacters(in: .whitespaces))
@@ -421,22 +500,26 @@ class LSPClient {
                     throw LSPError.communicationFailed
                 }
 
-                // JSON部分の開始位置
-                let jsonStart = headerEnd.upperBound
-                let jsonStartIndex = remainingText.distance(from: remainingText.startIndex, to: jsonStart)
+                // ボディ開始インデックス（バイト位置）
+                let bodyStart = separatorRange.upperBound
 
-                // Content-Length分のデータがあるか確認
-                let availableJsonLength = remainingText.count - jsonStartIndex
-                if availableJsonLength < length {
-                    break  // データ不完全、次の読み取りを待つ
+                // バッファ内のボディバイト数を確認
+                let availableBodyBytes = receiveBuffer.count - (bodyStart - receiveBuffer.startIndex)
+                if availableBodyBytes < length {
+                    break  // ボディ不完全、次の読み取りを待つ
                 }
 
-                // 正確にContent-Length分だけ取得
-                let jsonEndIndex = remainingText.index(jsonStart, offsetBy: length)
-                let jsonPart = String(remainingText[jsonStart..<jsonEndIndex])
+                // Content-Length バイト分だけボディをスライス
+                let bodyEnd = receiveBuffer.index(bodyStart, offsetBy: length)
+                let jsonData = receiveBuffer[bodyStart..<bodyEnd]
 
-                // 残りのテキストを更新
-                remainingText = String(remainingText[jsonEndIndex...])
+                // 処理済みバイトをバッファから除去
+                receiveBuffer = Data(receiveBuffer[bodyEnd...])
+
+                // バイト列をUTF-8文字列に変換
+                guard let jsonPart = String(data: jsonData, encoding: .utf8) else {
+                    throw LSPError.communicationFailed
+                }
 
                 // メッセージ種別を判定（id有無）
                 if jsonPart.contains("\"id\":") {
@@ -449,11 +532,9 @@ class LSPClient {
                 }
             }
 
-            // バッファにデータが残っている場合、次の読み取りを待つ
-            if remainingText.isEmpty {
-                try await Task.sleep(nanoseconds: 100_000_000)
-                elapsedMs += 100
-            }
+            // データなし or 不完全、100ms待機してリトライ
+            try await Task.sleep(nanoseconds: 100_000_000)
+            elapsedMs += 100
         }
 
         // タイムアウト

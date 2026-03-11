@@ -89,7 +89,7 @@ enum InitializeProjectTool {
         let memory = try ProjectMemory(projectPath: projectPath)
 
         #if DEBUG
-        let message = "✅ Project initialized: \(projectPath)\n\n\(memory.getStats())"
+        let message = "✅ Project initialized: \(projectPath)\n\n\(await memory.getStats())"
         #else
         let message = "✅ Project initialized: \(projectPath)"
         #endif
