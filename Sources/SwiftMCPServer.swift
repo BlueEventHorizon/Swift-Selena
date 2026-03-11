@@ -139,11 +139,11 @@ struct SwiftMCPServer {
             // 標準ツール
             // ========================================
             case ToolNames.initializeProject:
-                guard let args = params.arguments,
-                      let projectPathValue = args[ParameterKeys.projectPath] else {
-                    throw MCPError.invalidParams(ErrorMessages.missingProjectPath)
-                }
-                let projectPath = String(describing: projectPathValue)
+                let projectPath = try ToolHelpers.getString(
+                    from: params.arguments,
+                    key: ParameterKeys.projectPath,
+                    errorMessage: ErrorMessages.missingProjectPath
+                )
 
                 // プロジェクトパスの存在確認
                 var isDirectory: ObjCBool = false
