@@ -85,7 +85,8 @@ enum GetTypeHierarchyTool: MCPTool {
         guard let hierarchy = try await SwiftSyntaxAnalyzer.getTypeHierarchy(
             typeName: typeName,
             projectPath: memory.projectPath,
-            projectMemory: memory
+            projectMemory: memory,
+            logger: logger
         ) else {
             return CallTool.Result(content: [.text("Type '\(typeName)' not found in project")])
         }
@@ -144,7 +145,8 @@ enum GetTypeHierarchyTool: MCPTool {
         guard let hierarchy = try await SwiftSyntaxAnalyzer.getTypeHierarchy(
             typeName: typeName,
             projectPath: memory.projectPath,
-            projectMemory: memory
+            projectMemory: memory,
+            logger: logger
         ) else {
             return CallTool.Result(content: [.text("Type '\(typeName)' not found in project")])
         }

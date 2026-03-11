@@ -91,8 +91,12 @@ enum FindSymbolDefinitionTool: MCPTool {
             }
         }
 
-        // キャッシュを保存
-        try? await memory.save()
+        // キャッシュを保存（失敗しても検索結果は返す）
+        do {
+            try await memory.save()
+        } catch {
+            logger.warning("シンボルキャッシュの保存に失敗: \(error)")
+        }
 
         if foundSymbols.isEmpty {
             return CallTool.Result(content: [.text("Symbol '\(symbolName)' not found in project")])
