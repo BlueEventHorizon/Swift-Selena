@@ -84,21 +84,24 @@ The build artifact is generated at `.build/release/Swift-Selena`.
 make help  # Show all available commands
 ```
 
+#### Build
+
 | Command | Description |
 |---------|-------------|
 | `make build` | Build debug version |
 | `make build-release` | Build release version |
 | `make clean` | Clean build artifacts |
-| `make register-debug` | Build & register DEBUG version to this project |
-| `make register-desktop` | Register to Claude Desktop |
-| `make unregister-debug` | Unregister DEBUG version from this project |
-| `make unregister-desktop` | Unregister from Claude Desktop |
 
-For release version registration, use scripts directly:
-```bash
-./register-selena-to-claude-code.sh /path/to/project
-./unregister-selena-from-claude-code.sh [/path/to/project]
-```
+#### Register / Unregister
+
+| Command | Target | Description |
+|---------|--------|-------------|
+| `make register-release` | Claude Code | Register RELEASE version (prompts for project path) |
+| `make unregister-release` | Claude Code | Unregister RELEASE version (prompts for project path) |
+| `make register-debug` | Claude Code | Build & register DEBUG version to Swift-Selena project |
+| `make unregister-debug` | Claude Code | Unregister DEBUG version from Swift-Selena project |
+| `make register-desktop` | Claude Desktop | Register to Claude Desktop |
+| `make unregister-desktop` | Claude Desktop | Unregister from Claude Desktop |
 
 ## Debugging & Logging
 
@@ -147,10 +150,8 @@ make register-desktop
 
 ```bash
 # For production use (register to target project)
-./register-selena-to-claude-code.sh /path/to/your/project
-
-# Example:
-./register-selena-to-claude-code.sh ~/apps/CCMonitor
+make register-release
+# → Prompts: Enter the target project path
 
 # For development/testing (register to Swift-Selena project itself)
 make register-debug
@@ -163,7 +164,8 @@ make register-debug
 make unregister-desktop
 
 # Unregister from target project
-./unregister-selena-from-claude-code.sh /path/to/your/project
+make unregister-release
+# → Prompts: Enter the target project path (leave blank for current directory)
 
 # Unregister debug version from this project
 make unregister-debug
