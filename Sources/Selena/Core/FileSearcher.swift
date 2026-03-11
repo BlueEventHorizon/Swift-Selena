@@ -99,8 +99,9 @@ enum FileSearcher {
         in directory: String,
         pattern: String,
         filePattern: String?
-    ) throws -> [String] {
+    ) throws -> (filesWithoutPattern: [String], totalChecked: Int) {
         var filesWithoutPattern: [String] = []
+        var totalChecked = 0
         let fileManager = FileManager.default
 
         // マルチラインモード（^と$が各行の先頭・末尾にマッチ）
@@ -132,6 +133,7 @@ enum FileSearcher {
             }
 
             if shouldSearch {
+                totalChecked += 1
                 // ファイル全体を読み込んでパターンマッチング
                 if let content = try? String(contentsOfFile: fullPath) {
                     let range = NSRange(content.startIndex..., in: content)
@@ -145,7 +147,7 @@ enum FileSearcher {
             }
         }
 
-        return filesWithoutPattern.sorted()
+        return (filesWithoutPattern: filesWithoutPattern.sorted(), totalChecked: totalChecked)
     }
 
     /// ワイルドカードパターンを正規表現に変換
