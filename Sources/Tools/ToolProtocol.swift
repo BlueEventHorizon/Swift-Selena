@@ -57,7 +57,16 @@ enum ToolHelpers {
               let value = args[key] else {
             return defaultValue
         }
-        return Int(String(describing: value)) ?? defaultValue
+        // パターンマッチで型安全に値を取り出す
+        switch value {
+        case .int(let v):
+            return v
+        case .string(let s):
+            // 文字列で渡された場合のフォールバック
+            return Int(s) ?? defaultValue
+        default:
+            return defaultValue
+        }
     }
 
     /// パラメータからBoolを取得

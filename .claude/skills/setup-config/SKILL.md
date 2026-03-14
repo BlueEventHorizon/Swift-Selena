@@ -50,7 +50,7 @@ This document defines:
 ### Step 1: Run directory scan script
 
 ```bash
-$HOME/.pyenv/shims/python3 .claude/doc-advisor/scripts/classify_dirs.py
+python3 .claude/doc-advisor/scripts/classify_dirs.py
 ```
 
 Capture the JSON output. The script discovers markdown directories but does NOT classify them.

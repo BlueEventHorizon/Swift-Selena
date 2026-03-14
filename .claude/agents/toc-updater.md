@@ -41,7 +41,7 @@ Read the following before processing:
 4. Call the write script to save the completed entry:
 
 ```bash
-$HOME/.pyenv/shims/python3 .claude/doc-advisor/scripts/write_pending.py \
+python3 .claude/doc-advisor/scripts/write_pending.py \
   --target {target} \
   --entry-file "{entry_file}" \
   --title "{extracted title}" \
@@ -62,7 +62,7 @@ If any step fails (file not found, empty file, read error, etc.):
 1. Write error status to the entry YAML:
 
 ```bash
-$HOME/.pyenv/shims/python3 .claude/doc-advisor/scripts/write_pending.py \
+python3 .claude/doc-advisor/scripts/write_pending.py \
   --target {target} \
   --entry-file "{entry_file}" \
   --error --error-message "{brief error description}"

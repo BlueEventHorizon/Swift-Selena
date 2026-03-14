@@ -43,7 +43,9 @@
       "Skill(create-project_toc)",
       "WebSearch",
       "Skill(next-doc-id)",
-      "Skill(forge:help)"
+      "Skill(forge:help)",
+      "Bash(git add:*)",
+      "Bash(python3 /Users/moons/data/dev/moons/ai_tools/Swift-Selena/.claude/skills/skill-creator/scripts/init_skill.py merge-specs --path /Users/moons/data/dev/moons/ai_tools/Swift-Selena/.claude/skills/)"
     ],
     "deny": [
       "Bash(sudo:*)",
@@ -79,5 +81,9 @@
       "Bash(git tag:*)",
       "Bash(npm publish:*)"
     ]
+  },
+  "sandbox": {
+    "enabled": false,
+    "autoAllowBashIfSandboxed": false
   }
 }

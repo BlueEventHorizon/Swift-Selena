@@ -7,10 +7,8 @@
 
 # === rules configuration ===
 rules:
-  root_dirs:
-    - docs/
-  doc_types_map:
-    docs/: rule
+  # root_dirs: []    # Auto-configured by setup.sh or /setup-config
+  # doc_types_map: {}  # Path-to-doc_type mapping (auto-configured)
   toc_file: .claude/doc-advisor/toc/rules/rules_toc.yaml
   checksums_file: .claude/doc-advisor/toc/rules/.toc_checksums.yaml
   work_dir: .claude/doc-advisor/toc/rules/.toc_work/
@@ -25,13 +23,8 @@ rules:
 
 # === specs configuration ===
 specs:
-  root_dirs:
-    - project/main/
-  doc_types_map:
-    project/main/spec/: spec
-    project/main/design/: design
-    project/main/plan/: plan
-    project/main/mcp-guide/: reference
+  # root_dirs: []    # Auto-configured by setup.sh or /setup-config
+  # doc_types_map: {}  # Path-to-doc_type mapping (auto-configured)
   toc_file: .claude/doc-advisor/toc/specs/specs_toc.yaml
   checksums_file: .claude/doc-advisor/toc/specs/.toc_checksums.yaml
   work_dir: .claude/doc-advisor/toc/specs/.toc_work/

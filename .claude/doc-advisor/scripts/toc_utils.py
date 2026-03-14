@@ -78,22 +78,34 @@ def validate_path_within_base(path, base_dir):
     """
     Validate that a path resolves within the base directory.
     Prevents path traversal attacks via ../ sequences (CWE-22).
+    Supports symlinked directories by checking the logical path
+    (without resolving symlinks) for containment, then returning
+    the joined path for file access.
 
     Args:
         path: Path to validate (str or Path)
         base_dir: Allowed base directory (str or Path)
 
     Returns:
-        Path: Resolved path
+        Path: The joined path (base_dir / path) for existence checks
 
     Raises:
-        ValueError: If path resolves outside base_dir
+        ValueError: If path contains traversal sequences escaping base_dir
+
+    Note:
+        Symlinks within base_dir may point outside it; such access is intentionally
+        permitted (project-configured symlinks). Only ../ traversal sequences that
+        escape base_dir in the logical path are rejected.
     """
-    resolved = Path(base_dir, path).resolve()
-    base_resolved = Path(base_dir).resolve()
-    if not str(resolved).startswith(str(base_resolved) + os.sep) and resolved != base_resolved:
+    # シンボリックリンクを解決せずに論理パスで包含チェック
+    # （.. を正規化しつつシンボリックリンクは辿らない）
+    joined = Path(base_dir, path)
+    # os.path.normpath で .. を解決（シンボリックリンクは辿らない）
+    normalized = os.path.normpath(str(joined))
+    base_normalized = os.path.normpath(str(base_dir))
+    if not normalized.startswith(base_normalized + os.sep) and normalized != base_normalized:
         raise ValueError(f"Path traversal detected: {path}")
-    return resolved
+    return joined
 
 
 def resolve_config_path(config_value, default_base, project_root):

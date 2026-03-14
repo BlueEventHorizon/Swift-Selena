@@ -20,12 +20,12 @@ class PropertyWrapperVisitor: SyntaxVisitor {
     override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
         let location = node.startLocation(converter: converter)
 
-        // Check for attributes (like @State, @Binding, etc.)
+        // 属性をチェック（@State, @Binding 等）
         for attribute in node.attributes {
             if let customAttribute = attribute.as(AttributeSyntax.self) {
                 let wrapperType = customAttribute.attributeName.trimmedDescription
 
-                // Only process known SwiftUI property wrappers
+                // 既知のSwiftUIプロパティラッパーのみ処理
                 let knownWrappers = ["State", "Binding", "ObservedObject", "StateObject",
                                     "EnvironmentObject", "Environment", "Published",
                                     "FetchRequest", "AppStorage", "SceneStorage",

@@ -155,17 +155,22 @@ struct SwiftMCPServer {
                 // ProjectMemory初期化
                 projectMemory = try ProjectMemory(projectPath: projectPath)
 
-                // v0.5.5: LSP接続を試みる（同期的に待機）
-                let lspAvailable = await lspState.tryConnect(projectPath: projectPath)
+                // DES-103 §4.1: LSP接続はバックグラウンドで実行（即時応答優先）
+                Task {
+                    let lspConnected = await lspState.tryConnect(projectPath: projectPath)
+                    if lspConnected {
+                        logger.info("LSP connection established for: \(projectPath)")
+                    } else {
+                        logger.info("LSP connection unavailable for: \(projectPath) - Using SwiftSyntax only")
+                    }
+                }
 
-                let lspStatus = lspAvailable ? "✅ LSP available - Enhanced features ready" : "ℹ️ LSP unavailable - Using SwiftSyntax only"
-
-                // LSP接続完了後にレスポンス返却
+                // ProjectMemory初期化完了後に即時レスポンスを返却
                 #if DEBUG
                 let stats = await projectMemory?.getStats() ?? ""
-                let message = "✅ Project initialized: \(projectPath)\n\n\(lspStatus)\n\n\(stats)"
+                let message = "✅ Project initialized: \(projectPath)\n\nℹ️ LSP connecting in background...\n\n\(stats)"
                 #else
-                let message = "✅ Project initialized: \(projectPath)\n\n\(lspStatus)"
+                let message = "✅ Project initialized: \(projectPath)\n\nℹ️ LSP connecting in background..."
                 #endif
                 return CallTool.Result(content: [.text(message)])
 
