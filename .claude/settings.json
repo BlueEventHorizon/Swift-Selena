@@ -1,5 +1,157 @@
 {
-  "hooks": {
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Task",
+      "Bash(cat *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(head *)",
+      "Bash(ls *)",
+      "Bash(pwd)",
+      "Bash(rg *)",
+      "Bash(tail *)",
+      "Bash(tree *)",
+      "Bash(wc *)",
+      "Bash(which *)",
+
+      "Bash(git blame *)",
+      "Bash(git branch)",
+      "Bash(git branch -a)",
+      "Bash(git branch -r)",
+      "Bash(git branch --show-current)",
+      "Bash(git describe *)",
+      "Bash(git diff *)",
+      "Bash(git fetch *)",
+      "Bash(git log *)",
+      "Bash(git remote -v)",
+      "Bash(git remote show *)",
+      "Bash(git show *)",
+      "Bash(git stash list)",
+      "Bash(git stash show *)",
+      "Bash(git status *)",
+      "Bash(git tag)",
+      "Bash(git tag -l *)",
+
+      "Bash(gh issue view *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr diff *)",
+      "Bash(gh pr list *)",
+
+      "Bash(dprint fmt *)",
+      "Bash(dprint check *)",
+      
+      "WebSearch",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+
+      "mcp__figma-dev-mode-mcp-server__get_screenshot",
+      "mcp__figma-dev-mode-mcp-server__get_design_context",
+      "mcp__figma-dev-mode-mcp-server__get_metadata",
+      "mcp__figma-dev-mode-mcp-server__get_variable_defs",
+      
+      "mcp__swift-selena-debug__initialize_project",
+      "mcp__swift-selena-debug__list_available_tools",
+      "mcp__swift-selena-debug__get_tool_schema",
+      "mcp__swift-selena-debug__execute_tool",
+      
+      "mcp__swift-selena__initialize_project",
+      "mcp__swift-selena__list_available_tools",
+      "mcp__swift-selena__execute_tool",
+      "mcp__swift-selena__get_tool_schema",
+
+      "mcp__gemini-cli__ask-gemini",
+      "mcp__codex__codex",
+      
+      "Skill(forge *)",
+      "Skill(anvil *)",
+      "Skill(xcode *)",
+      
+      "Skill(create-rules-toc)",
+      "Skill(create-specs-toc)",
+      "Skill(query-rules)",
+      "Skill(query-specs)",
+    ],
+    "ask": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git checkout *)",
+      "Bash(git switch *)",
+      "Bash(git pull *)",
+      "Bash(git merge *)",
+
+      "Bash(gh api *)",
+      "Bash(gh pr create *)",
+      "Bash(gh issue create *)",
+      "Bash(gh issue edit *)",
+
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      
+      "Bash(python3:*)",
+    ],
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git reset --hard *)",
+      "Bash(git checkout --force *)",
+      "Bash(git checkout -f *)",
+      "Bash(git switch --force *)",
+      "Bash(git switch -f *)",
+
+      "Bash(git branch -D *)",
+      "Bash(git branch -d *)",
+      "Bash(git branch --delete *)",
+      "Bash(git clean *)",
+      "Bash(git stash clear)",
+      "Bash(git stash drop *)",
+      "Bash(git config *)",
+      "Bash(git rebase *)",
+
+      "Bash(chmod *)",
+      "Bash(chown *)",
+      "Bash(sudo *)",
+      "Bash(kill *)",
+      "Bash(export *)",
+
+      "Bash(rm *)",
+      "Bash(mv *)",
+      "Bash(touch *)",
+      "Bash(sed *)",
+      "Bash(awk *)",
+      "Bash(> *)",
+      "Bash(>> *)",
+
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(nc *)",
+
+      "Bash(npm uninstall *)",
+      "Bash(npm remove *)",
+
+      "Read(.env*)",
+      "Read(.env.*)",
+      "Read(id_rsa)",
+      "Read(id_ed25519)",
+      "Read(**/*key*)",
+      "Read(**/.ssh/**)",
+      "Read(apps/app/flavor/*.local.json)",
+      "Read(scripts/firebase/config/*.json)",
+
+      "Write(.env*)",
+      "Write(.env.*)",
+      "Write(**/secrets/**)",
+      "Write(**/.ssh/**)",
+      "Write(apps/app/flavor/*.local.json)",
+      "Write(scripts/firebase/config/*.json)"
+    ]
+  },
+    "hooks": {
     "Stop": [
       {
         "matcher": "",
@@ -37,5 +189,5 @@
         ]
       }
     ]
-  }
+  },
 }
