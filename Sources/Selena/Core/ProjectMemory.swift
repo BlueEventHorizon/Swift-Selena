@@ -9,7 +9,7 @@ import Foundation
 import CryptoKit
 
 /// プロジェクトごとの永続化されたメモリ
-class ProjectMemory {
+actor ProjectMemory {
     let projectPath: String
     private let memoryDir: URL
     private let projectName: String

@@ -2,7 +2,7 @@
 
 # Swift Selena (DEBUG) をClaude Codeに登録するスクリプト
 # 開発・テスト用
-# Usage: ./register-selena-to-claude-code-debug.sh
+# Usage: ./scripts/register-debug.sh
 
 set -e
 
@@ -15,16 +15,15 @@ NC='\033[0m'
 echo -e "${CYAN}Swift Selena (DEBUG) → Claude Code 登録${NC}"
 echo "=========================================="
 
-# Swift-Selenaのパス（このスクリプトの2階層上）
+# Swift-Selenaのパス（このスクリプトの1階層上がプロジェクトルート）
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PROJECT_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
-EXECUTABLE_PATH="${PROJECT_ROOT}/.build/arm64-apple-macosx/debug/Swift-Selena"
-
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
 # debugディレクトリのみクリーンしてビルド
 echo ""
 echo -e "${CYAN}DEBUGビルド実行中...${NC}"
 cd "$PROJECT_ROOT"
-rm -rf .build/arm64-apple-macosx/debug
+BUILD_BIN_PATH="$(swift build --show-bin-path 2>/dev/null)"
+rm -rf "$BUILD_BIN_PATH"
 swift build
 BUILD_RESULT=$?
 
@@ -34,6 +33,9 @@ if [ $BUILD_RESULT -ne 0 ]; then
 fi
 
 echo -e "${GREEN}✓${NC} DEBUGビルド完了"
+
+# ビルド出力パスからバイナリパスを決定
+EXECUTABLE_PATH="${BUILD_BIN_PATH}/Swift-Selena"
 
 # 実行ファイルの存在確認
 if [ ! -f "$EXECUTABLE_PATH" ]; then

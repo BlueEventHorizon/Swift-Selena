@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Logging
 import SwiftSyntax
 import SwiftParser
 
@@ -152,14 +153,14 @@ enum SwiftSyntaxAnalyzer {
     }
 
     /// プロジェクト全体のImport依存関係を解析（キャッシュ利用）
-    static func analyzeImports(projectPath: String, projectMemory: ProjectMemory) throws -> [String: [ImportInfo]] {
+    static func analyzeImports(projectPath: String, projectMemory: ProjectMemory, logger: Logger? = nil) async throws -> [String: [ImportInfo]] {
         let swiftFiles = try FileSearcher.findFiles(in: projectPath, pattern: "*.swift")
 
         var fileImports: [String: [ImportInfo]] = [:]
 
         for file in swiftFiles {
             // キャッシュから取得を試みる
-            if let cached = projectMemory.getCachedImports(filePath: file) {
+            if let cached = await projectMemory.getCachedImports(filePath: file) {
                 let imports = cached.map { ImportInfo(module: $0.module, kind: $0.kind, symbols: [], line: $0.line) }
                 fileImports[file] = imports
                 continue
@@ -173,32 +174,36 @@ enum SwiftSyntaxAnalyzer {
 
                 // キャッシュに保存
                 let cacheData = imports.map { ProjectMemory.Memory.ImportInfo(module: $0.module, kind: $0.kind, line: $0.line) }
-                projectMemory.cacheImports(filePath: file, imports: cacheData)
+                await projectMemory.cacheImports(filePath: file, imports: cacheData)
             } catch {
                 // ファイル読み込みエラーをスキップ
                 continue
             }
         }
 
-        // メモリを保存
-        try? projectMemory.save()
+        // メモリを保存（失敗しても解析結果は返す）
+        do {
+            try await projectMemory.save()
+        } catch {
+            logger?.warning("インポートキャッシュの保存に失敗: \(error)")
+        }
 
         return fileImports
     }
 
     /// 型の継承階層を取得（キャッシュ利用）
-    static func getTypeHierarchy(typeName: String, projectPath: String, projectMemory: ProjectMemory) throws -> TypeHierarchy? {
+    static func getTypeHierarchy(typeName: String, projectPath: String, projectMemory: ProjectMemory, logger: Logger? = nil) async throws -> TypeHierarchy? {
         // キャッシュを構築（必要な場合のみ）
-        if projectMemory.getAllTypeConformances().isEmpty {
-            try buildTypeConformanceCache(projectPath: projectPath, projectMemory: projectMemory)
+        if await projectMemory.getAllTypeConformances().isEmpty {
+            try await buildTypeConformanceCache(projectPath: projectPath, projectMemory: projectMemory, logger: logger)
         }
 
         // キャッシュから型情報を取得
-        guard let cachedType = projectMemory.getCachedTypeConformance(typeName: typeName) else {
+        guard let cachedType = await projectMemory.getCachedTypeConformance(typeName: typeName) else {
             return nil
         }
 
-        let allTypes = projectMemory.getAllTypeConformances()
+        let allTypes = await projectMemory.getAllTypeConformances()
 
         // サブクラスを検索
         var subclasses: [String] = []
@@ -231,11 +236,11 @@ enum SwiftSyntaxAnalyzer {
     }
 
     /// 型情報キャッシュを構築
-    private static func buildTypeConformanceCache(projectPath: String, projectMemory: ProjectMemory) throws {
+    private static func buildTypeConformanceCache(projectPath: String, projectMemory: ProjectMemory, logger: Logger? = nil) async throws {
         let swiftFiles = try FileSearcher.findFiles(in: projectPath, pattern: "*.swift")
 
         // Class定義をクリアして再収集
-        projectMemory.clearClassDefinitions()
+        await projectMemory.clearClassDefinitions()
 
         for file in swiftFiles {
             do {
@@ -249,11 +254,11 @@ enum SwiftSyntaxAnalyzer {
                         superclass: conformance.superclass,
                         protocols: conformance.protocols
                     )
-                    projectMemory.cacheTypeConformance(typeName: conformance.typeName, typeInfo: cacheData)
+                    await projectMemory.cacheTypeConformance(typeName: conformance.typeName, typeInfo: cacheData)
 
                     // Class定義を収集
                     if conformance.typeKind == "Class" {
-                        projectMemory.addClassDefinition(conformance.typeName)
+                        await projectMemory.addClassDefinition(conformance.typeName)
                     }
                 }
             } catch {
@@ -262,8 +267,12 @@ enum SwiftSyntaxAnalyzer {
             }
         }
 
-        // メモリを保存
-        try? projectMemory.save()
+        // メモリを保存（失敗しても解析結果は返す）
+        do {
+            try await projectMemory.save()
+        } catch {
+            logger?.warning("型準拠キャッシュの保存に失敗: \(error)")
+        }
     }
 
     /// XCTestケースを検出

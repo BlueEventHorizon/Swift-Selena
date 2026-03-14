@@ -83,20 +83,20 @@ enum SearchFilesWithoutPatternTool: MCPTool {
             key: ParameterKeys.pattern,
             errorMessage: ErrorMessages.missingPattern
         )
-        let filePattern = params.arguments?[ParameterKeys.filePattern].map { String(describing: $0) }
+        let filePattern: String?
+        if case .string(let s) = params.arguments?[ParameterKeys.filePattern] {
+            filePattern = s
+        } else {
+            filePattern = nil
+        }
 
-        let filesWithoutPattern = try FileSearcher.searchFilesWithoutPattern(
+        let searchResult = try FileSearcher.searchFilesWithoutPattern(
             in: memory.projectPath,
             pattern: pattern,
             filePattern: filePattern
         )
-
-        // 統計情報のため、全ファイル数を取得
-        let allFiles = try FileSearcher.findFiles(
-            in: memory.projectPath,
-            pattern: filePattern ?? "*.swift"
-        )
-        let totalFiles = allFiles.count
+        let filesWithoutPattern = searchResult.filesWithoutPattern
+        let totalFiles = searchResult.totalChecked
         let filesWithoutCount = filesWithoutPattern.count
         let percentage = totalFiles > 0 ? Double(filesWithoutCount) / Double(totalFiles) * 100.0 : 0.0
 

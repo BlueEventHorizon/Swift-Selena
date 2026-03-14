@@ -1,0 +1,20 @@
+version: "1.0"
+
+specs:
+  spec:
+    paths:
+      - project/main/spec/
+  design:
+    paths:
+      - project/main/design/
+  plan:
+    paths:
+      - project/main/plan/
+  reference:
+    paths:
+      - project/main/mcp-guide/
+
+rules:
+  rule:
+    paths:
+      - docs/

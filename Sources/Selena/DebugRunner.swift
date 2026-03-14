@@ -113,7 +113,7 @@ actor DebugRunner {
         logger.info("🔧 Test v0.5.4: documentSymbol API")
 
         let projectPath = Self.detectProjectPath()
-        let fullPath = (projectPath as NSString).appendingPathComponent("Sources/ProjectMemory.swift")
+        let fullPath = (projectPath as NSString).appendingPathComponent("Sources/Selena/Core/ProjectMemory.swift")
 
         let filePath: MCP.Value = .string(fullPath)
 

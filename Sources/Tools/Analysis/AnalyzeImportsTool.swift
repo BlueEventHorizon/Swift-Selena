@@ -61,7 +61,7 @@ enum AnalyzeImportsTool: MCPTool {
     ) async throws -> CallTool.Result {
         let memory = try ToolHelpers.requireProjectMemory(projectMemory)
 
-        let fileImports = try SwiftSyntaxAnalyzer.analyzeImports(projectPath: memory.projectPath, projectMemory: memory)
+        let fileImports = try await SwiftSyntaxAnalyzer.analyzeImports(projectPath: memory.projectPath, projectMemory: memory, logger: logger)
 
         if fileImports.isEmpty {
             return CallTool.Result(content: [.text("No imports found in project")])

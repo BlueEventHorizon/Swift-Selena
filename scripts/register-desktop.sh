@@ -10,9 +10,9 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Swift-Selenaのパス（このスクリプトの2階層上）
+# Swift-Selenaのパス（このスクリプトの1階層上がプロジェクトルート）
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PROJECT_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
 EXECUTABLE_PATH="${PROJECT_ROOT}/.build/release/Swift-Selena"
 
 echo -e "${YELLOW}Swift Selena MCP Server 登録スクリプト${NC}"
@@ -40,13 +40,13 @@ mkdir -p "$CONFIG_DIR"
 # 既存の設定ファイルを読み込むか、新規作成
 if [ -f "$CONFIG_FILE" ]; then
     echo -e "${GREEN}✓${NC} 既存の設定ファイルが見つかりました"
-    
-    # バックアップ作成
-    cp "$CONFIG_FILE" "${CONFIG_FILE}.backup"
-    echo -e "${GREEN}✓${NC} バックアップ作成: ${CONFIG_FILE}.backup"
-    
-    # jqがインストールされているか確認
+
+    # jqがインストールされているか確認（バックアップはjq利用可能時のみ作成）
     if command -v jq &> /dev/null; then
+        # バックアップ作成
+        cp "$CONFIG_FILE" "${CONFIG_FILE}.backup"
+        echo -e "${GREEN}✓${NC} バックアップ作成: ${CONFIG_FILE}.backup"
+
         # jqで既存の設定を保持しつつswift-selenaを追加/更新
         jq --arg path "$EXECUTABLE_PATH" \
             '.mcpServers."swift-selena" = {"command": $path, "env": {"MCP_CLIENT_ID": "claude-desktop"}}' \
@@ -55,23 +55,25 @@ if [ -f "$CONFIG_FILE" ]; then
         echo -e "${GREEN}✓${NC} 設定ファイルを更新しました（既存設定を保持）"
     else
         echo -e "${YELLOW}警告: jq がインストールされていません${NC}"
+        echo "インストール: brew install jq"
+        echo ""
         echo "手動で設定ファイルを編集してください："
         echo ""
         echo "  nano \"$CONFIG_FILE\""
         echo ""
-        echo "以下を追加してください："
+        echo "mcpServers に以下を追加してください："
         echo ""
-        echo '  "swift-selena": {'
-        echo "    \"command\": \"$EXECUTABLE_PATH\","
-        echo '    "env": {'
-        echo '      "MCP_CLIENT_ID": "claude-desktop"'
+        echo '    "swift-selena": {'
+        echo "      \"command\": \"$EXECUTABLE_PATH\","
+        echo '      "env": {'
+        echo '        "MCP_CLIENT_ID": "claude-desktop"'
+        echo '      }'
         echo '    }'
-        echo '  }'
         exit 1
     fi
 else
     echo -e "${YELLOW}新規設定ファイルを作成します${NC}"
-    
+
     # 新規作成
     cat > "$CONFIG_FILE" <<EOF
 {

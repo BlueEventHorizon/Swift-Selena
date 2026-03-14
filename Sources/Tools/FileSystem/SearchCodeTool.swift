@@ -79,7 +79,11 @@ enum SearchCodeTool: MCPTool {
             key: ParameterKeys.pattern,
             errorMessage: ErrorMessages.missingPattern
         )
-        let filePattern = params.arguments?[ParameterKeys.filePattern].map { String(describing: $0) }
+        let filePattern: String? = {
+            guard let value = params.arguments?[ParameterKeys.filePattern] else { return nil }
+            if case .string(let s) = value { return s }
+            return nil
+        }()
 
         let matches = try FileSearcher.searchCode(
             in: memory.projectPath,

@@ -2,7 +2,7 @@
 
 # Swift Selena (RELEASE) をClaude Codeに登録するスクリプト
 # 本番用
-# Usage: ./register-selena-to-claude-code.sh <target-project-directory>
+# Usage: ./scripts/register-release.sh <target-project-directory>
 
 set -e
 
@@ -27,16 +27,17 @@ fi
 echo -e "${YELLOW}Swift Selena (RELEASE) → Claude Code 登録${NC}"
 echo "=========================================="
 
-# Swift-Selenaのパス（このスクリプトと同じディレクトリ）
+# Swift-Selenaのパス（このスクリプトの1階層上がプロジェクトルート）
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-EXECUTABLE_PATH="${SCRIPT_DIR}/.build/release/Swift-Selena"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+EXECUTABLE_PATH="${PROJECT_ROOT}/.build/release/Swift-Selena"
 
 # 実行ファイルの存在確認
 if [ ! -f "$EXECUTABLE_PATH" ]; then
     echo -e "${RED}エラー: Swift-Selena (release) が見つかりません${NC}"
     echo "パス: $EXECUTABLE_PATH"
     echo ""
-    echo -e "${YELLOW}まず 'swift build -c release -Xswiftc -Osize' を実行してください${NC}"
+    echo -e "${YELLOW}まず 'make build-release' を実行してください${NC}"
     exit 1
 fi
 
@@ -47,8 +48,8 @@ echo "  パス: $EXECUTABLE_PATH"
 BUILD_TIME=$(stat -f "%Sm" "$EXECUTABLE_PATH")
 echo "  ビルド日時: $BUILD_TIME"
 
-# ターゲットプロジェクト
-TARGET_PROJECT="$1"
+# ターゲットプロジェクト（~ を $HOME に展開）
+TARGET_PROJECT="${1/#\~/$HOME}"
 if [ ! -d "$TARGET_PROJECT" ]; then
     echo -e "${RED}エラー: ターゲットディレクトリが見つかりません${NC}"
     echo "パス: $TARGET_PROJECT"

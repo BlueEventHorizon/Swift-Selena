@@ -255,6 +255,15 @@ Found 2 definitions for 'UserManager':
 - ✅ プロジェクト全体を検索
 - ✅ キャッシュで高速化
 - ✅ 複数定義を全て発見
+- ✅ Class/Struct/Enum/Protocol/Actor の定義を優先して返す（v0.6.5+）
+- ✅ 複数候補がある場合は全候補を返す
+- ✅ シンボルが見つからない場合は「検索ファイル数・考えられる原因」を含むメッセージを返す（v0.6.5+）
+
+**エラー時の挙動（v0.6.5+）:**
+- シンボルが見つからない場合、以下を含むメッセージを返す:
+  - 検索したファイル数
+  - 考えられる原因（スペルミス / 外部パッケージ定義 / 存在しない）
+- プロジェクト未初期化: `initialize_project` の案内を含むエラー
 
 **ユースケース:**
 ```
@@ -266,6 +275,64 @@ UC: クラス定義の発見
 UC: 重複定義の検出
   find_symbol_definition("Config")
   → 2つの定義を発見（本番用とテスト用）
+
+UC: シンボルが見つからない場合（v0.6.5+）
+  find_symbol_definition("NonExistent")
+  → "Symbol not found. Searched 42 files.
+     Possible causes: typo / defined in external package"
+```
+
+---
+
+#### find_references
+
+**要件:**
+シンボルの参照箇所をプロジェクト全体から検索（LSP不要）
+
+**なぜ必要か:**
+- LSP利用不可環境でも参照検索が必要
+- `find_symbol_references`（LSP版）の代替（テキストベース）
+- 単語境界を考慮した精度の高い検索
+
+**入力:**
+- `symbol_name`: シンボル名（例: "UserManager"）
+
+**単語境界の定義:**
+シンボルの前後が行頭/行末・空白・記号（`()[]{}.,;:<>!=+-*/&|^~?@#$%`）の場合にマッチ
+- ✅ マッチ: `User.name`, `let user: User`, `(User)`
+- ❌ 非マッチ: `UserName`, `AppUser`, `userId`
+
+**出力:**
+```
+Found 15 references to 'User':
+
+  UserManager.swift:20 - let user: User
+  UserRepository.swift:15 - func save(_ user: User) async throws
+  ProfileView.swift:18 - @State private var user: User
+  ...
+
+Total: 15 references in 8 files
+```
+
+**受入基準:**
+- ✅ 単語境界を考慮した検索（部分一致を除外）
+- ✅ ファイルパス・行番号・該当行の内容を返す
+- ✅ 参照が見つからない場合は空のリストを返す（エラーではない）
+- ✅ プロジェクト未初期化: `initialize_project` の案内
+
+**制限事項:**
+- テキストベース検索のため、LSPほど正確ではない（同名の異なるシンボルを区別できない）
+
+**ユースケース:**
+```
+UC: LSP無効環境でのリファクタリング影響確認
+  開発者: 「User型がどこで使われてる？」
+  find_references("User")
+  → 15箇所を発見（LSP不要）
+
+UC: find_symbol_references との使い分け
+  ビルド可能時: find_symbol_references（型情報ベース、正確）
+  ビルド不可時: find_references（テキストベース、LSP不要）
 ```
 
 ---
@@ -566,6 +633,15 @@ Conforms to:
 - ✅ サブクラス検出（プロジェクト全体から）
 - ✅ Protocol準拠検出
 - ✅ v0.5.4: LSP版でType Detail追加
+- ✅ v0.6.5+: ツール実行時にプロジェクト内の全Swiftファイルを再スキャンして最新の型情報を取得する
+- ✅ v0.6.5+: 型が見つからない場合、以下を含むメッセージを返す:
+  - 検索したファイル数
+  - 検出可能な型の総数
+  - 考えられる原因（スペルミス / 外部パッケージ定義 / 存在しない）
+
+**検出対象（v0.6.5+）:**
+- プロジェクトディレクトリ配下のSwiftファイルで定義された型（Class/Struct/Enum/Protocol/Actor）
+- 除外: `.build/`, `.git/`, `DerivedData/`, `Pods/`, `Carthage/` 配下
 
 **ユースケース:**
 ```
@@ -577,6 +653,11 @@ UC: 継承階層の可視化
 UC: Protocol実装の確認
   get_type_hierarchy("UserRepositoryProtocol")
   → Protocolを実装している型を列挙
+
+UC: 型が見つからない場合（v0.6.5+）
+  get_type_hierarchy("NonExistent")
+  → "Type not found. Searched 42 files, 87 types detected.
+     Possible causes: typo / defined in external package"
 ```
 
 ---
@@ -627,6 +708,61 @@ UC: テスト追加の計画
   find_test_cases()
   → 既存テストを把握
   → 不足しているテストを特定
+```
+
+---
+
+#### analyze_file_metrics
+
+**要件:**
+プロジェクト内のSwiftファイルの行数・サイズを取得し、リファクタリング候補を検出する
+
+**なぜ必要か:**
+- 大きすぎるファイルを特定してリファクタリング対象を発見
+- 行数・サイズ順でソートして優先順位付け
+- コード品質の定量的把握
+
+**入力:**
+- `file_path` (optional): 単一ファイル指定
+- `pattern` (optional): ファイルパターン（例: "*.swift"）
+- `threshold_lines` (optional): 行数しきい値（デフォルト: 500）
+- `sort_by` (optional): ソート基準（`"lines"` | `"size"`、デフォルト: `"lines"`）
+- `limit` (optional): 結果数制限（デフォルト: 20）
+
+**出力:**
+```
+File Metrics (sorted by lines, threshold: 500):
+
+Files exceeding threshold (3 files):
+  SwiftSyntaxAnalyzer.swift: 580 lines (24.3 KB)
+  LSPClient.swift:           552 lines (21.8 KB)
+  ProjectMemory.swift:       510 lines (18.2 KB)
+
+Summary:
+  Total files: 42
+  Total lines: 8,420
+  Files over threshold: 3 (7.1%)
+```
+
+**受入基準:**
+- ✅ 正確な行数を返す（空行・コメント行含む）
+- ✅ 行数しきい値でフィルタリング
+- ✅ lines / size でソート可能
+- ✅ 結果数を制限可能
+- ✅ プロジェクト未初期化: `initialize_project` の案内
+
+**パフォーマンス:**
+- 340ファイルで1秒以内
+
+**ユースケース:**
+```
+UC: リファクタリング候補の検出
+  analyze_file_metrics(threshold_lines: 500)
+  → 500行超のファイルを列挙 → 分割候補を把握
+
+UC: 最大ファイルの確認
+  analyze_file_metrics(sort_by: "lines", limit: 5)
+  → 行数上位5ファイルを取得
 ```
 
 ---
@@ -936,15 +1072,19 @@ Step 3: メソッド確認（LSP版）
 
 ### 4.1 ツール別成功基準
 
-| ツール | 検出率 | 速度 | v0.5.3実績 |
-|--------|--------|------|-----------|
-| find_files | 100% | <1秒 | ✅ |
-| search_code | 100% | <2秒 | ✅ |
-| list_symbols | 100% | <1秒 | ✅ |
-| list_property_wrappers | 100% | <1秒 | ✅ |
-| list_protocol_conformances | 100% | <1秒 | ✅ |
-| list_extensions | 100% | <1秒 | ✅ |
-| find_symbol_references | 95%+ | <2秒 | ✅（参照検出成功）|
+| ツール | 検出率 | 速度 | 備考 |
+|--------|--------|------|------|
+| find_files | 100% | <1秒 | ✅ v0.5.3達成 |
+| search_code | 100% | <2秒 | ✅ v0.5.3達成 |
+| list_symbols | 100% | <1秒 | ✅ v0.5.3達成 |
+| list_property_wrappers | 100% | <1秒 | ✅ v0.5.3達成 |
+| list_protocol_conformances | 100% | <1秒 | ✅ v0.5.3達成 |
+| list_extensions | 100% | <1秒 | ✅ v0.5.3達成 |
+| find_symbol_references | 95%+ | <2秒 | ✅ v0.5.3達成 |
+| get_type_hierarchy | 100% | 初回<5秒 / 2回目<500ms | v0.6.5目標 |
+| find_symbol_definition | 100% | <500ms | v0.6.5目標 |
+| find_references | - | - | v0.6.5新規 |
+| analyze_file_metrics | 100% | <1秒（340ファイル） | v0.6.5新規 |
 
 ---
 
