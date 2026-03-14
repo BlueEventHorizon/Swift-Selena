@@ -73,7 +73,7 @@
       "Skill(create-rules-toc)",
       "Skill(create-specs-toc)",
       "Skill(query-rules)",
-      "Skill(query-specs)",
+      "Skill(query-specs)"
     ],
     "ask": [
       "Bash(git add *)",
@@ -92,7 +92,7 @@
       "Bash(mkdir *)",
       "Bash(cp *)",
       
-      "Bash(python3:*)",
+      "Bash(python3 *)"
     ],
     "deny": [
       "Bash(git push --force *)",
@@ -151,7 +151,7 @@
       "Write(scripts/firebase/config/*.json)"
     ]
   },
-    "hooks": {
+  "hooks": {
     "Stop": [
       {
         "matcher": "",
@@ -180,7 +180,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "str_replace_editor",
+        "matcher": "Edit",
         "hooks": [
           {
             "type": "command",
@@ -189,5 +189,5 @@
         ]
       }
     ]
-  },
+  }
 }
