@@ -4,7 +4,7 @@ description: Format definition for {target}_toc.yaml (Single Source of Truth)
 applicable_when:
   - Creating or updating ToC entries
   - Validating rules_toc.yaml or specs_toc.yaml structure
-doc-advisor-version-xK9XmQ: 4.4
+doc-advisor-version-xK9XmQ: 5.0
 ---
 
 # ToC YAML Format Definition

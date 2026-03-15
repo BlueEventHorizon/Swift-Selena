@@ -5,7 +5,7 @@ applicable_when:
   - Running as toc-updater Agent
   - Executing /create-rules-toc or /create-specs-toc
   - After adding, modifying, or deleting target documents
-doc-advisor-version-xK9XmQ: 4.4
+doc-advisor-version-xK9XmQ: 5.0
 ---
 
 # ToC Update Workflow
@@ -101,7 +101,7 @@ Read `.claude/doc-advisor/toc/{target}/.toc_work/*.yaml` and identify files with
 
 ### Step 2.2: Launch subagents in parallel
 
-**Parallel count**: Read from config.yaml `common.parallel.max_workers`
+**Parallel count**: Default 5 (defined in toc_utils.py)
 
 ```
 # Orchestrator calls multiple Task tools in one message

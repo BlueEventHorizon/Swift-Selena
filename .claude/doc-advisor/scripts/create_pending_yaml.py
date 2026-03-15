@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-# doc-advisor-version-xK9XmQ: 4.4
+# doc-advisor-version-xK9XmQ: 5.0
 """
 Generate pending YAML templates in .claude/doc-advisor/toc/{target}/.toc_work/
 
 Usage:
     python3 .claude/doc-advisor/scripts/create_pending_yaml.py --target rules [--full]
     python3 .claude/doc-advisor/scripts/create_pending_yaml.py --target specs [--full]
+    python3 .claude/doc-advisor/scripts/create_pending_yaml.py --target rules --check
 
 Options:
     --target  Target category: rules or specs (required)
     --full    Process all files (default: changed files only)
+    --check   Check staleness only (no file creation)
 
 Run from: Project root
 """
@@ -33,7 +35,7 @@ PATTERNS_CONFIG = None
 TARGET_GLOB = None
 EXCLUDE_PATTERNS = None
 TARGET = None  # 'rules' or 'specs'
-DOC_TYPES_MAP = None  # path → doc_type name (from config.yaml)
+DOC_TYPES_MAP = None  # path → doc_type name (from .doc_structure.yaml)
 
 # Pending YAML templates
 PENDING_TEMPLATE_RULES = """_meta:
@@ -83,6 +85,8 @@ def parse_args():
                         help='Target category: rules or specs')
     parser.add_argument('--full', action='store_true',
                         help='Process all files (default: changed files only)')
+    parser.add_argument('--check', action='store_true',
+                        help='Check staleness only (no file creation)')
     return parser.parse_args()
 
 
@@ -135,7 +139,7 @@ def init_config(target):
 
 
 def determine_doc_type(root_dir_name):
-    """Determine doc_type from root_dir path using config.yaml doc_types_map"""
+    """Determine doc_type from root_dir path using .doc_structure.yaml doc_types_map"""
     if DOC_TYPES_MAP:
         normalized = root_dir_name.rstrip('/')
         for path, doc_type in DOC_TYPES_MAP.items():
@@ -343,6 +347,44 @@ def main():
     # Initialize configuration
     if not init_config(args.target):
         return 1
+
+    # --check mode: report staleness without creating files
+    if args.check:
+        if not TOC_FILE.exists():
+            print(f"WARNING: ToC not found. Run /create-{TARGET}-toc to generate it.")
+            return 0
+        if not CHECKSUMS_FILE.exists():
+            return 0
+        old_checksums = load_checksums()
+        all_files, file_root_map = get_all_md_files()
+        current_files = {}
+        for f in all_files:
+            root_dir, root_dir_name = file_root_map[f]
+            current_files[get_source_file_path(f, root_dir, root_dir_name)] = f
+        new_count = 0
+        modified_count = 0
+        for source_file, full_path in current_files.items():
+            current_hash = calculate_file_hash(full_path)
+            if current_hash is None:
+                continue
+            old_hash = old_checksums.get(source_file)
+            if old_hash is None:
+                new_count += 1
+            elif current_hash != old_hash:
+                modified_count += 1
+        deleted_count = sum(1 for sf in old_checksums if sf not in current_files)
+        total = new_count + modified_count + deleted_count
+        if total > 0:
+            parts = []
+            if new_count:
+                parts.append(f"{new_count} new")
+            if modified_count:
+                parts.append(f"{modified_count} modified")
+            if deleted_count:
+                parts.append(f"{deleted_count} deleted")
+            print(f"WARNING: ToC may be stale ({', '.join(parts)}).")
+            print(f"Consider running /create-{TARGET}-toc to refresh the index.")
+        return 0
 
     full_mode = args.full
     toc_name = f"{TARGET}_toc.yaml"

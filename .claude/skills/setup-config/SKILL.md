@@ -2,7 +2,7 @@
 name: setup-config
 description: |
   Auto-detect and classify project document directories as rules or specs.
-  Updates config.yaml root_dirs based on classification results.
+  Updates .doc_structure.yaml root_dirs based on classification results.
   Trigger:
   - After initial setup to configure document directories
   - "Classify my documents"
@@ -10,7 +10,7 @@ description: |
 allowed-tools: Bash, Read, Edit, Glob
 user-invocable: true
 argument-hint: "[--update]"
-doc-advisor-version-xK9XmQ: 4.4
+doc-advisor-version-xK9XmQ: 5.0
 ---
 
 # setup-config
@@ -26,11 +26,11 @@ Auto-detect and classify project document directories for Doc Advisor.
 | Argument   | Description                                                   |
 | ---------- | ------------------------------------------------------------- |
 | (none)     | Full classification of all markdown directories               |
-| `--update` | Only process directories not already in config.yaml root_dirs |
+| `--update` | Only process directories not already in .doc_structure.yaml root_dirs |
 
 ## Prerequisite
 
-config.yaml must exist at `.claude/doc-advisor/config.yaml`.
+Doc Advisor must be installed (`.claude/doc-advisor/` directory exists).
 If not, run `setup.sh` first.
 
 ## Reference Documents
@@ -118,19 +118,18 @@ Ask the user:
 - For empty directories: confirm whether to include them in root_dirs.
 - Any overrides needed?
 
-### Step 5: Update config.yaml
+### Step 5: Update .doc_structure.yaml
 
-After user confirmation, update `.claude/doc-advisor/config.yaml` using the Edit tool.
+After user confirmation, write `.doc_structure.yaml` (at project root) using the Write tool.
 
-Replace the commented `root_dirs` and `doc_types_map` lines with actual values:
+If `.doc_structure.yaml` already exists, update the `root_dirs`, `doc_types_map`, and `patterns` sections.
+If it does not exist, create it with the following structure.
+
+Output example:
 
 ```yaml
-# Before:
-rules:
-# root_dirs: []    # Auto-configured by setup.sh or /setup-config
-# doc_types_map: {}  # Path-to-doc_type mapping (auto-configured)
+# doc_structure_version: 3.0
 
-# After:
 rules:
   root_dirs:
     - rules/
@@ -138,11 +137,10 @@ rules:
   doc_types_map:
     rules/: rule
     guidelines/: rule
-```
+  patterns:
+    target_glob: "**/*.md"
+    exclude: []
 
-For specs, map each directory to its specific doc_type:
-
-```yaml
 specs:
   root_dirs:
     - specs/requirements/
@@ -150,16 +148,17 @@ specs:
   doc_types_map:
     specs/requirements/: requirement
     specs/design/: design
+  patterns:
+    target_glob: "**/*.md"
+    exclude: []
 ```
 
 Valid doc_types: `rule`, `requirement`, `design`, `plan`, `api`, `reference`, `spec`
 
-**Important**: If root_dirs is already uncommented (from a previous run), replace the existing list and doc_types_map.
-
 ### Step 6: Summary
 
 ```
-config.yaml updated
+.doc_structure.yaml updated
 
 Rules directories:
   - rules/
@@ -176,6 +175,6 @@ Next steps:
 
 ## Error Handling
 
-- If config.yaml doesn't exist, tell user to run setup.sh first
+- If Doc Advisor is not installed (`.claude/doc-advisor/` not found), tell user to run setup.sh first
 - If no markdown directories found, report that the project has no documents to classify
 - If classification script fails, report the error and suggest manual configuration

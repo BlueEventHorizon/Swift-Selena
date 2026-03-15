@@ -4,7 +4,7 @@ description: Orchestrator workflow for {target}_toc.yaml generation
 applicable_when:
   - Executing /create-rules-toc or /create-specs-toc skill
   - Coordinating ToC generation process
-doc-advisor-version-xK9XmQ: 4.4
+doc-advisor-version-xK9XmQ: 5.0
 ---
 
 # ToC Orchestrator Workflow
@@ -43,13 +43,12 @@ Read the following before processing:
 Before Phase 1, verify that document directories are configured:
 
 1. The skill's Pre-check step runs `check_config.sh {target}` which verifies
-   that `root_dirs` is set for the target category in `config.yaml`
+   that `root_dirs` is set for the target category in `.doc_structure.yaml`
 2. If `check_config.sh` outputs a warning, stop and direct the user to run
    `/setup-config` first
 3. Once `check_config.sh` passes (no output), proceed to Phase 1
 
-Note: `.doc_structure.yaml` is NOT referenced at runtime (FR-08).
-`root_dirs` must be pre-configured by `setup.sh` or `/setup-config`.
+Note: `.doc_structure.yaml` is referenced at runtime by load_config() (FR-08). `root_dirs` must be configured in `.doc_structure.yaml` via `/setup-config` or forge plugin.
 
 ### Phase 1: Initialization
 
@@ -100,7 +99,7 @@ Note: `.doc_structure.yaml` is NOT referenced at runtime (FR-08).
 >
 > **For large projects (100+ files):**
 >
-> - Reduce `max_workers` to 3 in config.yaml to lower API load and context growth
+> - Consider reducing parallel batch size to 3 to lower API load and context growth
 > - If context overflows mid-session, start a new session and re-run the same command.
 >   `.toc_work/` with completed entries is preserved; Continue Mode automatically
 >   resumes from pending files only (Phase 1 detects existing `.toc_work/`)
@@ -113,7 +112,7 @@ Use `ls .toc_work/*.yaml` or `while read` loops instead.
     ↓
 2. If no pending files → Go to Phase 3 (merge)
     ↓
-3. Read common.parallel.max_workers (N) from config.yaml
+3. Use max_workers = 5 (default defined in toc_utils.py)
     CRITICAL: Launch up to N Task tool calls in a SINGLE assistant message.
     Do NOT launch them one at a time in separate messages — this defeats parallelism.
     Task(subagent_type: toc-updater, prompt: "target: {target}, entry_file: .claude/doc-advisor/toc/{target}/.toc_work/{filename}.yaml, format_doc: {format_doc}")
