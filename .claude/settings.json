@@ -73,10 +73,13 @@
       "Skill(create-rules-toc)",
       "Skill(create-specs-toc)",
       "Skill(query-rules)",
-      "Skill(query-specs)"
+      "Skill(query-specs)",
+
+      "Bash(python3 *)"
     ],
     "ask": [
       "Bash(git add *)",
+      "Bash(git mv *)",
       "Bash(git commit *)",
       "Bash(git push *)",
       "Bash(git checkout *)",
@@ -91,8 +94,7 @@
 
       "Bash(mkdir *)",
       "Bash(cp *)",
-      
-      "Bash(python3 *)"
+      "Bash(mv *)"
     ],
     "deny": [
       "Bash(git push --force *)",
@@ -120,7 +122,6 @@
       "Bash(export *)",
 
       "Bash(rm *)",
-      "Bash(mv *)",
       "Bash(touch *)",
       "Bash(sed *)",
       "Bash(awk *)",

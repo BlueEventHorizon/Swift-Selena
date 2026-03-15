@@ -1,20 +1,27 @@
-version: "1.0"
+# doc_structure_version: 3.0
 
-specs:
-  spec:
-    paths:
-      - project/main/spec/
-  design:
-    paths:
-      - project/main/design/
-  plan:
-    paths:
-      - project/main/plan/
-  reference:
-    paths:
-      - project/main/mcp-guide/
-
+# === rules configuration ===
 rules:
-  rule:
-    paths:
-      - docs/
+  root_dirs:
+    - docs/
+  doc_types_map:
+    docs/: rule
+  patterns:
+    target_glob: "**/*.md"
+    exclude: []
+
+# === specs configuration ===
+specs:
+  root_dirs:
+    - "project/*/spec/"
+    - "project/*/design/"
+    - "project/*/plan/"
+    - "project/*/mcp-guide/"
+  doc_types_map:
+    "project/*/spec/": requirement
+    "project/*/design/": design
+    "project/*/plan/": plan
+    "project/*/mcp-guide/": reference
+  patterns:
+    target_glob: "**/*.md"
+    exclude: []

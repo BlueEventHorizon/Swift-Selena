@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# doc-advisor-version-xK9XmQ: 4.4
+# doc-advisor-version-xK9XmQ: 5.0
 """
 ToC Auto-Generation Common Utilities
 
@@ -8,6 +8,7 @@ Common functions used by merge-rules-toc, merge-specs-toc, create-toc-checksums.
 Uses only standard library.
 """
 
+import copy
 import fnmatch
 import os
 import re
@@ -131,35 +132,30 @@ def resolve_config_path(config_value, default_base, project_root):
 
 def find_config_file():
     """
-    Find configuration file.
-
-    Location: {CWD}/.claude/doc-advisor/config.yaml
+    Find .doc_structure.yaml at project root.
 
     Returns:
-        Path: Path to configuration file
+        Path: Path to .doc_structure.yaml
 
     Raises:
         FileNotFoundError: When no configuration file is found
     """
-    project_config = Path.cwd() / ".claude/doc-advisor/config.yaml"
-    if project_config.exists():
-        return project_config
+    doc_structure = Path.cwd() / ".doc_structure.yaml"
+    if doc_structure.exists():
+        return doc_structure
 
     raise FileNotFoundError(
-        "Configuration file not found. Please create one at:\n"
-        "  - .claude/doc-advisor/config.yaml\n"
-        "Run setup.sh to generate the configuration file."
+        ".doc_structure.yaml not found.\n"
+        "Run /setup-config to create document structure configuration."
     )
 
 
 def load_config(target=None):
     """
-    Load config.yaml and return configuration dictionary.
+    Load .doc_structure.yaml and merge with internal defaults.
 
-    config.yaml is the sole runtime configuration (FR-08-1).
-    root_dirs and doc_types_map must be pre-configured by setup.sh
-    (from .doc_structure.yaml) or /setup-config skill.
-    This function does NOT fall back to .doc_structure.yaml at runtime.
+    .doc_structure.yaml provides document structure (root_dirs, doc_types_map, patterns).
+    Internal defaults provide Doc Advisor settings (toc_file, checksums_file, work_dir, output, common).
 
     Args:
         target: 'rules' or 'specs'. If specified, returns only that section
@@ -167,11 +163,11 @@ def load_config(target=None):
     Returns:
         dict: Configuration dictionary
     """
+    defaults = _get_default_config()
+
     try:
         config_path = find_config_file()
     except FileNotFoundError:
-        # Return default configuration if no file found
-        defaults = _get_default_config()
         if target:
             return defaults.get(target, {})
         return defaults
@@ -179,7 +175,14 @@ def load_config(target=None):
     with open(config_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    config = _parse_config_yaml(content)
+    doc_structure = _parse_config_yaml(content)
+
+    # Versioned migration: detect version and apply staged migrations (REQ-003)
+    detected_version = _detect_version(content)
+    doc_structure = apply_migrations(doc_structure, detected_version)
+
+    # Merge: doc_structure values override defaults
+    config = _deep_merge(defaults, doc_structure)
 
     # Backward compatibility: root_dir (string) → root_dirs (list)
     for section in ('rules', 'specs'):
@@ -193,8 +196,183 @@ def load_config(target=None):
     return config
 
 
+def _migrate_v1_to_v2(parsed):
+    """
+    Convert v1.0 .doc_structure.yaml format to v2.0 (in-memory only).
+
+    v1.0 format:
+        rules:
+          rule:
+            paths: [rules/]
+        specs:
+          spec:
+            paths: [specs/]
+
+    v2.0 format:
+        rules:
+          root_dirs: [rules/]
+          doc_types_map:
+            rules/: rule
+        specs:
+          root_dirs: [specs/]
+          doc_types_map:
+            specs/: spec
+
+    Detection: a category section has no 'root_dirs' key but has a sub-dict
+    with a 'paths' key (v1.0 doc_type → {paths: [...]}).
+    """
+    for category in ('rules', 'specs'):
+        if category not in parsed:
+            continue
+        section = parsed[category]
+
+        # Already v2.0 format
+        if 'root_dirs' in section:
+            continue
+
+        # Detect v1.0: sub-dicts with 'paths' key
+        root_dirs = []
+        doc_types_map = {}
+        v1_keys = []
+
+        for key, value in section.items():
+            if isinstance(value, dict) and 'paths' in value:
+                v1_keys.append(key)
+                paths = value['paths']
+                if isinstance(paths, list):
+                    for p in paths:
+                        root_dirs.append(p)
+                        doc_types_map[p] = key
+
+        if v1_keys:
+            # Remove v1.0 keys
+            for key in v1_keys:
+                del section[key]
+            # Add v2.0 keys
+            section['root_dirs'] = root_dirs
+            section['doc_types_map'] = doc_types_map
+
+    return parsed
+
+
+def _migrate_v2_to_v3(parsed):
+    """
+    Convert v2.0 .doc_structure.yaml format to v3.0 (in-memory only).
+
+    v2.0 contains internal Doc Advisor fields (toc_file, checksums_file,
+    work_dir, output) that were moved to code defaults in v3.0.
+    Also removes the top-level 'common' section.
+
+    v3.0 format retains only: root_dirs, doc_types_map, patterns.
+    """
+    INTERNAL_FIELDS = {'toc_file', 'checksums_file', 'work_dir', 'output'}
+
+    for category in ('rules', 'specs'):
+        if category not in parsed:
+            continue
+        section = parsed[category]
+        for field in INTERNAL_FIELDS:
+            section.pop(field, None)
+
+    # Remove top-level 'common' section (code default in v3)
+    parsed.pop('common', None)
+
+    return parsed
+
+
+# --- Version Migration Framework (REQ-003) ---
+
+CURRENT_DOC_STRUCTURE_VERSION = 3
+
+MIGRATIONS = {
+    2: _migrate_v1_to_v2,
+    3: _migrate_v2_to_v3,
+}
+
+
+def _detect_version(content):
+    """
+    Detect doc_structure_version from raw file content.
+
+    Scans for '# doc_structure_version: X.0' comment line.
+    Returns integer major version, or 1 if not found (FR-01-2).
+
+    Args:
+        content: Raw .doc_structure.yaml file content (string)
+
+    Returns:
+        int: Detected major version number
+    """
+    for line in content.split('\n'):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if not stripped.startswith('#'):
+            break  # YAML本文行に到達、走査打ち切り
+        match = re.match(r'^#\s*doc_structure_version:\s*(\d+)', stripped)
+        if match:
+            return int(match.group(1))
+    return 1  # FR-01-2: default to v1
+
+
+def apply_migrations(parsed, detected_version):
+    """
+    Apply staged migrations from detected_version to CURRENT_DOC_STRUCTURE_VERSION.
+
+    Migrations are applied one version at a time in ascending order (FR-02-1).
+    On error, returns the original data unchanged (FR-04-1).
+    If detected_version >= CURRENT, returns data as-is (FR-04-2).
+
+    Args:
+        parsed: Parsed configuration dictionary
+        detected_version: Integer version detected from file
+
+    Returns:
+        dict: Migrated configuration dictionary
+    """
+    if detected_version >= CURRENT_DOC_STRUCTURE_VERSION:
+        return parsed  # FR-04-2: future/current version, no migration
+
+    targets = [v for v in sorted(MIGRATIONS.keys())
+               if detected_version < v <= CURRENT_DOC_STRUCTURE_VERSION]
+
+    original = copy.deepcopy(parsed)  # FR-04-1: rollback reference
+    try:
+        for v in targets:
+            parsed = MIGRATIONS[v](parsed)
+    except Exception:
+        return original
+
+    return parsed
+
+
+def _deep_merge(base, override):
+    """
+    Deep merge two dictionaries. override values take precedence.
+    Lists are replaced, not merged.
+
+    Args:
+        base: Base dictionary (defaults)
+        override: Override dictionary (.doc_structure.yaml)
+
+    Returns:
+        dict: Merged dictionary
+    """
+    result = base.copy()
+    for key, value in override.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
 def _get_default_config():
-    """Return default configuration"""
+    """Return default configuration.
+
+    root_dirs defaults are used as fallback when .doc_structure.yaml is not found
+    (e.g., direct script execution without Pre-check).
+    """
     return {
         'rules': {
             'root_dirs': ['rules/'],
@@ -235,7 +413,7 @@ def _get_default_config():
 
 def _parse_config_yaml(content):
     """
-    Parse config.yaml (simple YAML parser)
+    Parse YAML configuration (simple YAML parser)
 
     Handles up to 4 levels of nesting:
     - Level 0: Top-level sections (rules, specs, common)
@@ -392,7 +570,7 @@ def expand_root_dir_globs(dirs, project_root):
     """
     Expand glob patterns in root_dirs paths.
 
-    config.yaml root_dirs supports patterns like "specs/*/requirements/"
+    root_dirs supports patterns like "specs/*/requirements/"
     which need to be expanded to actual directories before file scanning.
 
     Args:

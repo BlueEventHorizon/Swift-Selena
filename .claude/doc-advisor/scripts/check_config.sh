@@ -13,24 +13,29 @@
 # Hook cwd is not guaranteed to be project root; use $CLAUDE_PROJECT_DIR
 cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
 
-CONFIG=".claude/doc-advisor/config.yaml"
+CONFIG=".doc_structure.yaml"
 CATEGORY="${1:-}"
 
-# config.yaml doesn't exist → Doc Advisor not installed
-[[ ! -f "$CONFIG" ]] && exit 0
+# .doc_structure.yaml doesn't exist → not configured
+[[ ! -f "$CONFIG" ]] && {
+    echo "[ACTION REQUIRED] Doc Advisor: .doc_structure.yaml not found. Run /setup-config skill to create document structure configuration. This must be completed before document search or ToC generation will work. If in plan mode, run /setup-config after exiting plan mode."
+    exit 0
+}
 
 if [[ -n "$CATEGORY" ]]; then
-    # Category-specific check: look for uncommented root_dirs within the target section
+    # Category-specific check: look for root_dirs (v2.0) or paths (v1.0) within the target section
     in_section=$(awk -v cat="$CATEGORY" '
         /^(rules|specs|common):/ { sub(/:.*/, ""); section = $0 }
         section == cat && /^  root_dirs:/ { found=1; exit }
+        section == cat && /^    paths:/ { found=1; exit }
         END { print (found ? "yes" : "no") }
     ' "$CONFIG")
 
     [[ "$in_section" == "yes" ]] && exit 0
 else
-    # No category specified: check if any root_dirs exists (backward compat)
+    # No category specified: check if any root_dirs (v2.0) or paths (v1.0) exists
     grep -q "^  root_dirs:" "$CONFIG" 2>/dev/null && exit 0
+    grep -q "^    paths:" "$CONFIG" 2>/dev/null && exit 0
 fi
 
 # Not configured → warn
