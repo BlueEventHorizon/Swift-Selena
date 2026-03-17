@@ -1,5 +1,5 @@
 ---
-name: setup-config
+name: setup-doc-structure
 description: |
   Auto-detect and classify project document directories as rules or specs.
   Updates .doc_structure.yaml root_dirs based on classification results.
@@ -7,20 +7,20 @@ description: |
   - After initial setup to configure document directories
   - "Classify my documents"
   - "What directories should be rules vs specs?"
-allowed-tools: Bash, Read, Edit, Glob
+allowed-tools: Bash, Read, Write, Edit, Glob
 user-invocable: true
 argument-hint: "[--update]"
 doc-advisor-version-xK9XmQ: 5.0
 ---
 
-# setup-config
+# setup-doc-structure
 
 Auto-detect and classify project document directories for Doc Advisor.
 
 ## Usage
 
 ```
-/setup-config [--update]
+/setup-doc-structure [--update]
 ```
 
 | Argument   | Description                                                   |
@@ -31,7 +31,7 @@ Auto-detect and classify project document directories for Doc Advisor.
 ## Prerequisite
 
 Doc Advisor must be installed (`.claude/doc-advisor/` directory exists).
-If not, run `setup.sh` first.
+If not, run Doc Advisor's `setup.sh` from the DocAdvisor-CC repository.
 
 ## Reference Documents
 
@@ -46,6 +46,17 @@ This document defines:
 - Judgment procedure (path components → frontmatter → file content)
 
 ## Execution Flow
+
+### Step 0: Check for --update mode
+
+If `$0` = `--update` and `.doc_structure.yaml` exists at project root:
+
+1. Read `.doc_structure.yaml` to get the current `root_dirs` for both `rules` and `specs`
+2. Collect all currently registered directories into a set
+3. After Step 1 (scan), filter out directories already in the registered set
+4. Proceed with only unregistered directories for Steps 2-5
+
+If `$0` = `--update` but `.doc_structure.yaml` does not exist, fall back to full mode (process all directories).
 
 ### Step 1: Run directory scan script
 
@@ -123,6 +134,8 @@ Ask the user:
 After user confirmation, write `.doc_structure.yaml` (at project root) using the Write tool.
 
 If `.doc_structure.yaml` already exists, update the `root_dirs`, `doc_types_map`, and `patterns` sections.
+Preserve existing `patterns.exclude` entries unless the user explicitly requests changes.
+**For `--update` mode**: Read the existing file first, keep all existing `root_dirs` and `doc_types_map` entries, and append only the newly classified directories. Do not remove or overwrite existing entries.
 If it does not exist, create it with the following structure.
 
 Output example:

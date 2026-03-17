@@ -28,7 +28,7 @@ bash .claude/doc-advisor/scripts/check_config.sh rules
 ```
 
 - **No output** → Proceed to Staleness Check
-- **Output present** → STOP. Run `/setup-config` skill first to configure document directories, then restart this skill
+- **Output present** → STOP. Run `/setup-doc-structure` skill first to configure document directories, then restart this skill
 
 ## Staleness Check
 
@@ -36,15 +36,16 @@ bash .claude/doc-advisor/scripts/check_config.sh rules
 python3 .claude/doc-advisor/scripts/create_pending_yaml.py --target rules --check
 ```
 
-- **WARNING 出力あり** → ユーザーに警告メッセージを伝えてから Procedure に進む
-- **出力なし** → そのまま Procedure に進む
+- **WARNING output present** → Inform user of the warning message, then proceed to Procedure
+- **No output** → Proceed to Procedure directly
 
 ## Procedure
 
 1. Read `.claude/doc-advisor/toc/rules/rules_toc.yaml` **completely**
    - **MANDATORY**: Read the entire file with the Read tool. Do NOT use Grep or search tools on ToC
    - **If not found**: Read `.doc_structure.yaml` to get `rules.root_dirs`, then search with Glob `<dir>/**/*.md` for each configured directory
-2. Deeply understand all entries, then match task content against each entry's `applicable_tasks` and `keywords`
+2. Deeply understand all entries, then identify relevant candidates from task content
+   - Find relevant entries (match by keywords, purpose, title, applicable_tasks)
 3. If there's any chance of relevance, read the actual file to confirm (no false negatives allowed)
 4. Return the confirmed path list
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Doc Advisor config check: verify document directories are configured.
 # Called from skill Pre-check steps. If not configured, outputs a warning
-# that tells Claude to run /setup-config first.
+# that tells Claude to run /setup-doc-structure first.
 # Exit 0 with no output = directories are configured (OK).
 #
 # Usage: bash check_config.sh [rules|specs]
@@ -18,7 +18,7 @@ CATEGORY="${1:-}"
 
 # .doc_structure.yaml doesn't exist → not configured
 [[ ! -f "$CONFIG" ]] && {
-    echo "[ACTION REQUIRED] Doc Advisor: .doc_structure.yaml not found. Run /setup-config skill to create document structure configuration. This must be completed before document search or ToC generation will work. If in plan mode, run /setup-config after exiting plan mode."
+    echo "[ACTION REQUIRED] Doc Advisor: .doc_structure.yaml not found. Run /setup-doc-structure skill to create document structure configuration. This must be completed before document search or ToC generation will work. If in plan mode, run /setup-doc-structure after exiting plan mode."
     exit 0
 }
 
@@ -39,4 +39,4 @@ else
 fi
 
 # Not configured → warn
-echo "[ACTION REQUIRED] Doc Advisor: Document directories are not configured${CATEGORY:+ for '$CATEGORY'}. Run /setup-config skill to auto-detect and configure document directories. This must be completed before document search or ToC generation will work. If in plan mode, run /setup-config after exiting plan mode."
+echo "[ACTION REQUIRED] Doc Advisor: Document directories are not configured${CATEGORY:+ for '$CATEGORY'}. Run /setup-doc-structure skill to auto-detect and configure document directories. This must be completed before document search or ToC generation will work. If in plan mode, run /setup-doc-structure after exiting plan mode."

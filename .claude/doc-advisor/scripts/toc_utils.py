@@ -146,7 +146,7 @@ def find_config_file():
 
     raise FileNotFoundError(
         ".doc_structure.yaml not found.\n"
-        "Run /setup-config to create document structure configuration."
+        "Run /setup-doc-structure to create document structure configuration."
     )
 
 
