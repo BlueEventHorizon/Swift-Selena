@@ -1,5 +1,60 @@
 {
   "permissions": {
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git reset --hard *)",
+      "Bash(git checkout --force *)",
+      "Bash(git checkout -f *)",
+      "Bash(git switch --force *)",
+      "Bash(git switch -f *)",
+
+      "Bash(git branch -D *)",
+      "Bash(git branch -d *)",
+      "Bash(git branch --delete *)",
+      "Bash(git clean *)",
+      "Bash(git stash clear)",
+      "Bash(git stash drop *)",
+      "Bash(git config *)",
+      "Bash(git rebase *)",
+
+      "Bash(chmod *)",
+      "Bash(chown *)",
+      "Bash(sudo *)",
+      "Bash(kill *)",
+      "Bash(export *)",
+      "Bash(ln *)",
+      "Bash(defaults *)",
+      "Bash(launchctl *)",
+
+      "Bash(find *-delete*)",
+      "Bash(find *-exec *rm *)",
+
+      "Bash(sed *)",
+      "Bash(awk *)",
+      "Bash(> *)",
+      "Bash(>> *)",
+
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(nc *)",
+
+      "Bash(npm uninstall *)",
+      "Bash(npm remove *)",
+
+      "Read(.env*)",
+      "Read(.env.*)",
+      "Read(id_rsa)",
+      "Read(id_ed25519)",
+      "Read(**/*key*)",
+      "Read(**/.ssh/**)",
+
+      "Write(.env*)",
+      "Write(.env.*)",
+      "Write(**/secrets/**)",
+      "Write(**/.ssh/**)"
+    ],
     "allow": [
       "Read",
       "Glob",
@@ -34,6 +89,8 @@
       "Bash(git status *)",
       "Bash(git tag)",
       "Bash(git tag -l *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
 
       "Bash(gh issue view *)",
       "Bash(gh pr view *)",
@@ -75,12 +132,16 @@
       "Skill(query-rules)",
       "Skill(query-specs)",
 
-      "Bash(python3 *)"
+      "Bash(python3 .claude/doc-advisor/scripts/*)",
+      "Bash(bash .claude/doc-advisor/scripts/check_config.sh *)",
+      "Bash(mkdir -p .claude/.temp/*)",
+      "Bash(rm -rf .claude/doc-advisor/toc/specs/.toc_work/)",
+      "Bash(rm -rf .claude/doc-advisor/toc/rules/.toc_work/)",
+      "Bash(cp .claude/doc-advisor/toc/specs/.toc_work/.toc_checksums_pending.yaml .claude/doc-advisor/toc/specs/.toc_checksums.yaml)",
+      "Bash(cp .claude/doc-advisor/toc/rules/.toc_work/.toc_checksums_pending.yaml .claude/doc-advisor/toc/rules/.toc_checksums.yaml)"
     ],
     "ask": [
-      "Bash(git add *)",
       "Bash(git mv *)",
-      "Bash(git commit *)",
       "Bash(git push *)",
       "Bash(git checkout *)",
       "Bash(git switch *)",
@@ -92,64 +153,12 @@
       "Bash(gh issue create *)",
       "Bash(gh issue edit *)",
 
-      "Bash(mkdir *)",
-      "Bash(cp *)",
-      "Bash(mv *)"
-    ],
-    "deny": [
-      "Bash(git push --force *)",
-      "Bash(git push -f *)",
-      "Bash(git push --force-with-lease *)",
-      "Bash(git reset --hard *)",
-      "Bash(git checkout --force *)",
-      "Bash(git checkout -f *)",
-      "Bash(git switch --force *)",
-      "Bash(git switch -f *)",
-
-      "Bash(git branch -D *)",
-      "Bash(git branch -d *)",
-      "Bash(git branch --delete *)",
-      "Bash(git clean *)",
-      "Bash(git stash clear)",
-      "Bash(git stash drop *)",
-      "Bash(git config *)",
-      "Bash(git rebase *)",
-
-      "Bash(chmod *)",
-      "Bash(chown *)",
-      "Bash(sudo *)",
-      "Bash(kill *)",
-      "Bash(export *)",
-
       "Bash(rm *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
       "Bash(touch *)",
-      "Bash(sed *)",
-      "Bash(awk *)",
-      "Bash(> *)",
-      "Bash(>> *)",
-
-      "Bash(curl *)",
-      "Bash(wget *)",
-      "Bash(nc *)",
-
-      "Bash(npm uninstall *)",
-      "Bash(npm remove *)",
-
-      "Read(.env*)",
-      "Read(.env.*)",
-      "Read(id_rsa)",
-      "Read(id_ed25519)",
-      "Read(**/*key*)",
-      "Read(**/.ssh/**)",
-      "Read(apps/app/flavor/*.local.json)",
-      "Read(scripts/firebase/config/*.json)",
-
-      "Write(.env*)",
-      "Write(.env.*)",
-      "Write(**/secrets/**)",
-      "Write(**/.ssh/**)",
-      "Write(apps/app/flavor/*.local.json)",
-      "Write(scripts/firebase/config/*.json)"
+      "Bash(open *)",
+      "Bash(mkdir *)"
     ]
   },
   "hooks": {
@@ -175,17 +184,6 @@
           {
             "type": "command",
             "command": "/usr/bin/afplay --volume 0.5 /System/Library/Sounds/Blow.aiff"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/usr/bin/afplay --volume 0.1 /System/Library/Sounds/Tink.aiff"
           }
         ]
       }
