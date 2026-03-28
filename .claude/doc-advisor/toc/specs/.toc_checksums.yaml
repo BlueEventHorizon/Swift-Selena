@@ -1,6 +1,6 @@
 # Phase 1 snapshot - used to replace .toc_checksums.yaml after merge
 # Auto-generated - do not edit
-generated_at: 2026-03-15T09:16:56Z
+generated_at: 2026-03-28T12:55:59Z
 file_count: 16
 checksums:
   project/main/design/DES-004_swift_toc_generation_design.md: d863ce7363ef23ee3616b1e32aaabe0bbd9a0801bc7e81c4c2becebec2c618da
