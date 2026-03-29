@@ -7,6 +7,9 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 .serena/
-/meta/
+
 __pycache__
 .claude/doc-advisor/config.yaml.old
+
+/meta/
+/meta
