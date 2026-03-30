@@ -8,8 +8,24 @@ DerivedData/
 .netrc
 .serena/
 
-__pycache__
-.claude/doc-advisor/config.yaml.old
+# ===========================
 
-/meta/
-/meta
+# Claude Code
+.claude/settings.local.json
+.claude/.temp/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+*.bak
+.DS_Store
+
+# プロジェクト外参照
+
+**/meta/
+**/meta
+
+**/reference_projects/
+**/reference_projects
