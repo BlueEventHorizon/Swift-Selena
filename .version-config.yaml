@@ -1,0 +1,19 @@
+# version_config_version: 1.0
+
+targets:
+  - name: swift-selena
+    version_file: CHANGELOG.md
+    version_path: changelog_header
+    sync_files: []
+
+changelog:
+  file: CHANGELOG.md
+  format: simple
+  git_log_auto: false
+  section_per_target: false
+
+git:
+  tag_format: "v{version}"
+  commit_message: "chore: bump version to {version}"
+  auto_tag: false
+  auto_commit: false
