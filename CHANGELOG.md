@@ -4,6 +4,28 @@ Swift-Selenaのリリース履歴
 
 ---
 
+## v0.6.6 - 2026-04-02
+
+### リファクタリング・品質改善
+
+- LSPClient を actor 化し messageId の競合状態を解消
+- コードレビュー指摘対応: LSP ハング修正、同期初期化修正、URI エスケープ修正、パラメータパース修正、スレッドセーフティ改善
+- SearchFilesWithoutPatternTool のディレクトリ2重走査を解消
+- InitializeProjectTool の Dead Code 削除・String(describing:) 修正
+- エラー握りつぶし対応（save() 失敗を警告ログに記録）
+- Cache/ ディレクトリの Dead Code を削除
+- scripts/ 集約・Makefile 一元化
+
+### ドキュメント・設定整備
+
+- REQ-005 を REQ-003 に統合（v0.6.5 要件を吸収、REQ-005 を削除）
+- doc-advisor 更新・旧 doc-advisor 削除
+- docs リファクタリング
+- settings.json 整備、settings.local.json を git 管理から除外
+- .gitignore 更新
+
+---
+
 ## v0.6.3 - 2025/12/15〜2026/03/11
 
 ### メタツールモード・Swift対応強化・スクリプト整理
