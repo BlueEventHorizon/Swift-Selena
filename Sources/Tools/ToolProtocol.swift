@@ -44,10 +44,11 @@ enum ToolHelpers {
     /// パラメータから文字列を取得
     static func getString(from args: [String: Value]?, key: String, errorMessage: String) throws -> String {
         guard let args = args,
-              let value = args[key] else {
+              let value = args[key],
+              case .string(let s) = value else {
             throw MCPError.invalidParams(errorMessage)
         }
-        return String(describing: value)
+        return s
     }
 
     /// パラメータから整数を取得
@@ -56,7 +57,16 @@ enum ToolHelpers {
               let value = args[key] else {
             return defaultValue
         }
-        return Int(String(describing: value)) ?? defaultValue
+        // パターンマッチで型安全に値を取り出す
+        switch value {
+        case .int(let v):
+            return v
+        case .string(let s):
+            // 文字列で渡された場合のフォールバック
+            return Int(s) ?? defaultValue
+        default:
+            return defaultValue
+        }
     }
 
     /// パラメータからBoolを取得

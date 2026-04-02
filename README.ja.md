@@ -84,21 +84,24 @@ make build-release
 make help  # 全コマンドを表示
 ```
 
+#### ビルド
+
 | コマンド | 説明 |
 |---------|------|
 | `make build` | DEBUGビルド |
 | `make build-release` | RELEASEビルド |
 | `make clean` | ビルド成果物をクリーン |
-| `make register-debug` | DEBUG版をビルド＆このプロジェクトに登録 |
-| `make register-desktop` | Claude Desktopに登録 |
-| `make unregister-debug` | DEBUG版をこのプロジェクトから解除 |
-| `make unregister-desktop` | Claude Desktopから解除 |
 
-Release版の登録・解除はスクリプトを直接実行:
-```bash
-./register-selena-to-claude-code.sh /path/to/project
-./unregister-selena-from-claude-code.sh [/path/to/project]
-```
+#### 登録・解除
+
+| コマンド | 対象 | 説明 |
+|---------|------|------|
+| `make register-release` | Claude Code | RELEASE版を登録（プロジェクトパスを入力） |
+| `make unregister-release` | Claude Code | RELEASE版の登録を解除（プロジェクトパスを入力） |
+| `make register-debug` | Claude Code | DEBUG版をビルド＆Swift-Selenaプロジェクトに登録 |
+| `make unregister-debug` | Claude Code | DEBUG版をSwift-Selenaプロジェクトから解除 |
+| `make register-desktop` | Claude Desktop | Claude Desktopに登録 |
+| `make unregister-desktop` | Claude Desktop | Claude Desktopから解除 |
 
 ## デバッグ・ログ機能
 
@@ -147,10 +150,8 @@ make register-desktop
 
 ```bash
 # 本番用（ターゲットプロジェクトに登録）
-./register-selena-to-claude-code.sh /path/to/your/project
-
-# 例:
-./register-selena-to-claude-code.sh ~/apps/CCMonitor
+make register-release
+# → プロンプト: 登録先プロジェクトのパスを入力
 
 # 開発・テスト用（Swift-Selenaプロジェクト自体に登録）
 make register-debug
@@ -163,7 +164,8 @@ make register-debug
 make unregister-desktop
 
 # ターゲットプロジェクトから解除
-./unregister-selena-from-claude-code.sh /path/to/your/project
+make unregister-release
+# → プロンプト: 登録解除するプロジェクトのパスを入力（空白でカレントディレクトリ）
 
 # DEBUG版をこのプロジェクトから解除
 make unregister-debug

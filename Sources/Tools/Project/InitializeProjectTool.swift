@@ -7,7 +7,6 @@
 
 import Foundation
 import MCP
-import Logging
 
 /// プロジェクト初期化ツール
 ///
@@ -66,35 +65,4 @@ enum InitializeProjectTool {
         )
     }
 
-    /// プロジェクトを初期化
-    ///
-    /// - Returns: (結果メッセージ, 初期化されたProjectMemory)
-    static func execute(
-        params: CallTool.Parameters,
-        logger: Logger
-    ) async throws -> (result: CallTool.Result, memory: ProjectMemory) {
-        let projectPath = try ToolHelpers.getString(
-            from: params.arguments,
-            key: ParameterKeys.projectPath,
-            errorMessage: ErrorMessages.missingProjectPath
-        )
-
-        // プロジェクトパスの存在確認
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: projectPath, isDirectory: &isDirectory),
-              isDirectory.boolValue else {
-            throw MCPError.invalidParams(ErrorMessages.projectPathNotDirectory)
-        }
-
-        let memory = try ProjectMemory(projectPath: projectPath)
-
-        #if DEBUG
-        let message = "✅ Project initialized: \(projectPath)\n\n\(memory.getStats())"
-        #else
-        let message = "✅ Project initialized: \(projectPath)"
-        #endif
-        let result = CallTool.Result(content: [.text(message)])
-
-        return (result, memory)
-    }
 }

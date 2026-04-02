@@ -1,0 +1,16 @@
+# Phase 1 snapshot - used to replace .toc_checksums.yaml after merge
+# Auto-generated - do not edit
+generated_at: 2026-03-28T13:02:35Z
+file_count: 11
+checksums:
+  docs/format/code_header_format.md: 4ef7b3faeb3bad9a527d8b77de91afa3dd2af38784e51b6fae3b4f959233800f
+  docs/format/design_format.md: 59701c7dfc7ff09d478eba9f10c177ec48d0e251a3f1da92851501308999524e
+  docs/format/plan_format.md: 716688144ef4812a762d75647dbd36122ac991ff2665c23a8b867cda548130c1
+  docs/format/spec_format.md: d9c297216efb0340c8e5b7d2e2d886b9effb035b9745f1c517c2beb840d2e22b
+  docs/rules/base/coding_rule.md: 6dff34237c0ea9a8af37213f760457943c571b430bc056a6323c6185c2bfa304
+  docs/rules/base/develop_with_agent_rule.md: 21f9beed5ee2447dc3eed61dc5d33c2116ca07226905ef450de8bcf574b97873
+  docs/rules/base/principles_of_software_development.md: 47adf096731475fc213231b99fb3e3f74dbdb441dbd9d1fa392110a713d1d7fe
+  docs/rules/base/project_rule.md: 94d5fe91ea2418b0b39571afeb5c6eb26a8423df601507fe3b23fef20ce01ca2
+  docs/rules/base/review_criteria.md: fdbf601fa1f8572523c9abc73708456e64cff33159f0c2484bd3048622d9447d
+  docs/workflow/plan/design_workflow.md: 37fd15f8ce707ed3c699d15158c7d825fbadf7573d2298cf81e06779c67b7c11
+  docs/workflow/plan/planning_workflow.md: b6e6b5716db57efb44ced346fc1dc45eeef95114115e4d8e0b8d1b1b542a7c02

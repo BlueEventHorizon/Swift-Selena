@@ -1,0 +1,21 @@
+# Phase 1 snapshot - used to replace .toc_checksums.yaml after merge
+# Auto-generated - do not edit
+generated_at: 2026-03-28T12:55:59Z
+file_count: 16
+checksums:
+  project/main/design/DES-004_swift_toc_generation_design.md: d863ce7363ef23ee3616b1e32aaabe0bbd9a0801bc7e81c4c2becebec2c618da
+  project/main/design/DES-005_code_header_generation_design.md: ab2712503ca33eeb62f71d2350d38b2123a54f69fa77b2dc5772f65d2f8ccac0
+  project/main/design/DES-006_code_header_db_design_v2.md: 8aa4b6bb6eee91b7172b441207bbeb95aa9896a49b041c6330dc07f3747b2dca
+  project/main/design/DES-101_System_Architecture.md: 59c5ac8ae534b66cb9e4ae0a6415f0c2f890eb04b38c21404e866af1604f668d
+  project/main/design/DES-102_LSP_Integration_Design.md: 27de783d55fb649c8c3684022ab442e4e62190f1d2e0393859a8d62653edd326
+  project/main/design/DES-103_Tool_Implementation_Design.md: 26cf131757c50c7eda2d33623bd30f96c320fa80a5048fd4fa53e86f44a027ff
+  project/main/mcp-guide/MCP-Best-Practices.md: 746afb937d36c0c8c5a98480a2ebebcd908ac0f8a015b8278ab2e43c58fe607e
+  project/main/mcp-guide/MCP-Implementation-Guide.md: c5d2659fdd81c462e99db70052fa9b280e1ce97fbdb5fb92851ec5a722c73bb0
+  project/main/mcp-guide/MCP-SDK-Deep-Dive.md: e1955431ca8b490e9d3af7479f838484ac8a00f518b4319f1c7ddde4b91fe7de
+  project/main/mcp-guide/README.md: 3ccab753610f1bc9648deea7ae46c3a2994a5907c1b9f9dbac0713094c7e0306
+  project/main/plan/main_plan.md: e2e6cd83d5b377248aebd17faa71dc0ed1ec65518a5ff96647a8e7651303669e
+  project/main/spec/README.md: f2beb9c0f67305c58d6a8949f2c3a22c1ca9a6c009406db26c553e953736ff4a
+  project/main/spec/REQ-001_Swift_Selena_Overall_Requirements.md: 86075a7bb063ff5e3a3a02acf4b68a2979d6ba04fa4033bbb22b68494e30eb58
+  project/main/spec/REQ-002_LSP_Integration_v0.5.x.md: 637d41764c6f07971509a832e73500070fe7a614df1f264f2ecf1859f22cac69
+  project/main/spec/REQ-003_Core_Features_Requirements.md: 4458c9819a9ae26071d2e98367f6dacb2181ea7aba5483c9d8818f5d8826173b
+  project/main/spec/REQ-004_Code_Header_DB_v0.6.x.md: ea033023d9b74679e52edc54a89957181da49cc45196e6088e5c7ed6bfd43cbb

@@ -1,4 +1,4 @@
-.PHONY: help build build-release register-debug register-desktop unregister-debug unregister-desktop install-client-makefile clean
+.PHONY: help build build-release register-release unregister-release register-debug unregister-debug register-desktop unregister-desktop clean
 
 default: help
 
@@ -11,19 +11,15 @@ help:
 	@echo "  make clean          - Clean build artifacts"
 	@echo ""
 	@echo "Register commands:"
+	@echo "  make register-release   - Register RELEASE version to Claude Code (prompts for path)"
 	@echo "  make register-debug     - Build & register DEBUG version to this project's Claude Code"
 	@echo "  make register-desktop   - Register to Claude Desktop"
 	@echo ""
-	@echo "  For release version, use scripts directly:"
-	@echo "    ./register-selena-to-claude-code.sh /path/to/project"
-	@echo "    ./unregister-selena-from-claude-code.sh [/path/to/project]"
-	@echo ""
 	@echo "Unregister commands:"
+	@echo "  make unregister-release - Unregister RELEASE version from Claude Code (prompts for path)"
 	@echo "  make unregister-debug   - Unregister DEBUG version from this project"
 	@echo "  make unregister-desktop - Unregister from Claude Desktop"
 	@echo ""
-	@echo "Client tools:"
-	@echo "  make install-client-makefile TARGET=<path> - Install client Makefile to target project"
 
 # ビルド
 build:
@@ -41,11 +37,19 @@ clean:
 	swift package clean
 
 # 登録コマンド
+register-release:
+	@read -p "登録先プロジェクトのパスを入力してください: " target_path; \
+	./scripts/register-release.sh "$$target_path"
+
+unregister-release:
+	@read -p "登録解除するプロジェクトのパスを入力してください（空白でカレントディレクトリ）: " target_path; \
+	./scripts/unregister-release.sh "$$target_path"
+
 register-debug:
-	@./Tools/Scripts/register-selena-to-claude-code-debug.sh
+	@./scripts/register-debug.sh
 
 register-desktop:
-	@./Tools/Scripts/register-mcp-to-claude-desktop.sh
+	@./scripts/register-desktop.sh
 
 # 登録解除コマンド
 unregister-debug:
@@ -54,36 +58,4 @@ unregister-debug:
 	@echo "Done. Restart Claude Code to apply changes."
 
 unregister-desktop:
-	@echo "Unregistering swift-selena from Claude Desktop..."
-	@CONFIG_FILE="$$HOME/Library/Application Support/Claude/claude_desktop_config.json"; \
-	if [ -f "$$CONFIG_FILE" ] && command -v jq &> /dev/null; then \
-		jq 'del(.mcpServers."swift-selena")' "$$CONFIG_FILE" > "$$CONFIG_FILE.tmp" && \
-		mv "$$CONFIG_FILE.tmp" "$$CONFIG_FILE" && \
-		echo "Removed swift-selena from Claude Desktop config."; \
-	else \
-		echo "Config file not found or jq not installed. Please edit manually."; \
-	fi
-	@echo "Done. Restart Claude Desktop to apply changes."
-
-# クライアントツール
-install-client-makefile:
-	@if [ -z "$(TARGET)" ]; then \
-		echo "Error: TARGET is required"; \
-		echo "Usage: make install-client-makefile TARGET=/path/to/your/project"; \
-		exit 1; \
-	fi
-	@if [ ! -d "$(TARGET)" ]; then \
-		echo "Error: Directory not found: $(TARGET)"; \
-		exit 1; \
-	fi
-	@if [ -f "$(TARGET)/Makefile" ]; then \
-		echo "Warning: Makefile already exists at $(TARGET)/Makefile"; \
-		read -p "Overwrite? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1; \
-	fi
-	@cp Tools/Client/Makefile "$(TARGET)/Makefile"
-	@echo "Installed client Makefile to $(TARGET)/Makefile"
-	@echo ""
-	@echo "Available commands in target project:"
-	@echo "  make connect_gemini     - Connect gemini-cli MCP tool"
-	@echo "  make connect_figma      - Connect Figma Dev Mode MCP server"
-	@echo "  make connect_serena     - Connect serena MCP server"
+	@./scripts/unregister-desktop.sh

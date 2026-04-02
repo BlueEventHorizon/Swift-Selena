@@ -7,6 +7,25 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 .serena/
-/meta/
-__pycache__
-.claude/doc-advisor/config.yaml.old
+
+# ===========================
+
+# Claude Code
+.claude/settings.local.json
+.claude/.temp/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+*.bak
+.DS_Store
+
+# プロジェクト外参照
+
+**/meta/
+**/meta
+
+**/reference_projects/
+**/reference_projects

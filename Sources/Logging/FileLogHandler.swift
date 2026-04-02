@@ -72,6 +72,7 @@ struct FileLogHandler: LogHandler {
         line: UInt
     ) {
         // v0.5.4: 日本時間（JST）でタイムスタンプ表示
+        // DateFormatterはスレッドセーフでないため、呼び出し毎にローカル生成
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
         formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")

@@ -4,7 +4,56 @@ Swift-Selenaのリリース履歴
 
 ---
 
-## v0.6.1 - 2025/12/06 (開発中)
+## v0.6.3 - 2025/12/15〜2026/03/11
+
+### メタツールモード・Swift対応強化・スクリプト整理
+
+**新機能 - メタツールモード（2025-12-15）:**
+- ✅ **MetaToolRegistry** - 全解析ツールをレジストリで動的管理
+- ✅ **list_available_tools** - 利用可能なツール一覧と説明を表示
+- ✅ **get_tool_schema** - 特定ツールのJSONスキーマを取得
+- ✅ **execute_tool** - ツールを名前で実行（JSON引数渡し）
+- ✅ **SWIFT_SELENA_LEGACY=1** - 全ツール直接公開の従来モードをフォールバックとして維持
+- Claudeへの公開ツールを4つに削減、コンテキストウィンドウ消費を最小化
+
+**Swift Version対応（2025-12-15）:**
+- ✅ **SymbolVisitor 強化** - 新しい Swift バージョンの構文に対応
+
+**Swift Testing 強化（2025-12-17）:**
+- ✅ **SwiftTestingVisitor 新規追加** - `@Test` / `@Suite` マクロを専用 Visitor で検出
+- ✅ **FindTestCasesTool 改善** - XCTest と Swift Testing の両方を統合的に解析
+
+**バグ修正 - Protocol認識（2026-01-06）:**
+- ✅ **TypeConformanceVisitor 大幅改修** - Protocol vs Class の認識精度を大幅改善
+  - `list_protocol_conformances` で Protocol がクラスとして誤認識される問題を修正
+  - Protocol宣言の専用検出ロジックを追加
+  - ProjectMemory への保存形式を整理
+
+**その他（2026-01-06）:**
+- ✅ **MIT LICENSE ファイル追加** - ライセンス明示
+
+**スクリプト整理・Makefile一元化（2026-03-11）:**
+- ✅ **scripts/ ディレクトリ新設** - 全 shell script を集約
+  - `register-release.sh`, `unregister-release.sh`, `register-debug.sh`, `register-desktop.sh`
+- ✅ **ルートの .sh を削除** - `register-selena-to-claude-code.sh` 等を廃止
+- ✅ **Makefile が唯一の入口** - make コマンド以外の直接実行を不要に
+
+**Makefile - 登録コマンド一覧:**
+
+| コマンド | 対象 | 説明 |
+|---------|------|------|
+| `make register-release` | Claude Code | RELEASE版を登録（パスを対話入力） |
+| `make unregister-release` | Claude Code | RELEASE版の登録を解除（パスを対話入力） |
+| `make register-debug` | Claude Code | DEBUG版をビルド＆登録 |
+| `make unregister-debug` | Claude Code | DEBUG版を登録解除 |
+| `make register-desktop` | Claude Desktop | Claude Desktopに登録 |
+| `make unregister-desktop` | Claude Desktop | Claude Desktopから解除 |
+
+**ツール総数:** 15個（MetaTool 4個 + 解析ツール 11個）
+
+---
+
+## v0.6.1 - 2025/12/06
 
 ### ビルド・登録システムのリファクタリング
 
@@ -12,9 +61,7 @@ Swift-Selenaのリリース履歴
 - ✅ **make build** - DEBUGビルド
 - ✅ **make build-release** - RELEASEビルド
 - ✅ **make register-debug** - DEBUG版をこのプロジェクトに登録
-- ✅ **make register-release TARGET=/path** - RELEASE版をターゲットに登録
 - ✅ **make register-desktop** - Claude Desktopに登録
-- ✅ **make unregister-debug/release/desktop** - 登録解除コマンド
 - ✅ **make install-client-makefile TARGET=/path** - クライアント用Makefile配布
 
 **ファイル構成変更:**
@@ -23,34 +70,10 @@ Swift-Selenaのリリース履歴
 - 新規 `Makefile` でビルド・登録を一元管理
 
 **バグ修正:**
-- ✅ **DebugRunner パス修正** - ハードコードされた `/Users/k_terada/...` を動的検出に変更
+- ✅ **DebugRunner パス修正** - ハードコードされたパスを動的検出に変更
   - `detectProjectPath()` メソッド追加
-  - カレントディレクトリまたは実行ファイルパスから自動検出
-- ✅ **ドキュメントのパス修正** - 個人パスをプレースホルダーに置換
 
-**ドキュメント更新:**
-- README.md/README.ja.md: Makeコマンド一覧、セットアップ手順更新
-- CLAUDE.md: ビルド・登録コマンドをmake形式に更新
-- `.claude/commands/create-code-headers.md`: Swift-Selena用にディレクトリ修正
-
-**ツール総数:** 18個（変更なし）
-
----
-
-## v0.6.0 - (計画中)
-
-### Code Header DB機能（予定）
-
-**計画中の新機能:**
-- **search_code_headers** - セマンティック検索でCode Headerを検索
-- **get_code_header_stats** - Code Header統計情報
-
-**技術:**
-- NLEmbedding（Apple Natural Language）によるベクトル埋め込み
-- コサイン類似度による意味検索
-- ProjectMemoryへのキャッシュ統合
-
-**詳細**: docs/v0.6.0_implementation_plan.md、docs/requirements/REQ-004_Code_Header_DB_v0.6.x.md参照
+**ツール総数:** 15個（変更なし）
 
 ---
 
@@ -419,4 +442,4 @@ Swift-Selenaのリリース履歴
 
 ---
 
-**Last Updated**: 2025-12-06
+**Last Updated**: 2026-03-11
