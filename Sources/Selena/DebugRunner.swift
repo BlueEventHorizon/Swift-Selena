@@ -133,7 +133,7 @@ actor DebugRunner {
 
         // 結果をログに出力（最初の200文字のみ）
         for content in result.content {
-            if case .text(let text) = content {
+            if case .text(let text, _, _) = content {
                 let preview = String(text.prefix(200))
                 logger.info("   Result: \(preview)...")
             }
@@ -162,7 +162,7 @@ actor DebugRunner {
 
         // 結果をログに出力（最初の200文字のみ）
         for content in result.content {
-            if case .text(let text) = content {
+            if case .text(let text, _, _) = content {
                 let preview = String(text.prefix(200))
                 logger.info("   Result: \(preview)...")
             }
