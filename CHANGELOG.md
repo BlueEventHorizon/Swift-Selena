@@ -4,6 +4,15 @@ Swift-Selenaのリリース履歴
 
 ---
 
+## v0.6.7 - 2026-04-21
+
+### ビルドエラー対応
+
+- **fix**: swift-sdk を 0.10.2 → 0.12.0 に更新（Swift 6.3.1 コンパイラの `StrictConcurrency` 強化により `NetworkTransport.swift` で `#SendingRisksDataRace` エラーが発生する問題を解消）
+- **fix**: `DebugRunner.swift` のパターンマッチを新 API に対応（`.text` enum case が 3 連想値 `(text:annotations:_meta:)` になったため `.text(let text, _, _)` へ修正）
+
+---
+
 ## v0.6.6 - 2026-04-02
 
 ### リファクタリング・品質改善
