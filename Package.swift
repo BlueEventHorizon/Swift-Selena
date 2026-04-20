@@ -8,7 +8,7 @@ let package = Package(
     ],
     dependencies: [
         // MCP Swift SDK
-        .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", exact: "0.10.2"),
+        .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", exact: "0.12.0"),
         .package(url: "https://github.com/apple/swift-syntax.git", exact: "602.0.0"),
     ],
     targets: [
