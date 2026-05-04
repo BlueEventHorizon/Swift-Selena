@@ -83,13 +83,9 @@ MCP プロトコルの `CallTool.Result` の `content` 配列に、`.text(String
 
 課題解決の主役は「出力モード選択」と「件数上限の明示指定」であり、デフォルト変更は後方互換を損なうため行わない。
 
-### TBD-007: 含めるパターン配列と既存単一指定の優先順位
+### TBD-007: 解消済み（`file_pattern` 廃止により無効化）
 
-**採用方針**: `include_patterns` 配列が 1 件以上指定された場合は配列を優先し、`file_pattern` を無視する
-
-- `include_patterns` が空配列・省略・null → `file_pattern` を従来どおり使用
-- `include_patterns` が 1 件以上 → `file_pattern` を完全に無視
-- 利用者はこの優先順位を考慮してパラメータを設計する
+REQ-005 §4.3 で `file_pattern` を本 Feature 廃止対象（破壊的変更）と確定したため、本 TBD（含めるパターン配列と既存単一指定の優先順位）は併存しなくなり優先順位の議論自体が消滅した。詳細は REQ-005 §4.3「破壊的変更（既存単一指定パラメータの廃止）」段落および §4.6 後方互換性を参照。
 
 ### TBD-009: 配列要素数上限方針
 
@@ -321,10 +317,12 @@ static func searchCode(
 
 **ファイルパターン評価アルゴリズム**:
 
-1. `includePatterns` が空 → `file_pattern`（従来パラメータ）を使用。`file_pattern` も空なら `.swift` 拡張子一致
-2. `includePatterns` が 1 件以上 → `file_pattern` を無視。`includePatterns` の OR 結合で対象ファイルを決定
+1. `includePatterns` が空（未指定・空配列・null） → `.swift` 拡張子一致（既定挙動）
+2. `includePatterns` が 1 件以上 → `includePatterns` の OR 結合で対象ファイルを決定
 3. `excludePatterns` が 1 件以上 → `excludePatterns` の OR 結合で合致するファイルを除外（include 優先度より除外優先）
 4. glob パース失敗（`NSRegularExpression` 生成失敗）→ `InvalidParams` エラー
+
+> **注**: 既存パラメータ `file_pattern` は本 Feature で廃止する破壊的変更（REQ-005 §4.3）。`file_pattern` が指定された場合の挙動（未知パラメータエラー / 無視）は §5.1 パラメータ設計で確定する。
 
 **glob パーサー**: 既存の `private static wildcardToRegex()` を `internal static` に変更し、`**/` パターン（サブディレクトリ再帰）をサポートする拡張を加える。`**` → `.*` に変換する。
 
@@ -635,17 +633,21 @@ CapabilityRegistry
 | パラメータ名 | 型 | 既存/新規 | 説明 |
 |-------------|-----|---------|------|
 | `pattern` | `string` | 既存 | 正規表現パターン（必須） |
-| `file_pattern` | `string` | 既存 | 後方互換用単一 glob |
 | `output_mode` | `string` | **新規** | `"match_detail"` / `"file_list"` / `"count_only"` |
 | `limit` | `integer` | **新規** | 件数上限（1〜10,000）。`output_mode="match_detail"` 時はマッチ行数に適用、`output_mode="file_list"` 時はファイル数（重複排除後）に適用、`output_mode="count_only"` 時は非適用（指定されても集計値に影響しない） |
 | `include_patterns` | `array<string>` | **新規** | 含めるファイル glob 配列 |
 | `exclude_patterns` | `array<string>` | **新規** | 除くファイル glob 配列 |
+
+> **廃止パラメータ**: 既存 `file_pattern`（`string`）は本 Feature で廃止する破壊的変更（REQ-005 §4.3）。`file_pattern` キーが指定された場合の挙動は **未知パラメータとして無視する**（`InvalidParams` エラーは返さない）。理由: MCP クライアント側で旧スキーマがキャッシュされている可能性に対する寛容性を優先し、エラー連鎖を避けるため。代替手段は `include_patterns=["{glob}"]` を利用すること。
 
 追加する `ParameterKeys` 定数:
 - `outputMode = "output_mode"`
 - `limit = "limit"`
 - `includePatterns = "include_patterns"`
 - `excludePatterns = "exclude_patterns"`
+
+削除する `ParameterKeys` 定数:
+- `filePattern = "file_pattern"`（`Sources/Constants.swift:58` を削除。`SearchFilesWithoutPatternTool` 等での同名パラメータ利用は別途 issue #34 で扱うため、本 Feature では `SearchCodeTool` 側の参照のみ削除し、`Constants.filePattern` 自体の削除可否は他ツールの修正完了を待って判断する）
 
 ### 5.2 出力モード別テキスト出力フォーマット
 
@@ -1053,9 +1055,13 @@ suggestion: {修正案（機械的に区別可能）}
 
 - `output_mode` 未指定 → `match_detail`（従来と同等の出力）
 - `limit` 未指定 → 全件返す
-- `include_patterns` / `exclude_patterns` 未指定 → 従来の `file_pattern` ロジックを適用
+- `include_patterns` / `exclude_patterns` 未指定 → `.swift` 拡張子一致（従来 `file_pattern` 未指定時と同等の既定挙動）
 - テキスト出力の行頭フォーマット `<file>:<line>: <content>` は変更なし
 - 構造化ブロック（`--- structured ---` 以降）は**追記**であり既存行に変更を加えない
+
+**破壊的変更（REQ-005 §4.3 / §4.6）**:
+- 既存パラメータ `file_pattern` は廃止。指定された場合は §5.1 の方針に従い未知パラメータとして無視される（旧クライアントは結果が「全 `.swift` ファイル対象」になるため、絞り込み再現には `include_patterns` への移行が必要）。
+- 後方互換例外として REQ-005 §4.6「破壊的変更（許容する範囲）」で許容済み。
 
 ### 9.2 FindSymbolDefinitionTool の後方互換
 
@@ -1091,7 +1097,8 @@ suggestion: {修正案（機械的に区別可能）}
 - `output_mode="count_only"` 指定時、マッチ数とファイル数のみ返る
 - `limit=5` 指定でマッチが 10 件のとき、5 件返し `truncated=true` が付く
 - `include_patterns=["*.swift"]` と `exclude_patterns=["*Tests*"]` で Tests ファイルが除外される
-- `include_patterns=["*.swift"]` と `file_pattern="*.md"` の同時指定で `include_patterns` が優先される
+- `include_patterns` / `exclude_patterns` を未指定で従来と同様 `.swift` ファイル全体が対象となる（既定挙動、旧 `file_pattern` 未指定時と同等）
+- 廃止済み `file_pattern="*.md"` を指定しても無視され、`include_patterns` 等が空ならば既定挙動（`.swift` 全体）が適用される（REQ-005 §4.3 破壊的変更の検証）
 
 **異常系**:
 - `pattern` に不正な正規表現を指定 → エラー（`cause:` / `suggestion:` を含む）
@@ -1181,3 +1188,4 @@ suggestion: {修正案（機械的に区別可能）}
 | 2026-05-04 | 1.0 | k2moons | 初版作成（REQ-005 §4.1〜§4.8 全 TBD 解決） |
 | 2026-05-04 | 1.1 | k2moons | レビュー指摘修正（要件トレーサビリティ表追加・SymbolVisitorV2 extension 種別シンボル追加・CapabilityRegistry 統合フロー補記・wildcardToRegex 採用案一本化・節番号重複解消・テンプレート整合注記追加・各種堅牢性注記追加） |
 | 2026-05-04 | 1.2 | k2moons | テンプレート必須セクション補完（§3.1 データフロー設計・§4.9 状態管理設計・§6.8 ユースケース設計を追加、§12.1 にテンプレートセクション対応マッピング追加） |
+| 2026-05-05 | 1.3 | k2moons | REQ-005 `file_pattern` 廃止（破壊的変更）反映: ① §2 TBD-007 を解消済みに変更（理由を REQ-005 §4.3 / §4.6 への参照に集約）／② §4.4 ファイルパターン評価アルゴリズムを書き換え（`includePatterns` 未指定時の既定挙動を `.swift` 拡張子一致に簡素化、`file_pattern` 廃止注を追加）／③ §5.1 パラメータ設計から `file_pattern` 行を削除し、廃止パラメータの扱い（未知パラメータとして無視）を明記、`Constants.filePattern` 削除可否は issue #34 と連動する旨を補記／④ §9.1 後方互換から `file_pattern` ロジック適用記述を削除し、破壊的変更の再現方法（`include_patterns` 移行）を追記／⑤ §11.1 テストケースを更新（同時指定優先テストを廃止挙動検証テストに置換） |
