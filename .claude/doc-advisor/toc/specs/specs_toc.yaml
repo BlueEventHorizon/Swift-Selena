@@ -4,40 +4,42 @@
 
 metadata:
   name: Project Specification Document Search Index
-  generated_at: 2026-05-01T12:13:04Z
+  generated_at: 2026-05-04T02:48:33Z
   file_count: 17
 
 docs:
   project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md:
     doc_type: spec
-    title: Search and Symbol Tools Enhancement
-    purpose: Strengthen search and symbol tools to support grep-level usage while expanding LSP-based semantic search capabilities across large projects
+    title: Search and Symbol Tools Enhancement (REQ-005)
+    purpose: Enhances search_code and find_symbol_definition tools with result volume control, structured output, advanced filtering, and symbol disambiguation to support both grep use cases and semantic search capabilities.
     content_details:
-      - Result volume control for search_code with output modes and result limits
-      - Structured search results with machine-readable fields
-      - Multiple file pattern support with include/exclude glob arrays
-      - Enhanced symbol definition search with type filter and scope information
-      - Symbol name-based reference search with LSP precision and fallback
-      - Graceful LSP unavailability handling with fallback status
-      - Backward compatibility for existing tool invocations
-      - Input validation for regex, glob syntax, result limits, symbol types
-      - "Edge case handling: LSP disconnection, cache corruption, zero matches"
+      - Result output mode control (match details, file list, count only)
+      - Result count limit with overflow indication
+      - Structured output format with common fields (file path, line number, matched content, total count, truncation flag)
+      - Include pattern and exclude pattern arrays with glob support
+      - Symbol type filter (struct, class, enum, protocol, actor, function, variable, typealias, extension)
+      - Symbol scope information (parent scope, extension target, module name)
+      - Backward compatibility for existing single-pattern and text output formats
+      - Error handling and validation for glob syntax, count limits, and symbol types
+      - Capability notification to report available tools based on environment prerequisites
     applicable_tasks:
-      - Search tool implementation enhancement
-      - Symbol definition resolution improvement
-      - Reference search implementation
-      - LSP integration and fallback handling
-      - Input validation and error messaging
+      - Grep-style code search with result volume control
+      - Symbol definition search with disambiguation for same-named symbols
+      - Test and mock exclusion filtering
+      - Machine-processable result extraction without text parsing
+      - Environment capability detection and reporting
+      - Error message generation with cause and remedy information
     keywords:
-      - search
-      - symbol
-      - grep
-      - LSP
-      - references
-      - file pattern
-      - result control
-      - fallback
-      - structured data
+      - search_code
+      - find_symbol_definition
+      - output mode
+      - result count limit
+      - glob pattern
+      - file filtering
+      - symbol type
+      - scope disambiguation
+      - structured result
+      - backward compatibility
   project/main/design/DES-004_swift_toc_generation_design.md:
     doc_type: design
     title: Swift Code Index Generation System Design
