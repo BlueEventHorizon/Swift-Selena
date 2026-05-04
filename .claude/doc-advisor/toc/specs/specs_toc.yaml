@@ -4,10 +4,43 @@
 
 metadata:
   name: Project Specification Document Search Index
-  generated_at: 2026-05-04T02:48:33Z
-  file_count: 17
+  generated_at: 2026-05-04T03:18:15Z
+  file_count: 18
 
 docs:
+  project/improve/design/DES-104_search_symbol_tools_enhancement_design.md:
+    doc_type: design
+    title: Search and Symbol Tools Enhancement Design
+    purpose: Defines the design and architecture for enhancing search_code and find_symbol_definition tools with multiple input patterns, structured output, symbol kind filtering, scope information, and capability notification.
+    content_details:
+      - Output modes (match_detail, file_list, count_only)
+      - Include/exclude file pattern arrays
+      - Symbol kind filtering and priority-based sorting
+      - Scope information (parent scope, extension target, module name)
+      - SearchCodeTool and FindSymbolDefinitionTool parameter expansion
+      - SymbolVisitorV2 for scope tracking
+      - SymbolKindMapper for kind value translation
+      - ResultEncoder for structured JSON output
+      - ModuleNameResolver for SwiftPM target detection
+      - CapabilityRegistry for dynamic tool availability
+    applicable_tasks:
+      - Search and symbol tools implementation
+      - Tool parameter enhancement implementation
+      - Scope information tracking implementation
+      - Output format design implementation
+      - Error handling design validation
+      - Backward compatibility verification
+    keywords:
+      - search_code
+      - find_symbol_definition
+      - SearchCodeTool
+      - FindSymbolDefinitionTool
+      - SymbolVisitorV2
+      - scope information
+      - structured output
+      - symbol kind filtering
+      - FileSearcher
+      - CapabilityRegistry
   project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md:
     doc_type: spec
     title: Search and Symbol Tools Enhancement (REQ-005)

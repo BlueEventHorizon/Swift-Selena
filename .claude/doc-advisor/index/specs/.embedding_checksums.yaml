@@ -1,9 +1,9 @@
-# Phase 1 snapshot - used to replace .toc_checksums.yaml after merge
+# Embedding index checksums for specs
 # Auto-generated - do not edit
-generated_at: 2026-05-04T03:17:50Z
+generated_at: 2026-05-04T03:00:47Z
 file_count: 18
 checksums:
-  project/improve/design/DES-104_search_symbol_tools_enhancement_design.md: 686e0cb424292648af91adbbdaa111652502edee02ec6f1c8492e6080aa637dd
+  project/improve/design/DES-104_search_symbol_tools_enhancement_design.md: 74a6522ba3eb718c5e76c191a2cdb0b5f85ee70d5d3a7f6d5558323eab02119a
   project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md: 88e6e574ec5659846e18b0ea8f39bee7acb24f56fa29cbb760e5e4c13d908a75
   project/main/design/DES-004_swift_toc_generation_design.md: d863ce7363ef23ee3616b1e32aaabe0bbd9a0801bc7e81c4c2becebec2c618da
   project/main/design/DES-005_code_header_generation_design.md: ab2712503ca33eeb62f71d2350d38b2123a54f69fa77b2dc5772f65d2f8ccac0
