@@ -1,9 +1,9 @@
 # Phase 1 snapshot - used to replace .toc_checksums.yaml after merge
 # Auto-generated - do not edit
-generated_at: 2026-05-01T12:12:35Z
+generated_at: 2026-05-04T02:48:07Z
 file_count: 17
 checksums:
-  project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md: bb6207e4a720e51488ca45e89e3ec90a8babf4d5915eba08cd487878971be4a5
+  project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md: 88e6e574ec5659846e18b0ea8f39bee7acb24f56fa29cbb760e5e4c13d908a75
   project/main/design/DES-004_swift_toc_generation_design.md: d863ce7363ef23ee3616b1e32aaabe0bbd9a0801bc7e81c4c2becebec2c618da
   project/main/design/DES-005_code_header_generation_design.md: ab2712503ca33eeb62f71d2350d38b2123a54f69fa77b2dc5772f65d2f8ccac0
   project/main/design/DES-006_code_header_db_design_v2.md: 8aa4b6bb6eee91b7172b441207bbeb95aa9896a49b041c6330dc07f3747b2dca
