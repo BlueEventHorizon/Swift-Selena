@@ -44,10 +44,11 @@ tasks:
     build_check: per_task
     description:
       - DES-104 §5.1 / §6.1 に従い ParameterKeys 定数を追加（output_mode / limit / include_patterns / exclude_patterns / symbol_kinds）
-      - DES-104 §5.1 注記に従い filePattern = "file_pattern" 定数の扱いを整理（SearchCodeTool 側参照削除のみ、定数削除可否は他ツール状況に応じて判断）
+      - DES-104 §5.1 注記に従い filePattern = "file_pattern" 定数の扱いを整理（SearchCodeTool 側参照削除のみ、定数削除可否は issue #34（他ツールの file_pattern 参照削除）連動とし、本タスクのスコープ外）
       - DES-104 §8 に従い ErrorMessages の cause / suggestion 定数を追加（正規表現エラー / glob 構文エラー / 件数上限境界 / シンボル種別未定義 / 配列要素数上限）
       - DES-104 §4.8 に従い capabilityCheckTimeout 等のケーパビリティ判定タイムアウト定数を追加
       - DES-104 §8.4 に従い maxSkippedFilesInResponse 定数を追加
+      - DES-104 §7.2 に従い `[CapabilityWarning]` プレフィックス定数を Constants に追加（TASK-013 の CapabilityRegistry 通知および後方互換テストから定数経由で参照可能とする）
     acceptance_criteria: 既存ビルドが通り、後続タスクが新規定数を参照できる
     required_reading:
       - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
@@ -134,7 +135,7 @@ tasks:
       - docs/rules/base/coding_rule.md
 
   - task_id: TASK-006
-    title: SymbolVisitorV2 新規実装
+    title: SymbolVisitorV2 実装と SwiftSyntaxAnalyzer.listSymbolsWithScope 本体完成
     priority: 75
     status: pending
     design_id: DES-104
@@ -145,13 +146,12 @@ tasks:
     build_check: per_task
     description:
       - DES-104 §4.5 に従い Sources/Selena/Visitors/SymbolVisitorV2.swift を新規作成（SymbolVisitor は継承せず独立実装）
-      - DES-104 §4.5 のスコープ追跡仕様（追跡対象宣言 6 種・visit/visitPost での push/pop・extension の取り扱い）に従いスコープスタックを実装
-      - parentScope は直近の非 extension エントリ、extensionTarget は直近の extension エントリ対象型から決定
+      - DES-104 §4.5 のスコープ追跡仕様に従いスコープスタックを実装する（決定規則は §4.5 に従う）
       - extension 自身も "Extension" 種別のシンボルとして登録する（REQ-005 §4.4.1 受入基準対応）
-      - DES-104 §4.5 のスタック整合性方針（visit 戻り値・defer によるスタック崩壊防止）に従う
+      - DES-104 §4.5 のスタック整合性方針に従う
       - ModuleNameResolver を参照してモジュール名を付与
-      - listSymbolsWithScope(filePath) の本体実装を完成させ、SymbolVisitorV2 の出力を SymbolInfoV2 配列として返す
-    acceptance_criteria: ルート型 / ネスト型 / extension 内型を区別する単体テストが通る
+      - Sources/Selena/Core/SwiftSyntaxAnalyzer.swift の listSymbolsWithScope(filePath)（TASK-005 で追加されたスタブ）の本体実装を完成させ、SymbolVisitorV2 を呼び出して SymbolInfoV2 配列を返す形に置き換える（DES-104 §2 TBD-009 / TBD-010 の上限値は本タスクのスコープ外で TASK-014 の境界値テストにて検証）
+    acceptance_criteria: ルート型 / ネスト型 / extension 内型を区別する単体テストが通り、かつ visit/visitPost 対称性（push/pop 回数の一致）・defer によるスタック崩壊防止（早期 return パスを含む発火）・extension 自身の Extension 種別シンボル登録を検証する単体テストが通る
     required_reading:
       - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
       - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
@@ -195,8 +195,8 @@ tasks:
       - DES-104 §4.7 / §5.2 に従い検索結果のテキスト出力（モード別フォーマット）と JSON スキーマを生成する encodeSearchCode を実装
       - DES-104 §4.7 に従い text と structured json を結合する buildFinalResponse を実装
       - DES-104 §8.1 統一フォーマットに従い buildErrorResponse を実装
-      - encodeSymbolDefinition は API スケルトンのみ実装し、整形ロジックは TASK-012 で完成（今回はコンパイル可能な状態まで）
-      - DES-104 §8.3 構造化結果生成失敗時の付記ルール（末尾改行 + [structured output unavailable]）に対応する
+      - encodeSymbolDefinition は API スケルトンのみ実装（本体は fatalError("unimplemented") など即時クラッシュさせるスタブ）、整形ロジックは TASK-012 で完成
+      - DES-104 §8.3 に従い構造化結果生成失敗時の付記ルールに対応する
     acceptance_criteria: 単体ビルドが通り、encodeSearchCode の各モードでの出力が単体テストで検証可能
     required_reading:
       - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
@@ -205,7 +205,7 @@ tasks:
 
   - task_id: TASK-009
     title: CapabilityRegistry 新規実装
-    priority: 60
+    priority: 70
     status: pending
     design_id: DES-104
     depends_on:
@@ -219,13 +219,14 @@ tasks:
       - キャンセル協調・defer によるリソース解放原則を満たす
       - ListTools 呼び出しごとに前提条件を再評価する設計（永続的除外フラグは持たない）
       - search_code / find_symbol_definition / list_symbols は前提条件なしで初期登録するが、登録自体はこのタスクでは実施せず、TASK-013 で SwiftMCPServer 起動時に登録する
-      - DES-104 §4.8 で要請される並列実行・capabilityCheckTimeout 経過時の除外・キャンセル協調観測点・defer によるリソース解放・タイムアウト時ログ出力を検証する単体テストを追加する
+      - DES-104 §4.8 で要請される並列実行・capabilityCheckTimeout 経過時の除外・キャンセル協調観測点・defer によるリソース解放・タイムアウト時ログ出力を検証する単体テストを追加する（ログ検証は Sources/Logging/ のロガーをテスト用にスタブ化／プロトコル経由で注入し、出力内容を assert する手段で実施）
     acceptance_criteria: |
       actor として動作し、register / availableTools の単体テストが通る。
       並列実行・capabilityCheckTimeout 経過時の除外動作・キャンセル発行から子タスク停止の協調観測・タイムアウト時ログ出力の単体テストが通る。
     required_reading:
       - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
       - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - Sources/Logging/
       - docs/format/code_header_format.md
       - docs/rules/base/coding_rule.md
 
@@ -300,7 +301,7 @@ tasks:
       - SymbolDefinitionResult 構造体を本ファイル内に定義（§4.7 配置方針）
       - ResultEncoder.encodeSymbolDefinition の本実装を §6.6 テキスト出力フォーマットに従って完成（TASK-008 のスケルトンを完成）
       - キャッシュ未ヒット時は SwiftSyntaxAnalyzer.listSymbolsWithScope を呼び出し、ProjectMemory.cacheFileSymbols でキャッシュ保存
-      - パース失敗ファイルは skipped_files に記録（§8.4、最大 100 件 + skipped_files_truncated / total_skipped_count）
+      - パース失敗ファイルは DES-104 §8.4 に従い skipped_files に記録する（上限値・関連フィールドは設計書参照）
       - ProjectMemory.isCacheWarning() を await で取得し ResultEncoder に渡す
       - 既存テキスト出力フォーマットの後方互換（§9.2）を維持し、Scope 行は追加行として付記
     acceptance_criteria: §11.2 の正常系・異常系テストが通り、ビルドと既存テストが GROUP-001 完了時点で全て通る
@@ -325,7 +326,7 @@ tasks:
       - 初期登録（search_code / find_symbol_definition / list_symbols）を実施
       - ListTools / list_available_tools ハンドラを CapabilityRegistry.availableTools() 経由に変更し、MetaToolRegistry.getToolDefinition で Tool 定義を取得して応答
       - DES-104 §7.2 に従いケーパビリティ判定失敗ツールは [CapabilityWarning] プレフィックスで通知し、initialize_project / list_available_tools 応答に含める
-    acceptance_criteria: ListTools 応答が CapabilityRegistry 経由で返り、判定失敗時の警告が観察できる
+    acceptance_criteria: 前提条件チェック関数が常に false を返すモックを登録した場合に initialize_project / list_available_tools 応答テキストが `[CapabilityWarning]` プレフィックス行を含むことを assert する単体テストが通る
     required_reading:
       - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
       - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
@@ -343,7 +344,8 @@ tasks:
     build_check: per_task
     description:
       - DES-104 §11.1 の正常系（output_mode 各種・limit・include/exclude・既定挙動・file_pattern 無視）をカバー
-      - 異常系（不正正規表現・limit=0/-1・limit=20000 切り詰め・include 21 件・不正 glob・include/exclude 衝突）をカバー
+      - 境界値テストとして limit=10000 ちょうど（切り詰めなし）と limit=10001（境界 +1、切り詰めあり）の双方を検証（DES-104 §2 TBD-010 件数上限最大値 10,000 に従う）
+      - 異常系（不正正規表現・limit=0/-1・limit=20000 切り詰め・include 21 件・include_patterns / exclude_patterns 各々に不正 glob を含むケース・include/exclude 衝突）をカバー（配列要素数上限は DES-104 §2 TBD-009 に従う）
       - 既存テストとの後方互換を破壊しない
     acceptance_criteria: swift test が通り、追加ケースが緑になる
     required_reading:
@@ -362,7 +364,7 @@ tasks:
     build_check: per_task
     description:
       - DES-104 §11.2 の正常系（symbol_kinds 未指定の優先返却順 / 単一・複数指定 OR / ルート vs ネスト型 vs extension 内型の区別）をカバー
-      - 異常系（unknown_type / 部分的不正値）をカバー
+      - 異常系（unknown_type / 部分的不正値 / symbol_kinds 配列要素数 9 件超過（重複含む））をカバー（配列要素数上限は DES-104 §2 TBD-009 に従う）
     acceptance_criteria: swift test が通り、3 ケース区別の受入確認ができる
     required_reading:
       - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
@@ -380,7 +382,7 @@ tasks:
     build_check: per_task
     description:
       - DES-104 §11.3 の正常系（Package.swift 配下のターゲット名取得 / Sources/{target}/ パターン）をカバー
-      - 異常系（Package.swift 不在 / Xcode Only 構造）で nil 返却を確認
+      - 異常系（Package.swift 不在 / Xcode Only 構造）で nil 返却を確認（fixture 構築は tmp ディレクトリで Package.swift 不在のディレクトリ構造を生成して検証する手法を採用）
     acceptance_criteria: swift test が通り、ターゲット名解決の境界条件を網羅
     required_reading:
       - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
@@ -402,6 +404,7 @@ tasks:
       - find_symbol_definition の既存出力形式（[Kind] Name / File / Line）が維持されることを検証
       - 構造化ブロック --- structured --- 以降の付加が既存行を変更しないことを検証
       - file_pattern 廃止が破壊的変更として REQ-005 §4.6 で許容済みである旨をテスト名・コメントで明示
+      - DES-104 §4.6【案A】に従い v3 形式キャッシュファイル fixture を投入し、cacheVersion 3→4 マイグレーション時に notes フィールドが部分デコードで保持され解析関連キャッシュが空再構築されることを検証するケースを追加
     acceptance_criteria: 既存出力契約の維持が機械的に検証可能
     required_reading:
       - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
@@ -412,4 +415,6 @@ tasks:
 # === 改定履歴 ===
 revision_history:
   - date: "2026-05-05"
-    content: 初版作成（REQ-005 / DES-104 全タスク抽出。GROUP-001 で ProjectMemory v4 と FindSymbolDefinitionTool 拡張をビルド単位として束ね、それ以外は per_task で並列実行可能とする）
+    content: 初版作成（REQ-005 / DES-104 全タスク抽出。GROUP-001 で ProjectMemory v4 と FindSymbolDefinitionTool 拡張をビルド単位として束ね、それ以外は per_task で並列実行可能とする）。REQ-005 / DES-104 2026-05-05 改定（`file_pattern` 廃止確定）反映済み
+  - date: "2026-05-06"
+    content: AI レビュー（対話モード）反映。TASK-006 acceptance_criteria に visit/visitPost 対称性・defer 発火・extension 自身登録のテスト要件を追加、TASK-009 priority を 60→70 に引き上げ、TASK-008 description に encodeSymbolDefinition の fatalError スタブ方式を明示、TASK-009 description にロガースタブ手段を併記し required_reading に Sources/Logging/ を追加、TASK-016 description に tmp ディレクトリでの fixture 構築手段を補記、TASK-006/008/012 の設計書実装詳細転記を §X.Y 参照に圧縮
