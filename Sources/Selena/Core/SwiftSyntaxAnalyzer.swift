@@ -156,20 +156,26 @@ enum SwiftSyntaxAnalyzer {
     /// （DES-104 §8.4 / §6.6 シーケンス図参照）。
     ///
     /// - Parameter filePath: 解析対象 Swift ファイルの絶対パス
-    /// - Returns: スコープ情報付きシンボル一覧。本タスク（TASK-005）ではスタブのため空配列を返す
+    /// - Returns: スコープ情報付きシンボル一覧
     /// - Throws:
-    ///   - **現スタブ段階（TASK-005）**: `String(contentsOfFile:)` による I/O エラーのみ伝播する。
-    ///     SwiftSyntax のパースは行わないため、パースエラーは発生しない。
-    ///   - **本体実装完成後（TASK-006）**: I/O エラーに加え、SwiftSyntax のパース失敗も伝播する想定。
-    ///     呼び出し側でファイル単位のスキップを実装する API 契約は両段階で同一。
-    ///
-    /// TODO: ⚠️ SymbolVisitorV2 を用いた本体実装が未実装です（TASK-006 で実装予定）
+    ///   - `String(contentsOfFile:)` による I/O エラー
+    ///   - SwiftSyntax のパース処理に伴うエラー（現状 SwiftParser.Parser.parse 自体は
+    ///     throws しないが、将来のスキーマ変更に備えて throws 仕様で公開する）
     static func listSymbolsWithScope(filePath: String) throws -> [SymbolInfoV2] {
         // パース失敗時のスキップ挙動を呼び出し側が判定できるよう、
         // ファイル読み込みは listSymbols と同じく throws で伝播させる API 形状とする。
-        // 本タスクではスタブとして空配列を返す（TASK-006 で SymbolVisitorV2 連携を実装）。
-        _ = try String(contentsOfFile: filePath)
-        return []
+        let content = try String(contentsOfFile: filePath)
+        let sourceFile = Parser.parse(source: content)
+
+        // SymbolVisitorV2 はスコープスタックを保持しながら型宣言を訪問する
+        // （DES-104 §4.5 / REQ-005 §4.4.2）
+        let visitor = SymbolVisitorV2(
+            converter: SourceLocationConverter(fileName: filePath, tree: sourceFile),
+            filePath: filePath
+        )
+        visitor.walk(sourceFile)
+
+        return visitor.symbols
     }
 
     /// SwiftUI Property Wrapperを抽出

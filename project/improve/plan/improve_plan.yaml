@@ -37,7 +37,7 @@ tasks:
   - task_id: TASK-001
     title: Constants にパラメータキー・エラーメッセージ拡張
     priority: 75
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on: []
     group_id: null
@@ -57,7 +57,7 @@ tasks:
   - task_id: TASK-002
     title: ToolHelpers に getStringArray / getOptionalInt 追加
     priority: 75
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on: []
     group_id: null
@@ -129,7 +129,7 @@ tasks:
   - task_id: TASK-006
     title: SymbolVisitorV2 実装と SwiftSyntaxAnalyzer.listSymbolsWithScope 本体完成
     priority: 75
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on:
       - TASK-005

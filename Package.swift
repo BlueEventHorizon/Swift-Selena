@@ -20,6 +20,16 @@ let package = Package(
                 .product(name: "SwiftParser", package: "swift-syntax"),
             ],
             path: "Sources"
+        ),
+        // SymbolVisitorV2 単体テスト（DES-104 / REQ-005 §4.4.1 受入基準対応）
+        .testTarget(
+            name: "SymbolVisitorV2Tests",
+            dependencies: [
+                "Swift-Selena",
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftParser", package: "swift-syntax"),
+            ],
+            path: "Tests/SymbolVisitorV2Tests"
         )
     ]
 )
