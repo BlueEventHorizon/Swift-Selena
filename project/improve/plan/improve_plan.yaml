@@ -118,7 +118,7 @@ tasks:
   - task_id: TASK-005
     title: SwiftSyntaxAnalyzer に SymbolInfoV2 と listSymbolsWithScope 追加
     priority: 78
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on: []
     group_id: null
