@@ -46,9 +46,7 @@ tasks:
       - DES-104 §5.1 / §6.1 に従い ParameterKeys 定数を追加（output_mode / limit / include_patterns / exclude_patterns / symbol_kinds）
       - DES-104 §5.1 注記に従い filePattern = "file_pattern" 定数の扱いを整理（SearchCodeTool 側参照削除のみ、定数削除可否は issue #34（他ツールの file_pattern 参照削除）連動とし、本タスクのスコープ外）
       - DES-104 §8 に従い ErrorMessages の cause / suggestion 定数を追加（正規表現エラー / glob 構文エラー / 件数上限境界 / シンボル種別未定義 / 配列要素数上限）
-      - DES-104 §4.8 に従い capabilityCheckTimeout 等のケーパビリティ判定タイムアウト定数を追加
       - DES-104 §8.4 に従い maxSkippedFilesInResponse 定数を追加
-      - DES-104 §7.2 に従い `[CapabilityWarning]` プレフィックス定数を Constants に追加（TASK-013 の CapabilityRegistry 通知および後方互換テストから定数経由で参照可能とする）
     acceptance_criteria: 既存ビルドが通り、後続タスクが新規定数を参照できる
     required_reading:
       - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
@@ -99,21 +97,15 @@ tasks:
   - task_id: TASK-004
     title: ModuleNameResolver 新規実装
     priority: 65
-    status: pending
+    status: cancelled
     design_id: DES-104
     depends_on: []
     group_id: null
     build_check: per_task
     description:
-      - DES-104 §2 TBD-002 / §4.5 に従い Sources/Selena/Core/ModuleNameResolver.swift を新規作成
-      - ファイルパスから Package.swift を遡って探索し、name "..." を正規表現抽出してターゲット名を返す
-      - Sources/{target}/ パターンに合致しない・Package.swift が見つからない・パース失敗時はいずれも nil を返す（エラーとしない）
-      - 複数ターゲット構成における精度の制限（最初の一致が返る可能性）をコメントで明示
-    acceptance_criteria: SwiftPM プロジェクト配下では target 名が返り、それ以外では nil が返る
-    required_reading:
-      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
-      - docs/format/code_header_format.md
-      - docs/rules/base/coding_rule.md
+      - "[CANCELLED 2026-05-06] DES-104 v2.0 簡素化により独立モジュール化を撤回。ModuleNameResolver はヘルパーメソッドとして TASK-006 内で SymbolVisitorV2 に内包実装する"
+    acceptance_criteria: "(cancelled) TASK-006 内のヘルパー実装で代替"
+    required_reading: []
 
   - task_id: TASK-005
     title: SwiftSyntaxAnalyzer に SymbolInfoV2 と listSymbolsWithScope 追加
@@ -140,7 +132,6 @@ tasks:
     status: pending
     design_id: DES-104
     depends_on:
-      - TASK-004
       - TASK-005
     group_id: null
     build_check: per_task
@@ -149,7 +140,7 @@ tasks:
       - DES-104 §4.5 のスコープ追跡仕様に従いスコープスタックを実装する（決定規則は §4.5 に従う）
       - extension 自身も "Extension" 種別のシンボルとして登録する（REQ-005 §4.4.1 受入基準対応）
       - DES-104 §4.5 のスタック整合性方針に従う
-      - ModuleNameResolver を参照してモジュール名を付与
+      - DES-104 v2.0 簡素化に従い、SymbolVisitorV2 内部にヘルパーメソッドとして resolveModuleName(from:) を実装し、Package.swift を遡って探索・正規表現抽出・nil 返却（Package.swift 不在 / Sources/{target}/ 不一致 / パース失敗）を行う
       - Sources/Selena/Core/SwiftSyntaxAnalyzer.swift の listSymbolsWithScope(filePath)（TASK-005 で追加されたスタブ）の本体実装を完成させ、SymbolVisitorV2 を呼び出して SymbolInfoV2 配列を返す形に置き換える（DES-104 §2 TBD-009 / TBD-010 の上限値は本タスクのスコープ外で TASK-014 の境界値テストにて検証）
     acceptance_criteria: ルート型 / ネスト型 / extension 内型を区別する単体テストが通り、かつ visit/visitPost 対称性（push/pop 回数の一致）・defer によるスタック崩壊防止（早期 return パスを含む発火）・extension 自身の Extension 種別シンボル登録を検証する単体テストが通る
     required_reading:
@@ -206,29 +197,15 @@ tasks:
   - task_id: TASK-009
     title: CapabilityRegistry 新規実装
     priority: 70
-    status: pending
+    status: cancelled
     design_id: DES-104
-    depends_on:
-      - TASK-001
+    depends_on: []
     group_id: null
     build_check: per_task
     description:
-      - DES-104 §4.8 に従い Sources/Tools/Meta/CapabilityRegistry.swift を新規作成（Swift actor）
-      - register(tool requires) と availableTools() を実装
-      - 各前提条件チェックを並列実行し、capabilityCheckTimeout でタイムアウト除外
-      - キャンセル協調・defer によるリソース解放原則を満たす
-      - ListTools 呼び出しごとに前提条件を再評価する設計（永続的除外フラグは持たない）
-      - search_code / find_symbol_definition / list_symbols は前提条件なしで初期登録するが、登録自体はこのタスクでは実施せず、TASK-013 で SwiftMCPServer 起動時に登録する
-      - DES-104 §4.8 で要請される並列実行・capabilityCheckTimeout 経過時の除外・キャンセル協調観測点・defer によるリソース解放・タイムアウト時ログ出力を検証する単体テストを追加する（ログ検証は Sources/Logging/ のロガーをテスト用にスタブ化／プロトコル経由で注入し、出力内容を assert する手段で実施）
-    acceptance_criteria: |
-      actor として動作し、register / availableTools の単体テストが通る。
-      並列実行・capabilityCheckTimeout 経過時の除外動作・キャンセル発行から子タスク停止の協調観測・タイムアウト時ログ出力の単体テストが通る。
-    required_reading:
-      - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
-      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
-      - Sources/Logging/
-      - docs/format/code_header_format.md
-      - docs/rules/base/coding_rule.md
+      - "[CANCELLED 2026-05-06] DES-104 v2.0 簡素化により actor + 並列前提条件チェック + タイムアウト + キャンセル協調 + 状態機械 を撤回。CapabilityRegistry は MetaToolRegistry.allTools をそのまま返す静的 enum 関数として最小化し、TASK-013 内で実装する"
+    acceptance_criteria: "(cancelled) TASK-013 内の最小実装で代替"
+    required_reading: []
 
   - task_id: TASK-010
     title: SearchCodeTool 拡張（新パラメータ対応・file_pattern 廃止）
@@ -258,7 +235,7 @@ tasks:
       - docs/rules/base/review_criteria.md
 
   - task_id: TASK-011
-    title: ProjectMemory v4 移行（SymbolInfo スコープフィールド追加・cacheVersion=4・notes 保持）
+    title: ProjectMemory v4 移行（SymbolInfo スコープフィールド追加・cacheVersion=4・全破棄方式）
     priority: 75
     status: pending
     design_id: DES-104
@@ -269,10 +246,10 @@ tasks:
     description:
       - DES-104 §4.6 に従い Sources/Selena/Core/ProjectMemory.swift の Memory.SymbolInfo をスコープ情報を含む拡張形に更新
       - DES-104 §4.6 に従い cacheVersion をインクリメント（v3 → v4）
-      - DES-104 §4.6【案A】に従い、バージョン不一致検出時に notes フィールドのみを部分デコードして保持し、解析関連キャッシュは破棄する
-      - DES-104 §4.9.1 に従い cacheWarning 状態とアクセサ API を追加
-      - DES-104 §6.5 並存方針に沿って cacheFileSymbols / getCachedFileSymbols のシグネチャを新型対応に更新
-      - DES-104 §6.5 に従い既存呼び出し側との境界変換方針を整える（このタスクの時点では呼び出し側が壊れる可能性があり、TASK-012 と同グループでまとめて完成させる）
+      - DES-104 v2.0 簡素化に従い、バージョン不一致検出時は notes を含む全フィールドを破棄して空状態で再構築する（部分デコードによる notes 保持は行わない）
+      - DES-104 §4.6 に従い cacheWarning 状態とアクセサ API を追加
+      - DES-104 §6.4 並存方針に沿って cacheFileSymbols / getCachedFileSymbols のシグネチャを新型対応に更新
+      - DES-104 §6.4 に従い既存呼び出し側との境界変換方針を整える（このタスクの時点では呼び出し側が壊れる可能性があり、TASK-012 と同グループでまとめて完成させる）
     acceptance_criteria: GROUP-001 (2/2) 完了時にビルド・既存テストが通る
     required_reading:
       - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
@@ -313,20 +290,18 @@ tasks:
       - docs/rules/base/review_criteria.md
 
   - task_id: TASK-013
-    title: SwiftMCPServer の ListTools ハンドラを CapabilityRegistry 経由に切り替え
+    title: CapabilityRegistry（最小実装）作成と SwiftMCPServer ListTools 連携
     priority: 60
     status: pending
     design_id: DES-104
-    depends_on:
-      - TASK-009
+    depends_on: []
     group_id: null
     build_check: per_task
     description:
-      - DES-104 §4.8 (b)(c) に従い SwiftMCPServer 初期化時に CapabilityRegistry をシングルトン生成
-      - 初期登録（search_code / find_symbol_definition / list_symbols）を実施
-      - ListTools / list_available_tools ハンドラを CapabilityRegistry.availableTools() 経由に変更し、MetaToolRegistry.getToolDefinition で Tool 定義を取得して応答
-      - DES-104 §7.2 に従いケーパビリティ判定失敗ツールは [CapabilityWarning] プレフィックスで通知し、initialize_project / list_available_tools 応答に含める
-    acceptance_criteria: 前提条件チェック関数が常に false を返すモックを登録した場合に initialize_project / list_available_tools 応答テキストが `[CapabilityWarning]` プレフィックス行を含むことを assert する単体テストが通る
+      - DES-104 §7 / v2.0 簡素化に従い Sources/Tools/Meta/CapabilityRegistry.swift を新規作成（actor ではなく enum + static func の最小実装）
+      - availableTools() は MetaToolRegistry.allTools をそのまま返すのみ（前提条件チェック・並列実行・タイムアウト・キャンセル協調・状態機械はいずれも持たない）
+      - SwiftMCPServer の ListTools / list_available_tools ハンドラを CapabilityRegistry.availableTools() 経由に変更し、MetaToolRegistry.getToolDefinition で Tool 定義を取得して応答
+    acceptance_criteria: ListTools / list_available_tools 応答が現状と同じツール一覧を返すことを単体テストで確認できる
     required_reading:
       - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
       - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
@@ -374,20 +349,15 @@ tasks:
   - task_id: TASK-016
     title: ModuleNameResolver テストを追加
     priority: 45
-    status: pending
+    status: cancelled
     design_id: DES-104
-    depends_on:
-      - TASK-004
+    depends_on: []
     group_id: null
     build_check: per_task
     description:
-      - DES-104 §11.3 の正常系（Package.swift 配下のターゲット名取得 / Sources/{target}/ パターン）をカバー
-      - 異常系（Package.swift 不在 / Xcode Only 構造）で nil 返却を確認（fixture 構築は tmp ディレクトリで Package.swift 不在のディレクトリ構造を生成して検証する手法を採用）
-    acceptance_criteria: swift test が通り、ターゲット名解決の境界条件を網羅
-    required_reading:
-      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
-      - docs/format/code_header_format.md
-      - docs/rules/base/coding_rule.md
+      - "[CANCELLED 2026-05-06] DES-104 v2.0 簡素化により ModuleNameResolver は SymbolVisitorV2 内のヘルパーメソッドへ吸収。モジュール名解決の境界条件は TASK-015（FindSymbolDefinitionTool テスト）の正常系・異常系ケースで合わせて検証する"
+    acceptance_criteria: "(cancelled) TASK-015 のテストで代替"
+    required_reading: []
 
   - task_id: TASK-017
     title: 後方互換テストを追加
@@ -404,7 +374,7 @@ tasks:
       - find_symbol_definition の既存出力形式（[Kind] Name / File / Line）が維持されることを検証
       - 構造化ブロック --- structured --- 以降の付加が既存行を変更しないことを検証
       - file_pattern 廃止が破壊的変更として REQ-005 §4.6 で許容済みである旨をテスト名・コメントで明示
-      - DES-104 §4.6【案A】に従い v3 形式キャッシュファイル fixture を投入し、cacheVersion 3→4 マイグレーション時に notes フィールドが部分デコードで保持され解析関連キャッシュが空再構築されることを検証するケースを追加
+      - DES-104 §4.6（v2.0 簡素化）に従い v3 形式キャッシュファイル fixture を投入し、cacheVersion 3→4 マイグレーション時にキャッシュが全破棄されて空状態で再構築されることを検証するケースを追加
     acceptance_criteria: 既存出力契約の維持が機械的に検証可能
     required_reading:
       - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
@@ -418,3 +388,14 @@ revision_history:
     content: 初版作成（REQ-005 / DES-104 全タスク抽出。GROUP-001 で ProjectMemory v4 と FindSymbolDefinitionTool 拡張をビルド単位として束ね、それ以外は per_task で並列実行可能とする）。REQ-005 / DES-104 2026-05-05 改定（`file_pattern` 廃止確定）反映済み
   - date: "2026-05-06"
     content: AI レビュー（対話モード）反映。TASK-006 acceptance_criteria に visit/visitPost 対称性・defer 発火・extension 自身登録のテスト要件を追加、TASK-009 priority を 60→70 に引き上げ、TASK-008 description に encodeSymbolDefinition の fatalError スタブ方式を明示、TASK-009 description にロガースタブ手段を併記し required_reading に Sources/Logging/ を追加、TASK-016 description に tmp ディレクトリでの fixture 構築手段を補記、TASK-006/008/012 の設計書実装詳細転記を §X.Y 参照に圧縮
+  - date: "2026-05-06"
+    content: |
+      DES-104 v2.0 全面是正反映（過剰設計の是正）。
+      - TASK-001: capabilityCheckTimeout 定数と [CapabilityWarning] プレフィックス定数の追加要求を削除（最小化された CapabilityRegistry には不要）
+      - TASK-004 (ModuleNameResolver 新規実装): cancelled。SymbolVisitorV2 内のヘルパーメソッドとして TASK-006 に内包
+      - TASK-006: ModuleNameResolver ヘルパー実装を description に追加、depends_on から TASK-004 を削除
+      - TASK-009 (CapabilityRegistry actor): cancelled。actor + 並列前提条件チェック + タイムアウト + キャンセル協調 + 状態機械 を撤回し、最小実装を TASK-013 に統合
+      - TASK-011: notes フィールド部分デコード保持機構を削除し、v3→v4 マイグレーション時は全破棄方式へ変更
+      - TASK-013: タイトルと description を更新（最小 CapabilityRegistry の作成 + ListTools 連携）。depends_on から TASK-009 を削除し、[CapabilityWarning] テスト要件を削除
+      - TASK-016 (ModuleNameResolver テスト): cancelled。境界条件は TASK-015 で吸収検証
+      - TASK-017: notes フィールド部分デコード fixture テストを削除し、cacheVersion 3→4 全破棄を検証する記述に変更
