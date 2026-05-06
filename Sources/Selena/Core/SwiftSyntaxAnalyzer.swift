@@ -2,7 +2,28 @@
 //  SwiftSyntaxAnalyzer.swift
 //  SwiftMCPServer
 //
-//  Created by k_terada on 2025/10/03.
+//  Created by k2moons on 2025/10/03.
+//
+//  [Code Header Format]
+//
+//  目的
+//  - SwiftSyntax を用いた静的解析の単一エントリポイント提供
+//  - シンボル・型準拠・Import・Extension・テスト等の抽出 API を集約
+//  - 解析結果のキャッシュ連携（ProjectMemory）と一貫した throws/skip 方針の整合
+//
+//  主要機能
+//  - ファイル単位のシンボル抽出（既存: SymbolInfo / 拡張: SymbolInfoV2 によるスコープ情報付き）
+//  - Property Wrapper / Type Conformance / Extension / Import の抽出
+//  - プロジェクト横断の Import 依存関係および型階層の解析（キャッシュ利用）
+//  - XCTest / Swift Testing のテスト検出
+//
+//  含まれる型
+//  - SymbolInfo: シンボル名・種別・行番号の基本 3 フィールド（既存ツール互換用）
+//  - SymbolInfoV2: 上記 3 フィールド + parentScope / extensionTarget / moduleName のスコープ情報拡張型
+//  - PropertyWrapperInfo, TypeConformanceInfo, ExtensionInfo, ImportInfo, TypeHierarchy, XCTestInfo, SwiftTestInfo
+//
+//  関連型
+//  - ProjectMemory（キャッシュ層）, SymbolVisitor 系（Visitors/）
 //
 
 import Foundation
@@ -12,12 +33,31 @@ import SwiftParser
 
 /// SwiftSyntax静的解析のエントリポイント
 enum SwiftSyntaxAnalyzer {
-    // MARK: - Data Structures
+    // MARK: - データ構造
 
     struct SymbolInfo {
         let name: String
         let kind: String
         let line: Int
+    }
+
+    /// スコープ情報付きシンボル情報（DES-104 §4.5）
+    ///
+    /// 既存 `SymbolInfo`（3 フィールド）を変更せず別型として並存させる（DES-104 §6.5 並存方針）。
+    /// 同名シンボルの所属（ルート / ネスト型 / extension 内）を区別するための拡張フィールドを持つ。
+    struct SymbolInfoV2 {
+        /// シンボル名
+        let name: String
+        /// 表示用 kind 値（`Class` / `Struct` 等。SymbolVisitor 系の出力と同一表記）
+        let kind: String
+        /// 宣言開始行（1-indexed）
+        let line: Int
+        /// ネスト親の型名（例: `Foo.Button` の場合 `Foo`）。ルート定義時は nil
+        let parentScope: String?
+        /// extension 内定義時の対象型名（例: `extension Foo { struct Button }` の場合 `Foo`）。それ以外は nil
+        let extensionTarget: String?
+        /// SwiftPM ターゲット名（ベストエフォート、未取得時は nil）
+        let moduleName: String?
     }
 
     struct PropertyWrapperInfo {
@@ -95,7 +135,7 @@ enum SwiftSyntaxAnalyzer {
         }
     }
 
-    // MARK: - Public Methods
+    // MARK: - 公開メソッド
 
     /// ファイル内の全シンボルを抽出
     static func listSymbols(filePath: String) throws -> [SymbolInfo] {
@@ -106,6 +146,30 @@ enum SwiftSyntaxAnalyzer {
         visitor.walk(sourceFile)
 
         return visitor.symbols
+    }
+
+    /// ファイル内の全シンボルを所属スコープ情報付きで抽出（DES-104 §4.5 / §6.7）
+    ///
+    /// 既存 `listSymbols(filePath:)` と並存する API（DES-104 §6.5 並存方針）。
+    /// パース失敗・I/O エラー時は throws し、呼び出し側（FindSymbolDefinitionTool 等）が
+    /// catch して当該ファイルを skipped_files に列挙しつつループを継続する責務を持つ
+    /// （DES-104 §8.4 / §6.7 シーケンス図参照）。
+    ///
+    /// - Parameter filePath: 解析対象 Swift ファイルの絶対パス
+    /// - Returns: スコープ情報付きシンボル一覧。本タスク（TASK-005）ではスタブのため空配列を返す
+    /// - Throws:
+    ///   - **現スタブ段階（TASK-005）**: `String(contentsOfFile:)` による I/O エラーのみ伝播する。
+    ///     SwiftSyntax のパースは行わないため、パースエラーは発生しない。
+    ///   - **本体実装完成後（TASK-006）**: I/O エラーに加え、SwiftSyntax のパース失敗も伝播する想定。
+    ///     呼び出し側でファイル単位のスキップを実装する API 契約は両段階で同一。
+    ///
+    /// TODO: ⚠️ SymbolVisitorV2 を用いた本体実装が未実装です（TASK-006 で実装予定）
+    static func listSymbolsWithScope(filePath: String) throws -> [SymbolInfoV2] {
+        // パース失敗時のスキップ挙動を呼び出し側が判定できるよう、
+        // ファイル読み込みは listSymbols と同じく throws で伝播させる API 形状とする。
+        // 本タスクではスタブとして空配列を返す（TASK-006 で SymbolVisitorV2 連携を実装）。
+        _ = try String(contentsOfFile: filePath)
+        return []
     }
 
     /// SwiftUI Property Wrapperを抽出

@@ -380,7 +380,9 @@ static func searchCode(
 **実装上の制約**:
 - `visit` メソッドは必ず `.visitChildren` を返すこと
 - `.skipChildren` を返すと `visitPost` が呼ばれずスコープスタックが崩壊する
-- スタック崩壊防止のため、`defer { scopeStack.removeLast() }` パターンの併用を推奨する
+- スコープスタックの push/pop は **`visit` で push、`visitPost` で pop の一本化方針**を採用する（上表参照）。
+  `defer { scopeStack.removeLast() }` 等の併用は二重 pop によるスタック崩壊を招くため行わない。
+  `.skipChildren` を返さないことで `visit` / `visitPost` のペア呼び出しを保証し、スタック整合を担保する
 
 **モジュール名取得** (`ModuleNameResolver`、新規ヘルパー):
 
