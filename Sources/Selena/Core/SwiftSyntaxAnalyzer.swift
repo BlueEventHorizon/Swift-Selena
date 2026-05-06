@@ -43,7 +43,7 @@ enum SwiftSyntaxAnalyzer {
 
     /// スコープ情報付きシンボル情報（DES-104 §4.5）
     ///
-    /// 既存 `SymbolInfo`（3 フィールド）を変更せず別型として並存させる（DES-104 §6.5 並存方針）。
+    /// 既存 `SymbolInfo`（3 フィールド）を変更せず別型として並存させる（DES-104 §6.4 並存方針）。
     /// 同名シンボルの所属（ルート / ネスト型 / extension 内）を区別するための拡張フィールドを持つ。
     struct SymbolInfoV2 {
         /// シンボル名
@@ -148,12 +148,12 @@ enum SwiftSyntaxAnalyzer {
         return visitor.symbols
     }
 
-    /// ファイル内の全シンボルを所属スコープ情報付きで抽出（DES-104 §4.5 / §6.7）
+    /// ファイル内の全シンボルを所属スコープ情報付きで抽出（DES-104 §4.5 / §6.6）
     ///
-    /// 既存 `listSymbols(filePath:)` と並存する API（DES-104 §6.5 並存方針）。
+    /// 既存 `listSymbols(filePath:)` と並存する API（DES-104 §6.4 並存方針）。
     /// パース失敗・I/O エラー時は throws し、呼び出し側（FindSymbolDefinitionTool 等）が
     /// catch して当該ファイルを skipped_files に列挙しつつループを継続する責務を持つ
-    /// （DES-104 §8.4 / §6.7 シーケンス図参照）。
+    /// （DES-104 §8.4 / §6.6 シーケンス図参照）。
     ///
     /// - Parameter filePath: 解析対象 Swift ファイルの絶対パス
     /// - Returns: スコープ情報付きシンボル一覧。本タスク（TASK-005）ではスタブのため空配列を返す
