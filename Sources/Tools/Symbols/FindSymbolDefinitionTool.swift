@@ -9,6 +9,17 @@ import Foundation
 import MCP
 import Logging
 
+/// `find_symbol_definition` の構造化出力に載せる 1 件分（DES-104 §7.1）
+struct SymbolDefinitionResult: Sendable {
+    let symbolName: String
+    let kind: String
+    let file: String
+    let line: Int
+    let parentScope: String?
+    let extensionTarget: String?
+    let moduleName: String?
+}
+
 /// シンボル定義検索ツール
 ///
 /// ## 目的

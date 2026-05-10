@@ -75,7 +75,7 @@ tasks:
   - task_id: TASK-003
     title: SymbolKindMapper 新規実装
     priority: 72
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on:
       - TASK-001
@@ -152,7 +152,7 @@ tasks:
   - task_id: TASK-007
     title: FileSearcher に searchCode オーバーロード追加
     priority: 78
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on:
       - TASK-001
@@ -175,7 +175,7 @@ tasks:
   - task_id: TASK-008
     title: ResultEncoder 新規実装
     priority: 73
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on:
       - TASK-007
@@ -210,7 +210,7 @@ tasks:
   - task_id: TASK-010
     title: SearchCodeTool 拡張（新パラメータ対応・file_pattern 廃止）
     priority: 82
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on:
       - TASK-001
@@ -237,7 +237,7 @@ tasks:
   - task_id: TASK-011
     title: ProjectMemory v4 移行（SymbolInfo スコープフィールド追加・cacheVersion=4・全破棄方式）
     priority: 75
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on:
       - TASK-005

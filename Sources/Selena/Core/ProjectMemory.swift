@@ -2,7 +2,26 @@
 //  ProjectMemory.swift
 //  SwiftMCPServer
 //
-//  Created by k_terada on 2025/10/02.
+//  Created by k2moons on 2026/05/10.
+//
+//  [Code Header Format]
+//
+//  目的
+//  - プロジェクト単位の解析結果・インデックス・ノートの永続キャッシュ管理
+//  - SwiftSyntax / FileSearcher 等から再利用できる状態をディスクへ保存・復元
+//  - DES-104 に準じたシンボルキャッシュスキーマ（v4）と cache_warning 伝達の土台
+//
+//  主要機能
+//  - memory.json への Codable 永続化と cacheVersion による世代管理
+//  - ファイル単位のシンボル・Import・型準拠キャッシュと変更検知による無効化
+//  - デコード失敗時の空状態への復旧と cacheWarning フラグ設定（§8.2）
+//
+//  含まれる型
+//  - ProjectMemory: プロジェクト単位の actor キャッシュ
+//  - Memory および FileInfo / SymbolInfo / ImportInfo / TypeConformanceInfo / Note: 永続スナップショット
+//
+//  関連型
+//  - CryptoKit（SHA256）, AppConstants
 //
 
 import Foundation
@@ -15,7 +34,7 @@ actor ProjectMemory {
     private let projectName: String
     
     /// キャッシュフォーマットのバージョン（構造変更時にインクリメント）
-    private static let cacheVersion = 3
+    private static let cacheVersion = 4
 
     struct Memory: Codable {
         var cacheVersion: Int
@@ -32,10 +51,33 @@ actor ProjectMemory {
             let lastModified: Date
         }
 
+        /// v4: SymbolInfoV2 と同構成のキャッシュ永続化型（DES-104 §4.6 / §6.4）
         struct SymbolInfo: Codable {
             let name: String
             let kind: String
             let line: Int
+            /// ネスト親の型名（ルート定義時は nil）
+            let parentScope: String?
+            /// extension 内定義時の対象型名（それ以外は nil）
+            let extensionTarget: String?
+            /// SwiftPM ターゲット名など（ベストエフォート、未取得時は nil）
+            let moduleName: String?
+
+            init(
+                name: String,
+                kind: String,
+                line: Int,
+                parentScope: String? = nil,
+                extensionTarget: String? = nil,
+                moduleName: String? = nil
+            ) {
+                self.name = name
+                self.kind = kind
+                self.line = line
+                self.parentScope = parentScope
+                self.extensionTarget = extensionTarget
+                self.moduleName = moduleName
+            }
         }
 
         struct ImportInfo: Codable {
@@ -61,6 +103,9 @@ actor ProjectMemory {
     }
     
     private var memory: Memory
+
+    /// DES-104 §8.2: キャッシュ復旧が不完全だったことをツール応答へ伝えるためのフラグ
+    private(set) var cacheWarning = false
     
     init(projectPath: String) throws {
         self.projectPath = projectPath
@@ -90,20 +135,32 @@ actor ProjectMemory {
         let memoryFile = memoryDir.appendingPathComponent("memory.json")
 
         if FileManager.default.fileExists(atPath: memoryFile.path) {
-            let data = try Data(contentsOf: memoryFile)
-            let loaded = try JSONDecoder().decode(Memory.self, from: data)
+            do {
+                let data = try Data(contentsOf: memoryFile)
+                let loaded = try JSONDecoder().decode(Memory.self, from: data)
 
-            // バージョンチェック: 古いバージョンなら再初期化
-            if loaded.cacheVersion != Self.cacheVersion {
+                // バージョンチェック: 古いバージョンなら全破棄・空再構築（§4.6、notes も含め部分復旧しない）
+                if loaded.cacheVersion != Self.cacheVersion {
+                    self.memory = Self.createEmptyMemory()
+                    try save()
+                } else {
+                    self.memory = loaded
+                }
+            } catch {
+                // §8.2: デコード失敗時は空メモリへ復旧し警告フラグを立てる（部分デコードによる notes 保持はしない）
                 self.memory = Self.createEmptyMemory()
+                self.cacheWarning = true
                 try save()
-            } else {
-                self.memory = loaded
             }
         } else {
             self.memory = Self.createEmptyMemory()
             try save()
         }
+    }
+
+    /// DES-104 §8.2: 構造化結果の cache_warning 伝達用に外部から参照する
+    func isCacheWarning() async -> Bool {
+        cacheWarning
     }
 
     /// 空のメモリを作成
@@ -120,7 +177,7 @@ actor ProjectMemory {
         )
     }
 
-    /// ファイルのシンボル一覧をキャッシュ
+    /// ファイルのシンボル一覧をキャッシュ（v4: 6 フィールド SymbolInfo）
     func cacheFileSymbols(filePath: String, symbols: [Memory.SymbolInfo]) {
         // ファイルインデックスも更新
         if let attributes = try? FileManager.default.attributesOfItem(atPath: filePath),
@@ -133,7 +190,7 @@ actor ProjectMemory {
         memory.fileSymbolCache[filePath] = symbols
     }
 
-    /// キャッシュからファイルのシンボル一覧を取得
+    /// キャッシュからファイルのシンボル一覧を取得（v4: 6 フィールド SymbolInfo）
     func getCachedFileSymbols(filePath: String) -> [Memory.SymbolInfo]? {
         guard !isFileModified(path: filePath) else {
             return nil
