@@ -403,4 +403,106 @@ final class SymbolVisitorV2Tests: XCTestCase {
         let resolved = SymbolVisitorV2.resolveModuleName(from: testFile.path)
         XCTAssertNil(resolved, "Tests/ 配下では Sources/ パターンに合致せず nil")
     }
+
+    // MARK: - path: 属性対応（DES-104 §4.5 拡張）
+
+    /// path: "Sources"（ターゲット直下に Sources/ を割り当てる Swift-Selena 構造）でも
+    /// target 名がモジュール名として解決される
+    func testResolveModuleNameWhenPathPointsToSourcesDirectly() {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("svv2_path_root_\(UUID().uuidString)")
+        // ターゲットディレクトリは "Sources/"（target 名と無関係）
+        let sourcesDir = tempDir.appendingPathComponent("Sources/Subdir")
+        try? FileManager.default.createDirectory(at: sourcesDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        // path: "Sources" を指定する Swift-Selena 風構造
+        let packageContent = """
+        // swift-tools-version: 5.9
+        import PackageDescription
+        let package = Package(
+            name: "Swift-Selena",
+            targets: [
+                .executableTarget(
+                    name: "Swift-Selena",
+                    dependencies: [.product(name: "MCP", package: "swift-sdk")],
+                    path: "Sources"
+                )
+            ]
+        )
+        """
+        let packageURL = tempDir.appendingPathComponent("Package.swift")
+        try? packageContent.write(to: packageURL, atomically: true, encoding: .utf8)
+
+        let sourceFile = sourcesDir.appendingPathComponent("Foo.swift")
+        try? "// dummy".write(to: sourceFile, atomically: true, encoding: .utf8)
+
+        let resolved = SymbolVisitorV2.resolveModuleName(from: sourceFile.path)
+        XCTAssertEqual(resolved, "Swift-Selena",
+                       "path: \"Sources\" 指定時はディレクトリ名ではなく target 名がモジュール名として返る")
+    }
+
+    /// 複数 target が存在する場合、ファイルパスに最長プレフィックスでマッチする target が選ばれる
+    func testResolveModuleNameWithMultipleTargets() {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("svv2_multi_\(UUID().uuidString)")
+        let mainDir = tempDir.appendingPathComponent("Sources/MainTarget")
+        let helperDir = tempDir.appendingPathComponent("Sources/HelperTarget")
+        try? FileManager.default.createDirectory(at: mainDir, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: helperDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let packageContent = """
+        // swift-tools-version: 5.9
+        import PackageDescription
+        let package = Package(
+            name: "MultiPkg",
+            targets: [
+                .target(name: "MainTarget"),
+                .target(name: "HelperTarget")
+            ]
+        )
+        """
+        try? packageContent.write(to: tempDir.appendingPathComponent("Package.swift"),
+                                  atomically: true, encoding: .utf8)
+
+        let mainFile = mainDir.appendingPathComponent("Foo.swift")
+        let helperFile = helperDir.appendingPathComponent("Bar.swift")
+        try? "// dummy".write(to: mainFile, atomically: true, encoding: .utf8)
+        try? "// dummy".write(to: helperFile, atomically: true, encoding: .utf8)
+
+        XCTAssertEqual(SymbolVisitorV2.resolveModuleName(from: mainFile.path), "MainTarget",
+                       "Sources/MainTarget/ 配下のファイルは MainTarget に解決")
+        XCTAssertEqual(SymbolVisitorV2.resolveModuleName(from: helperFile.path), "HelperTarget",
+                       "Sources/HelperTarget/ 配下のファイルは HelperTarget に解決")
+    }
+
+    /// path: が Sources/ 配下以外（カスタムパス）を指す場合も解決される
+    func testResolveModuleNameWithCustomPath() {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("svv2_custom_\(UUID().uuidString)")
+        // 非標準パス "Custom/Foo/" にターゲットを配置
+        let customDir = tempDir.appendingPathComponent("Custom/Foo")
+        try? FileManager.default.createDirectory(at: customDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let packageContent = """
+        // swift-tools-version: 5.9
+        import PackageDescription
+        let package = Package(
+            name: "CustomPkg",
+            targets: [
+                .target(name: "Foo", path: "Custom/Foo")
+            ]
+        )
+        """
+        try? packageContent.write(to: tempDir.appendingPathComponent("Package.swift"),
+                                  atomically: true, encoding: .utf8)
+
+        let sourceFile = customDir.appendingPathComponent("Bar.swift")
+        try? "// dummy".write(to: sourceFile, atomically: true, encoding: .utf8)
+
+        let resolved = SymbolVisitorV2.resolveModuleName(from: sourceFile.path)
+        XCTAssertEqual(resolved, "Foo", "path: で指定された非標準ディレクトリ配下のファイルも target 名に解決")
+    }
 }

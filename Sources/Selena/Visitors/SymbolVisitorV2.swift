@@ -220,17 +220,29 @@ final class SymbolVisitorV2: SyntaxVisitor {
 
     // MARK: - モジュール名解決ヘルパー（DES-104 §4.5 / TBD-002）
 
+    /// Package.swift から抽出した target エントリ（name と任意の path）
+    private struct TargetEntry {
+        let name: String
+        /// `.target(name:..., path: "...")` で明示された path（未指定なら nil → 規約通り Sources/{name}/）
+        let path: String?
+    }
+
     /// SwiftPM ターゲット名をベストエフォートで解決する
     ///
-    /// 方針（DES-104 §2 TBD-002 採用方針）:
+    /// 方針（DES-104 §2 TBD-002 採用方針 + path: 属性対応）:
     /// 1. `filePath` の親方向に Package.swift を探索（FileManager.fileExists で確認）
-    /// 2. 見つかれば内容を読み、`name: "..."` を正規表現抽出（最初に一致したターゲット名）
-    /// 3. ファイルパスが `Sources/{target}/` 配下のいずれかに合致すればその target をモジュール名として返す
-    /// 4. 上記いずれかが満たせない（Package.swift 不在 / Sources/{target}/ 不一致 / パース失敗）場合は nil
+    /// 2. Package.swift から `.target(...)` / `.executableTarget(...)` / `.testTarget(...)` 等の
+    ///    ターゲット定義ブロックを括弧深度で取り出し、各ブロックから name と（あれば）path を抽出
+    /// 3. 各 target のルートディレクトリを計算:
+    ///    - `path: "..."` 指定あり → `{packageDir}/{path}/`
+    ///    - 未指定 → 規約通り `{packageDir}/Sources/{name}/`
+    /// 4. filePath が最も長い prefix にマッチする target 名を返す（最長一致で曖昧性解消）
+    /// 5. マッチしない / target ブロックが取れない場合 → 旧ロジック（Sources/{firstName}/ の照合）にフォールバック
+    /// 6. それも失敗 → nil
     ///
-    /// 精度の制限（DES-104 §4.5 「複数ターゲット構成の精度制限」）:
-    /// - 複数ターゲット構成では Package.swift 内で最初に一致した `name: "..."` 値を採用する
-    ///   ため、実際の所属ターゲットと異なる名前を返す可能性がある（ベストエフォート）
+    /// 制限:
+    /// - Package.swift の Swift コード本格 parse は行わない（正規表現 + 括弧深度の簡易解析）
+    /// - 文字列リテラル内の `(` や `)`、コメント内のキーワードで誤動作する可能性は残る
     /// - throws せず常に Optional<String> を返す（呼び出し側はエラー処理不要）
     static func resolveModuleName(from filePath: String) -> String? {
         // 1. 親ディレクトリを遡って Package.swift を探す
@@ -243,38 +255,158 @@ final class SymbolVisitorV2: SyntaxVisitor {
             return nil
         }
 
-        // 3. `name: "..."` を正規表現で抽出（最初にマッチしたものを採用）
-        //    Package(name: "Foo") やターゲット定義 .target(name: "Foo", ...) の両方にマッチする
-        guard let firstName = extractFirstName(from: packageContent) else {
-            return nil
+        let packageDir = packageURL.deletingLastPathComponent().path
+
+        // 3. ターゲット定義ブロックを抽出し name / path を取り出す
+        let targets = parseTargets(from: packageContent)
+
+        // 4. 各 target のルートディレクトリを計算し最長 prefix マッチ
+        if !targets.isEmpty {
+            var bestMatch: (name: String, rootLen: Int)?
+            for target in targets {
+                let root = targetRootDirectory(packageDir: packageDir, target: target)
+                if filePath.hasPrefix(root) {
+                    let len = root.count
+                    if bestMatch == nil || len > bestMatch!.rootLen {
+                        bestMatch = (target.name, len)
+                    }
+                }
+            }
+            if let match = bestMatch {
+                return match.name
+            }
         }
 
-        // 4. ファイルパスが Sources/{target}/ 配下にあるかチェック
-        //    Package.swift が置かれているディレクトリからの相対パスで Sources/<target>/ を含むか
-        let packageDir = packageURL.deletingLastPathComponent().path
+        // 5. target ブロック解析失敗 or 未マッチ → 旧来の Sources/{firstName}/ パターン照合へフォールバック
+        return resolveByLegacySourcesPattern(filePath: filePath, packageDir: packageDir, packageContent: packageContent)
+    }
+
+    /// `target` のルートディレクトリ絶対パスを末尾 `/` 付きで返す
+    /// - path 指定あり: `{packageDir}/{path}/`（path が絶対パスならそのまま）
+    /// - 未指定: `{packageDir}/Sources/{name}/`
+    private static func targetRootDirectory(packageDir: String, target: TargetEntry) -> String {
+        let dir = packageDir.hasSuffix("/") ? packageDir : packageDir + "/"
+        let raw: String
+        if let p = target.path {
+            raw = p.hasPrefix("/") ? p : dir + p
+        } else {
+            raw = "\(dir)Sources/\(target.name)"
+        }
+        return raw.hasSuffix("/") ? raw : raw + "/"
+    }
+
+    /// Package.swift の旧来 Sources/{firstName}/ パターン照合（target ブロック解析が空振った場合の保険）
+    private static func resolveByLegacySourcesPattern(
+        filePath: String,
+        packageDir: String,
+        packageContent: String
+    ) -> String? {
+        guard let firstName = extractFirstName(from: packageContent) else { return nil }
         let sourcesPrefix = packageDir.hasSuffix("/")
             ? "\(packageDir)Sources/"
             : "\(packageDir)/Sources/"
-
-        guard filePath.hasPrefix(sourcesPrefix) else {
-            // Sources/ 配下ではない（テストファイル等の Tests/、Plugins/ など）→ 解決不能
-            return nil
-        }
-
-        // Sources/ 以降の最初のディレクトリ名を target 名として取り出す
+        guard filePath.hasPrefix(sourcesPrefix) else { return nil }
         let relativeAfterSources = String(filePath.dropFirst(sourcesPrefix.count))
-        guard let firstSlashIndex = relativeAfterSources.firstIndex(of: "/") else {
-            // Sources/ 直下にファイルが置かれている形（ターゲット名なし）→ パース失敗扱い
+        guard let firstSlashIndex = relativeAfterSources.firstIndex(of: "/") else { return nil }
+        let targetDirName = String(relativeAfterSources[..<firstSlashIndex])
+        return targetDirName == firstName ? firstName : nil
+    }
+
+    /// Package.swift の文字列から `.target(...)` 系ブロックを走査し name / path を抽出する
+    ///
+    /// 対応キーワード（SwiftPM の Target 系 DSL）:
+    /// `.target(`, `.executableTarget(`, `.testTarget(`, `.plugin(`, `.binaryTarget(`,
+    /// `.systemLibrary(`, `.macro(`
+    ///
+    /// 各ブロックの範囲は **括弧深度** で識別し、ブロック内の **最初の** `name:` と
+    /// **最初の** `path:` を採用する（dependencies 内の `.product(name: ...)` 等は
+    /// ブロック内の最初の name より後に来る慣習に依存したベストエフォート）。
+    private static func parseTargets(from content: String) -> [TargetEntry] {
+        let keywords = [
+            ".target(",
+            ".executableTarget(",
+            ".testTarget(",
+            ".plugin(",
+            ".binaryTarget(",
+            ".systemLibrary(",
+            ".macro("
+        ]
+
+        var entries: [TargetEntry] = []
+        var searchStart = content.startIndex
+
+        while searchStart < content.endIndex {
+            // 次に出現するキーワードを探す（複数候補のうち最も早いもの）
+            var nextKwStart: String.Index?
+            var nextKwLen = 0
+            for kw in keywords {
+                if let r = content.range(of: kw, range: searchStart..<content.endIndex) {
+                    if nextKwStart == nil || r.lowerBound < nextKwStart! {
+                        nextKwStart = r.lowerBound
+                        nextKwLen = kw.count
+                    }
+                }
+            }
+            guard let kwStart = nextKwStart else { break }
+
+            // キーワード末尾の `(` の位置（例: ".target(" の最後の文字）
+            let openParenIndex = content.index(kwStart, offsetBy: nextKwLen - 1)
+            guard let closeIndex = matchingCloseParen(in: content, openAt: openParenIndex) else {
+                // 括弧対応が取れない（不正な Package.swift もしくは parse 失敗）→ そのブロックはスキップ
+                searchStart = content.index(after: openParenIndex)
+                continue
+            }
+
+            // `(` の次〜`)` の直前までをブロック本体とする
+            let blockStart = content.index(after: openParenIndex)
+            let block = String(content[blockStart..<closeIndex])
+
+            if let name = extractFirstName(from: block) {
+                let path = extractFirstPath(from: block)
+                entries.append(TargetEntry(name: name, path: path))
+            }
+
+            // 次の検索開始位置は `)` の直後
+            searchStart = content.index(after: closeIndex)
+        }
+
+        return entries
+    }
+
+    /// `openAt` 位置の `(` に対応する `)` の位置を、括弧深度で見つけて返す
+    private static func matchingCloseParen(in content: String, openAt openIndex: String.Index) -> String.Index? {
+        guard content[openIndex] == "(" else { return nil }
+        var depth = 0
+        var i = openIndex
+        while i < content.endIndex {
+            switch content[i] {
+            case "(":
+                depth += 1
+            case ")":
+                depth -= 1
+                if depth == 0 { return i }
+            default:
+                break
+            }
+            i = content.index(after: i)
+        }
+        return nil
+    }
+
+    /// 文字列から最初の `path: "..."` を抽出する（target ブロック内利用）
+    private static func extractFirstPath(from content: String) -> String? {
+        let pattern = #"path:\s*"([^"]+)""#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
             return nil
         }
-        let targetDirName = String(relativeAfterSources[..<firstSlashIndex])
-
-        // ベストエフォート判定: ファイルパス上の target ディレクトリ名と
-        // Package.swift から抽出した最初の name が一致するなら採用、それ以外は nil
-        // DES-104 §4.5「発見・抽出失敗時はいずれも nil を返す」/ §2 TBD-002 の方針に従い、
-        // path: "Sources" 等で targetDirName と target 名が一致しないケースは誤推定を避けるため nil を返す
-        // （Package.swift の target/path を本格的にパースするのは TBD-002 の精度範囲を超える）
-        return targetDirName == firstName ? firstName : nil
+        let range = NSRange(content.startIndex..<content.endIndex, in: content)
+        guard let match = regex.firstMatch(in: content, options: [], range: range),
+              match.numberOfRanges >= 2,
+              let pathRange = Range(match.range(at: 1), in: content)
+        else {
+            return nil
+        }
+        return String(content[pathRange])
     }
 
     /// `filePath` の親ディレクトリを遡って `Package.swift` を探す

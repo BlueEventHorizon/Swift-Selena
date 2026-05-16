@@ -96,7 +96,7 @@ Claude/Client
     ↓ JSON-RPC over stdio
 SwiftMCPServer (MCP SDK)
     ↓ ツール呼び出し
-Tool実装 (ToolProtocol準拠)
+Tool実装 (MCPTool 準拠)
     ↓ 解析処理
 Selena解析エンジン
     ↓ 結果
@@ -106,7 +106,7 @@ Claude/Client
 ```
 
 **重要原則**:
-- 全ツールはToolProtocolに準拠
+- 全ツールは MCPTool プロトコルに準拠
 - SwiftSyntaxによる静的解析（ビルド不要）
 - LSP統合によるセマンティック解析（ビルド可能時）
 
@@ -136,7 +136,7 @@ swift build -c release
 - **project_toc.yaml 自動更新**: project/{feature}/spec/、project/{feature}/design/ 配下のファイルを追加・変更・削除・移動したら、`project-toc-updater` Subagent を起動して project_toc.yaml を更新すること
 
 ### MCP Server実装原則
-- **ToolProtocol準拠**: 新規ツールは`ToolProtocol`を実装
+- **MCPTool 準拠**: 新規ツールは `MCPTool` プロトコル（`Sources/Tools/ToolProtocol.swift` で定義）を実装
 - **静的解析優先**: SwiftSyntaxベースの解析を基本とし、LSPは補助的に使用
 - **キャッシュ活用**: 解析結果はProjectMemoryでキャッシュ
 - **エラーハンドリング**: ツール実行エラーは適切にMCP応答として返却
@@ -162,7 +162,7 @@ swift build -c release
 ## Critical Implementation Constraints
 
 ### Sources/Tools/ - ツール実装制約
-- **ToolProtocol準拠**: 全ツールは`Sources/Tools/ToolProtocol.swift`に準拠
+- **MCPTool 準拠**: 全ツールは `Sources/Tools/ToolProtocol.swift` で定義された `MCPTool` プロトコルに準拠
 - **カテゴリ配置**:
   - `Analysis/` - コード解析（imports, type hierarchy等）
   - `FileSystem/` - ファイル操作（find_files, search_code等）

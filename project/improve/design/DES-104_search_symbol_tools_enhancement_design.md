@@ -39,13 +39,22 @@
 
 ### TBD-002: モジュール名取得の精度
 
-**採用方針**: ベストエフォート（SwiftPM ターゲット名推定）
+**採用方針**: ベストエフォート（SwiftPM ターゲット名推定、`path:` 属性対応）
 
 - `Package.swift` が存在するディレクトリを起点に SwiftPM ターゲット名を読み取る
-- `Package.swift` のテキスト内から `name: "..."` を正規表現抽出し、`Sources/{target}/` パターンとファイルパスを照合
+- `Package.swift` のテキスト内から `.target(...)` / `.executableTarget(...)` / `.testTarget(...)` / `.plugin(...)` / `.binaryTarget(...)` / `.systemLibrary(...)` / `.macro(...)` の各ブロックを **括弧深度で抽出** し、ブロック内の最初の `name: "..."` と（あれば）`path: "..."` を取得する
+- 各 target のルートディレクトリを以下で決定し、ファイルパスとの **最長プレフィックス一致** で target 名を返す
+  - `path:` 指定あり → `{packageDir}/{path}/`（path が絶対パスならそのまま使用）
+  - 未指定 → 規約通り `{packageDir}/Sources/{name}/`
+- target ブロック抽出に失敗した場合は旧来の `Sources/{firstName}/` パターン照合へフォールバック
 - 取得できない場合は `moduleName: nil` を返す（エラーとしない）
 - SwiftPM 構造でない場合（Xcode Only プロジェクト等）も同様に `nil`
 - 実装は `SymbolVisitorV2` 内のヘルパーメソッドとして配置し、独立モジュール化はしない
+
+**path: 対応により改善されるケース**:
+- ターゲット名とディレクトリ名が一致しない構成（例: `path: "Sources"` でルート直下を割り当てる Swift-Selena 自身）
+- 複数 target が同じ親ディレクトリ配下に存在する構成（最長プレフィックスで一意化）
+- 非標準パス（例: `path: "Custom/Foo"`）にターゲットを配置する構成
 
 ### TBD-004: 構造化結果の表現形式
 
@@ -312,10 +321,11 @@ static func searchCode(
 **モジュール名解決ヘルパー**（`SymbolVisitorV2` 内のメソッドとして実装）:
 
 - ファイルパスからプロジェクトルートを遡り `Package.swift` を発見
-- `Package.swift` テキストから `name: "..."` を正規表現抽出
-- ファイルパスが `Sources/{target}/` 配下であれば target 名をモジュール名として返す
+- `Package.swift` テキストから `.target(...)` / `.executableTarget(...)` / `.testTarget(...)` / `.plugin(...)` / `.binaryTarget(...)` / `.systemLibrary(...)` / `.macro(...)` の各ブロックを **括弧深度で抽出** し、各ブロック内の最初の `name: "..."` と `path: "..."` を取得
+- 各 target のルートディレクトリ（`path:` 指定あり → `{packageDir}/{path}/`、未指定 → `{packageDir}/Sources/{name}/`）を計算し、ファイルパスとの **最長プレフィックス一致** で target 名を返す
+- target ブロックが取得できない場合は旧来の `Sources/{firstName}/` パターン照合へフォールバック
 - 発見・抽出失敗時はいずれも `nil` を返す（エラーとしない）
-- **精度の制限**: 複数ターゲット構成では最初に一致したターゲット名が返る可能性がある（ベストエフォート、§2 TBD-002 採用方針参照）
+- **精度の制限**: 文字列リテラル内・コメント内に `(`/`)` を含む特殊 Package.swift では誤動作の可能性が残る（ベストエフォート、§2 TBD-002 採用方針参照）
 
 ### 4.6 ProjectMemory のキャッシュスキーマ更新
 
@@ -335,6 +345,14 @@ static func searchCode(
 - `notes` を含む全フィールドを破棄する（バージョン移行時の部分復旧は行わない）
 
 > **設計判断**: `notes` の保持機構は REQ-005 要件外。バージョン移行頻度は低く（spec バージョンごと）、シンプル全破棄が妥当。`notes` の永続化保証は別途独立 Feature として検討する場合のみ復活させる。
+
+#### 4.6.1 v4 → v5 への bump（2026/05/16）
+
+v4 リリース直後に発覚した「**同一 cacheVersion 内で SymbolInfo へフィールドを追加してしまった**」事象への是正措置として、`cacheVersion` を **4 → 5** にインクリメントする。
+
+- 経緯: v4 移行時点でデコード可能だったのは `name` / `kind` / `line` の 3 フィールド構成のみだったが、その後 `parentScope` / `extensionTarget` / `moduleName` を追加した際に `cacheVersion` を据え置いたため、3 フィールド時代の v4 キャッシュが残った環境で新フィールドが `nil` のまま読み出される潜在不具合があった
+- 対応: `cacheVersion = 5` に bump して既存 v4 キャッシュを全破棄・再構築させる（バージョン不一致時の既存ロジックを利用）
+- 教訓: 永続化スキーマを変更する変更（フィールド追加 / 型変更 / 制約変更）は **必ず同一コミット内で `cacheVersion` を更新する**。フィールド追加でも例外なし
 
 ---
 
