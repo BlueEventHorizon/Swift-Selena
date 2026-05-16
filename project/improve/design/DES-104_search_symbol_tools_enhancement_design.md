@@ -377,7 +377,7 @@ v4 リリース直後に発覚した「**同一 cacheVersion 内で SymbolInfo �
 - `excludePatterns = "exclude_patterns"`
 
 削除する `ParameterKeys` 定数:
-- `filePattern = "file_pattern"`（`Sources/Constants.swift:58` を削除。`SearchFilesWithoutPatternTool` 等での同名パラメータ利用は別途 issue #34 で扱うため、本 Feature では `SearchCodeTool` 側の参照のみ削除し、`Constants.filePattern` 自体の削除可否は他ツールの修正完了を待って判断する）
+- `filePattern = "file_pattern"`（`Sources/Constants.swift` の定数自体を削除。issue #34 で `SearchFilesWithoutPatternTool` も `include_patterns` / `exclude_patterns` へ移行完了したため、共有定数を廃止する。両ツールでの `file_pattern` キー指定は §5.1 の方針に従い未知パラメータとして無視される）
 
 ### 5.2 出力モード別テキスト出力フォーマット
 
@@ -849,3 +849,4 @@ Reason: {判定失敗の理由}
 | 2026-05-04 | 1.2 | k2moons | テンプレート必須セクション補完 |
 | 2026-05-05 | 1.3 | k2moons | REQ-005 `file_pattern` 廃止反映 |
 | 2026-05-06 | 2.0 | k2moons | **大幅圧縮（拡大解釈の是正）**: ① CapabilityRegistry を最小実装に縮退（actor / 並列前提条件チェック / タイムアウト戦略 / キャンセル協調 / 状態機械を削除し、無条件で全ツール返す静的 enum 関数に変更）／② ProjectMemory v3→v4 移行時の notes 保持機構（LegacyNotesContainer による 2 段階デコード）を削除し全破棄方針に変更（REQ-005 要件外のため）／③ ModuleNameResolver を独立モジュールから SymbolVisitorV2 内のヘルパーメソッドに内包／④ §3.1 データフロー設計・§4.9 状態管理設計（§4.9.1 / §4.9.2）・§6.8 ユースケース設計・§12.1 テンプレートマッピングを削除（テンプレート準拠のための形式的セクションで実装に寄与しない）／⑤ §4.8 ListTools 切り替えシーケンス図を削除／⑥ §6.5 並存 3 型表を §6.4 に集約／⑦ 1193 行 → 833 行（約 30% 削減）に圧縮 |
+| 2026-05-17 | 2.1 | k2moons | issue #34 対応反映: `SearchFilesWithoutPatternTool` も `file_pattern` を廃止し `include_patterns` / `exclude_patterns` へ統一。`Sources/Constants.swift` の `ParameterKeys.filePattern` 共有定数を完全削除。§5.1 の `file_pattern` 未知パラメータ無視方針は両ツールに適用される |

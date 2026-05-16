@@ -329,7 +329,7 @@ final class SearchCodeToolTests: XCTestCase {
         let response = try await runSearchCode(arguments: [
             ParameterKeys.pattern: .string("hello"),
             ParameterKeys.outputMode: .string("file_list"),
-            ParameterKeys.filePattern: .string("*.md"),
+            "file_pattern": .string("*.md"),
         ])
         let parts = splitStructured(response)
 

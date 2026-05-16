@@ -4,6 +4,28 @@ Swift-Selenaのリリース履歴
 
 ---
 
+## v0.6.9 - 2026-05-17
+
+### Issue #34: `search_files_without_pattern` のパラメータ API 統一
+
+- **breaking**: `search_files_without_pattern` の `file_pattern` パラメータを廃止
+  - `include_patterns` / `exclude_patterns`（glob 配列、各最大 20 件）へ統一し、`search_code` と API を揃えた
+  - 未知パラメータとして `file_pattern` が渡された場合は DES-104 §5.1 に従い無視（エラーにはしない）
+- **feat**: `FileSearcher.searchFilesWithoutPattern` を `includePatterns` / `excludePatterns` 引数に刷新
+  - `searchCode` と共通の `shouldSearchFile` / `compiledGlobRegexes` ヘルパを再利用し、include OR / exclude 優先の評価規則を統一
+- **feat**: `SearchFilesWithoutPatternTool` で正規表現構文・glob 構文・配列要素数を Tool 層で事前検証
+  - エラーは `ResultEncoder.buildErrorResponse(cause:suggestion:)` による DES-104 §8.1 統一形式で返却
+- **chore**: `Sources/Constants.swift` から `ParameterKeys.filePattern` 共有定数を完全削除
+- **test**: `BackwardCompatibilityTests` に `search_files_without_pattern` 用の 5 ケースを追加
+  - `file_pattern` 無視（破壊的変更の確認）
+  - `include_patterns` による絞り込み
+  - `exclude_patterns` の優先適用
+  - 配列要素数上限超過のエラー応答
+  - 不正な正規表現のエラー応答
+- **docs**: DES-104 を v2.1 に更新（issue #34 対応反映、両ツールへの §5.1 適用を明記）
+
+---
+
 ## v0.6.8 - 2026-05-16
 
 ### REQ-005 / DES-104: 検索・シンボルツール拡張
