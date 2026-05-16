@@ -80,11 +80,6 @@ enum ParameterKeys {
     static let projectPath = "project_path"
     static let filePath = "file_path"
     static let pattern = "pattern"
-    /// 旧 `file_pattern` パラメータキー（DES-104 §5.1 にて廃止対象）
-    /// - Note: SearchCodeTool 側からの参照は本 Feature で削除する。
-    ///   本定数自体の削除は他ツール（SearchFilesWithoutPattern 等）の修正完了を
-    ///   待つ必要があるため、issue #34 連動とし本タスクのスコープ外とする。
-    static let filePattern = "file_pattern"
     static let symbolName = "symbol_name"
     static let typeName = "type_name"
     /// search_code の出力モード（"match_detail" / "file_list" / "count_only"）
