@@ -23,6 +23,8 @@ Swift-Selenaのリリース履歴
   - 配列要素数上限超過のエラー応答
   - 不正な正規表現のエラー応答
 - **docs**: DES-104 を v2.1 に更新（issue #34 対応反映、両ツールへの §5.1 適用を明記）
+- **docs**: `REQ-003_Core_Features_Requirements.md` の `search_code` 入力欄を `include_patterns` / `exclude_patterns` に修正（v0.6.8 反映漏れの遡及補正）
+- **docs**: `mcp-test` Skill のテストパラメータ（`search_code` / `search_files_without_pattern`）を `file_pattern` から `include_patterns` に更新
 
 ---
 
