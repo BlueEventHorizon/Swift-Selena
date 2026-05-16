@@ -28,6 +28,11 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
   - AI 側からは別プロセスである MCP サーバーを再起動できない
   - 再起動が必要な場合は、再起動手順（バイナリ再ビルド要否、必要なキャッシュ削除、確認したい挙動）を明示してユーザーに依頼する
   - ユニットテストでの代替検証で済む場合はそれを優先し、E2E 検証の要否を判断する
+- **リリースタグは main ブランチで作成する**: `v{version}` 形式のリリースタグは、必ず **main ブランチ上のコミット**に対して作成すること
+  - `develop` 等の作業ブランチ上で `git tag` を実行しない
+  - 通常フロー: `develop` の変更を `main` にマージ（PR / merge commit）→ `main` に checkout → `git tag v{version}` → `git push <remote> v{version}`
+  - タグ作成前に `git branch --show-current` で必ず main ブランチに居ることを確認する
+  - 誤って別ブランチで作成したタグは `git tag -d <tag> && git push <remote> :<tag>` で削除し、正しいブランチで切り直す
 
 ## 開発言語・フレームワーク
 
