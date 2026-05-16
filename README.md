@@ -381,7 +381,7 @@ In legacy mode, the following 12 tools are exposed directly:
 
 ### Technology Stack
 
-- **[MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)** (0.10.2) - MCP protocol implementation
+- **[MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)** (0.12.0) - MCP protocol implementation
 - **[SwiftSyntax](https://github.com/apple/swift-syntax)** (602.0.0) - Syntax parsing
 - **CryptoKit** - Project path hashing
 - **swift-log** (via MCP Swift SDK) - Logging

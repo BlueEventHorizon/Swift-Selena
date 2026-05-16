@@ -381,7 +381,7 @@ claude mcp add swift-selena -e SWIFT_SELENA_LEGACY=1 -- /path/to/Swift-Selena/.b
 
 ### 技術スタック
 
-- **[MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)** (0.10.2) - MCPプロトコル実装
+- **[MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)** (0.12.0) - MCPプロトコル実装
 - **[SwiftSyntax](https://github.com/apple/swift-syntax)** (602.0.0) - 構文解析
 - **CryptoKit** - プロジェクトパスのハッシュ化
 - **swift-log** (MCP Swift SDK経由) - ロギング
