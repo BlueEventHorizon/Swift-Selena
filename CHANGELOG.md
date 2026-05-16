@@ -4,6 +4,52 @@ Swift-Selenaのリリース履歴
 
 ---
 
+## v0.6.8 - 2026-05-16
+
+### REQ-005 / DES-104: 検索・シンボルツール拡張
+
+- **feat**: `search_code` / `find_symbol_definition` / `list_symbols` を REQ-005 / DES-104 に基づき拡張
+  - `SymbolInfoV2` と `listSymbolsWithScope` を追加し、`parent_scope` / `extension_target` / `module_name` の 3 フィールドでシンボルのスコープを区別可能化
+  - `SymbolKindMapper` で 9 種別の小文字スネーク値（struct/class/enum/protocol/actor/function/variable/typealias/extension）と表示用 kind の対応を一元管理
+  - `symbol_kinds` フィルタ未指定時は優先返却順（Class/Struct/Enum/Protocol/Actor → 残り）で安定ソート
+  - `CapabilityRegistry` で Tool ごとのケーパビリティを登録、`list_available_tools` で取得可能化
+  - パース失敗ファイルは `skipped_files` として構造化結果に集約（DES-104 §8.4）
+- **feat**: `SymbolVisitorV2` を独立実装で追加（visit/visitPost 対称性によるスコープスタック方式）
+  - extension 自身を `Extension` 種別シンボルとして登録
+  - ネスト型・extension 内型・ルート型を `parent_scope` / `extension_target` で完全区別
+- **feat**: `module_name` 解決を `path:` 属性対応に拡張
+  - `Package.swift` の `.target(...)` / `.executableTarget(...)` 等を括弧深度で抽出し、`name` と `path` から target ルートを算出
+  - 最長プレフィックス一致で複数 target 構成を一意化
+  - `path: "Sources"` のように target 名とディレクトリ名が一致しない構成にも対応（Swift-Selena 自身が該当）
+  - target 解析失敗時は旧 `Sources/{firstName}/` パターンへフォールバック
+
+### 破壊的変更
+
+- **breaking**: `search_code` の `file_pattern` パラメータを廃止（REQ-005 §4.3 / §4.6）
+  - `include_patterns` / `exclude_patterns` に統一
+
+### キャッシュスキーマ
+
+- **fix**: `cacheVersion` を v3 → v4 → v5 へ段階的に bump
+  - v4: `SymbolInfo` に `parentScope` / `extensionTarget` / `moduleName` を追加
+  - v5: 同一 cacheVersion 内でフィールドを後追い拡張した経緯を是正、3 フィールド時代の v4 キャッシュを全破棄・再構築
+- **fix**: バージョン不一致 / デコード失敗時は空メモリへ復旧し `cache_warning` フラグを伝達（DES-104 §8.2）
+
+### テスト
+
+- **test**: `SymbolVisitorV2Tests` を追加（スコープ区別 / push-pop 対称性 / モジュール名解決 6 ケース）
+- **test**: `SearchCodeToolTests` / `FindSymbolDefinitionToolTests` を追加
+- **test**: `BackwardCompatibilityTests` で v3→latest および v4→v5 マイグレーションを検証
+
+### ドキュメント
+
+- **docs**: REQ-005（検索・シンボルツール拡張要件）と DES-104（設計書）を追加
+- **docs**: improve 計画書を追加し、REQ-005 / DES-104 のトレーサビリティを整備
+- **docs**: CLAUDE.md の `ToolProtocol` → `MCPTool` 文言を訂正
+- **docs**: MCP サーバー再起動を伴うテストはユーザー依頼必須をルール化
+
+---
+
 ## v0.6.7 - 2026-04-21
 
 ### ビルドエラー対応

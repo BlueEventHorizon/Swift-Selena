@@ -1,38 +1,38 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 Swift-Selena = MCP Server for Swift code analysis (Swift Package)
 
 ## AI Interaction Language [MANDATORY]
 
 **すべての対話は日本語で実施すること**
 - 技術用語・英単語はそのまま使用可能
-- ソースコードのコメントも必ず日本語で記述
+- ソースコードのコメントも日本語で記述
+- ファイル記述も日本語。ただし修正前のファイルがすでに英語記述の場合は、そのまま英語記述
 
-## Required Reading [MANDATORY]
+## Important Constraints [MANDATORY]
 
-### 作業タスク実施の基本フロー
-
-```
-作業タスクを受け取る
-    ↓
-docs-advisor Subagent でルール文書を特定
-    subagent_type: docs-advisor
-    prompt: [タスク内容]
-    ↓
-project-advisor Subagent で要件定義書・設計書を特定
-    subagent_type: project-advisor
-    prompt: [タスク内容]
-    ↓
-必要となる文書セット**全て**読む（または、subagentに渡す）
-    ↓
-作業タスクを実行
-```
-
-## Project Overview
-
-macOS SwiftUI app template for AI-powered development with Clean Architecture and Actor-based concurrency.
+- **NEVER modify Xcode project files** (`*.xcodeproj/`) without explicit permission
+  - 注: フォルダーベース登録済みのため、ファイル追加時は変更不要
+- **NEVER modify Info.plist or XCConfig files** without explicit permission
+- **要件定義書（specs/{feature}/requirements/）が最優先**（すべてのドキュメントに優先）
+- **文書不整合の即時報告**: `rules/`、`specs/`、`.claude/` 内の文書で不整合・矛盾を発見した場合、作業を中断して最優先でユーザーに報告すること
+- **Use existing code** before creating new ones (Tools/, Library/)
+- **既存コード参考必須**: 新規コード作成前に、既存の類似実装を検索して参考にすること
+- **ファイルヘッダーのCreated by**: git config user.nameの値を使用
+- **作業開始時の文書検索**: 文書読解が必要な作業は、`/query-rules` `/query-specs` で関連文書を特定し、該当する文書を読んでから作業に入ること
+- **ToC 自動更新**: rules/ 配下の文書を追加・変更・削除したら `/create-rules-toc`、specs/{feature}/requirements/ または specs/{feature}/design/ 配下の文書を追加・変更・削除したら `/create-specs-toc` を実行すること
+- **ToC ファイル直接編集禁止**: `.claude/doc-advisor/` 配下の ToC ファイルは直接編集せず、`/create-rules-toc` / `/create-specs-toc` で更新すること
+- **Swift-Selena MCP の利用検討**: Swift-Selena MCP が接続されている場合、コードの分析・解析作業で MCP の説明から効率的・効果的か判定し、利用を検討すること（実験は不要、MCP の説明で判断）
+- **Xcode MCP の利用検討**: Xcode MCP が接続されている場合、Skill（`/xcode:build` / `/xcode:test`）が対応していない場面でのみ、MCP の説明から効果的か判定し、利用を検討すること
+- **MCP サーバー再起動を伴うテストはユーザー依頼必須**: MCP サーバー（Swift-Selena MCP 等）の再起動を要するエンドツーエンドテスト（コード変更後の挙動確認、キャッシュ破棄を伴う動作確認など）は、**AI が独断で実施せず、必ずユーザーに再起動を依頼してから実施すること**
+  - AI 側からは別プロセスである MCP サーバーを再起動できない
+  - 再起動が必要な場合は、再起動手順（バイナリ再ビルド要否、必要なキャッシュ削除、確認したい挙動）を明示してユーザーに依頼する
+  - ユニットテストでの代替検証で済む場合はそれを優先し、E2E 検証の要否を判断する
+- **リリースタグは main ブランチで作成する**: `v{version}` 形式のリリースタグは、必ず **main ブランチ上のコミット**に対して作成すること
+  - `develop` 等の作業ブランチ上で `git tag` を実行しない
+  - 通常フロー: `develop` の変更を `main` にマージ（PR / merge commit）→ `main` に checkout → `git tag v{version}` → `git push <remote> v{version}`
+  - タグ作成前に `git branch --show-current` で必ず main ブランチに居ることを確認する
+  - 誤って別ブランチで作成したタグは `git tag -d <tag> && git push <remote> :<tag>` で削除し、正しいブランチで切り直す
 
 ## 開発言語・フレームワーク
 
@@ -105,7 +105,7 @@ Claude/Client
     ↓ JSON-RPC over stdio
 SwiftMCPServer (MCP SDK)
     ↓ ツール呼び出し
-Tool実装 (ToolProtocol準拠)
+Tool実装 (MCPTool 準拠)
     ↓ 解析処理
 Selena解析エンジン
     ↓ 結果
@@ -115,7 +115,7 @@ Claude/Client
 ```
 
 **重要原則**:
-- 全ツールはToolProtocolに準拠
+- 全ツールは MCPTool プロトコルに準拠
 - SwiftSyntaxによる静的解析（ビルド不要）
 - LSP統合によるセマンティック解析（ビルド可能時）
 
@@ -145,7 +145,7 @@ swift build -c release
 - **project_toc.yaml 自動更新**: project/{feature}/spec/、project/{feature}/design/ 配下のファイルを追加・変更・削除・移動したら、`project-toc-updater` Subagent を起動して project_toc.yaml を更新すること
 
 ### MCP Server実装原則
-- **ToolProtocol準拠**: 新規ツールは`ToolProtocol`を実装
+- **MCPTool 準拠**: 新規ツールは `MCPTool` プロトコル（`Sources/Tools/ToolProtocol.swift` で定義）を実装
 - **静的解析優先**: SwiftSyntaxベースの解析を基本とし、LSPは補助的に使用
 - **キャッシュ活用**: 解析結果はProjectMemoryでキャッシュ
 - **エラーハンドリング**: ツール実行エラーは適切にMCP応答として返却
@@ -171,7 +171,7 @@ swift build -c release
 ## Critical Implementation Constraints
 
 ### Sources/Tools/ - ツール実装制約
-- **ToolProtocol準拠**: 全ツールは`Sources/Tools/ToolProtocol.swift`に準拠
+- **MCPTool 準拠**: 全ツールは `Sources/Tools/ToolProtocol.swift` で定義された `MCPTool` プロトコルに準拠
 - **カテゴリ配置**:
   - `Analysis/` - コード解析（imports, type hierarchy等）
   - `FileSystem/` - ファイル操作（find_files, search_code等）
@@ -208,18 +208,3 @@ NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 
----
-
-## 一時メモ（TODO: 後で削除）
-
-### Codex MCP モデル指定の問題（2025-12-31）
-
-| モデル | 結果 |
-|--------|------|
-| `o3` | 応答なし |
-| `gpt-5.2` | AbortError |
-| `gpt-5.2-codex` | ✅ 正常応答 |
-| 指定なし | ✅ 正常応答 |
-
-- スキーマには `"o3", "o4-mini"` が例として記載されているが動作せず
-- `gpt-5.2-codex` または指定なしで使用すること

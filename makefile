@@ -1,4 +1,4 @@
-.PHONY: help build build-release register-release unregister-release register-debug unregister-debug register-desktop unregister-desktop clean
+.PHONY: help build build-release connect_gemini disconnect_gemini register-release unregister-release register-debug unregister-debug register-desktop unregister-desktop clean
 
 default: help
 
@@ -9,6 +9,9 @@ help:
 	@echo "  make build          - Build debug version"
 	@echo "  make build-release  - Build release version"
 	@echo "  make clean          - Clean build artifacts"
+	@echo ""
+	@echo "  make connect_gemini          - Connect gemini-cli MCP server to Claude Code"
+	@echo "  make disconnect_gemini       - Disconnect gemini-cli MCP server from Claude Code"
 	@echo ""
 	@echo "Register commands:"
 	@echo "  make register-release   - Register RELEASE version to Claude Code (prompts for path)"
@@ -35,6 +38,14 @@ build-release:
 
 clean:
 	swift package clean
+	
+connect_gemini:
+	@echo "Connecting gemini-cli MCP server to Claude Code..."
+	claude mcp add gemini-cli -s user -- npx -y gemini-mcp-tool
+
+disconnect_gemini:
+	@echo "Disconnecting gemini-cli MCP server from Claude Code..."
+	claude mcp remove gemini-cli
 
 # 登録コマンド
 register-release:
