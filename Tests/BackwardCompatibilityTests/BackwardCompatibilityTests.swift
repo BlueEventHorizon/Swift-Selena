@@ -445,17 +445,17 @@ final class BackwardCompatibilityTests: XCTestCase {
 
     // MARK: - キャッシュマイグレーションテスト（DES-104 §4.6 v2.0 簡素化）
 
-    /// cacheVersion 3→4 マイグレーション時に旧 v3 キャッシュは全破棄され空状態で再構築される（DES-104 §4.6）
+    /// cacheVersion 3→最新（5） マイグレーション時に旧 v3 キャッシュは全破棄され空状態で再構築される（DES-104 §4.6）
     ///
     /// DES-104 §4.6:
-    ///   旧バージョン（3 以前）キャッシュは起動時に **自動破棄・空再構築**（既存の再初期化ロジックを利用）
+    ///   旧バージョン（最新未満）キャッシュは起動時に **自動破棄・空再構築**（既存の再初期化ロジックを利用）
     ///   notes を含む全フィールドを破棄する（バージョン移行時の部分復旧は行わない）
     ///
     /// テストフロー:
-    ///   1. ProjectMemory 初回生成（v4 で初期化される）→ memoryDir を特定するため
+    ///   1. ProjectMemory 初回生成（最新版で初期化される）→ memoryDir を特定するため
     ///   2. memory.json を v3 形式（SymbolInfo が 3 フィールド、cacheVersion=3）で上書き
     ///   3. ProjectMemory を再生成 → マイグレーションが発火し空再構築されることを検証
-    func test_cacheVersion3_to_4_migration_purgesAllEntries() async throws {
+    func test_cacheVersion3_to_latest_migration_purgesAllEntries() async throws {
         // 1) ProjectMemory が memoryDir に memory.json を生成済み（setUp で生成）
         //    memoryDir のパスを ProjectMemory と同一のハッシュ計算で再現する
         let memoryFileURL = try locateMemoryFile(for: tempProjectDir.path, clientId: clientId)
@@ -523,45 +523,128 @@ final class BackwardCompatibilityTests: XCTestCase {
         let allCachedSymbols = await migrated.getAllCachedSymbols()
         XCTAssertTrue(
             allCachedSymbols.isEmpty,
-            "v3→v4 マイグレーションで fileSymbolCache は全破棄される（DES-104 §4.6）"
+            "v3→最新 マイグレーションで fileSymbolCache は全破棄される（DES-104 §4.6）"
         )
         let allImports = await migrated.getAllImports()
         XCTAssertTrue(
             allImports.isEmpty,
-            "v3→v4 マイグレーションで importCache は全破棄される"
+            "v3→最新 マイグレーションで importCache は全破棄される"
         )
         let allTypeConformances = await migrated.getAllTypeConformances()
         XCTAssertTrue(
             allTypeConformances.isEmpty,
-            "v3→v4 マイグレーションで typeConformanceCache は全破棄される"
+            "v3→最新 マイグレーションで typeConformanceCache は全破棄される"
         )
         let classDefinitions = await migrated.getClassDefinitions()
         XCTAssertTrue(
             classDefinitions.isEmpty,
-            "v3→v4 マイグレーションで classDefinitions は全破棄される"
+            "v3→最新 マイグレーションで classDefinitions は全破棄される"
         )
 
         // 検証 (b): notes も部分復旧されず破棄される（DES-104 §4.6: notes を含む全フィールドを破棄）
         let legacyNoteHits = await migrated.searchNotes(query: "legacy")
         XCTAssertTrue(
             legacyNoteHits.isEmpty,
-            "v3 の notes は v4 へ部分復旧されない（DES-104 §4.6 全破棄方針）"
+            "v3 の notes は最新版へ部分復旧されない（DES-104 §4.6 全破棄方針）"
         )
 
         // 検証 (c): cacheWarning は立たない（破損ではなくバージョン不一致のため、§4.6 ロジックは正常パス）
         let warning = await migrated.isCacheWarning()
         XCTAssertFalse(
             warning,
-            "v3→v4 のバージョン不一致は破損ではないため cacheWarning は立たない"
+            "v3→最新 のバージョン不一致は破損ではないため cacheWarning は立たない"
         )
 
-        // 検証 (d): 永続化された memory.json が v4 で再書き込みされている
+        // 検証 (d): 永続化された memory.json が最新版（v5）で再書き込みされている
         let reloadedData = try Data(contentsOf: memoryFileURL)
         let reloadedRoot = try JSONSerialization.jsonObject(with: reloadedData) as? [String: Any]
         XCTAssertEqual(
             reloadedRoot?["cacheVersion"] as? Int,
-            4,
-            "再保存された memory.json は cacheVersion=4 に更新される"
+            5,
+            "再保存された memory.json は最新の cacheVersion=5 に更新される"
+        )
+    }
+
+    /// cacheVersion 4→5 マイグレーション時に「3 フィールド時代の SymbolInfo を保持する v4 キャッシュ」も全破棄される
+    ///
+    /// 背景:
+    ///   v4 期間中に SymbolInfo へ parentScope / extensionTarget / moduleName を追加したため、
+    ///   3 フィールド時代に書かれた v4 キャッシュが残ると新フィールドが nil で読み出される潜在不具合があった。
+    ///   v5 への bump により、このような旧 v4 キャッシュも明示的に破棄され再構築されることを保証する。
+    ///
+    /// テストフロー:
+    ///   1. ProjectMemory 初回生成（v5 で初期化される）→ memoryDir を特定するため
+    ///   2. memory.json を v4 形式（SymbolInfo が 3 フィールドのみ、cacheVersion=4）で上書き
+    ///   3. ProjectMemory を再生成 → v4→v5 マイグレーションが発火し空再構築されることを検証
+    func test_cacheVersion4_to_5_migration_purgesLegacyV4Cache() async throws {
+        // 1) memory.json の位置を特定
+        let memoryFileURL = try locateMemoryFile(for: tempProjectDir.path, clientId: clientId)
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: memoryFileURL.path),
+            "ProjectMemory 初回生成で memory.json が作成されている"
+        )
+
+        // 2) v4 形式（旧フィールド欠落）の memory.json を直接書き出す
+        //    SymbolInfo は 3 フィールド（name / kind / line）のみ。
+        //    v5 では新フィールド3つを含む 6 フィールドが期待されるため、このキャッシュは破棄されるべき。
+        let v4LegacyJSON = """
+        {
+          "cacheVersion": 4,
+          "classDefinitions": ["LegacyV4Class"],
+          "fileIndex": {
+            "/legacy/v4.swift": {
+              "path": "/legacy/v4.swift",
+              "lastModified": -978307200
+            }
+          },
+          "fileSymbolCache": {
+            "/legacy/v4.swift": [
+              {
+                "name": "LegacyV4Symbol",
+                "kind": "Class",
+                "line": 10
+              }
+            ]
+          },
+          "importCache": {},
+          "lastAnalyzed": -978307200,
+          "notes": [],
+          "typeConformanceCache": {}
+        }
+        """
+        try v4LegacyJSON.write(to: memoryFileURL, atomically: true, encoding: .utf8)
+
+        // 3) ProjectMemory を再生成 → v4→v5 マイグレーション発火
+        let migrated = try ProjectMemory(projectPath: tempProjectDir.path)
+
+        // 検証 (a): fileSymbolCache が全破棄されている（parentScope 欠落キャッシュは残らない）
+        let allCachedSymbols = await migrated.getAllCachedSymbols()
+        XCTAssertTrue(
+            allCachedSymbols.isEmpty,
+            "v4→v5 マイグレーションで旧フィールド欠落の fileSymbolCache は全破棄される"
+        )
+
+        // 検証 (b): classDefinitions も全破棄されている
+        let classDefinitions = await migrated.getClassDefinitions()
+        XCTAssertTrue(
+            classDefinitions.isEmpty,
+            "v4→v5 マイグレーションで classDefinitions も全破棄される"
+        )
+
+        // 検証 (c): cacheWarning は立たない（破損ではなくバージョン不一致のため）
+        let warning = await migrated.isCacheWarning()
+        XCTAssertFalse(
+            warning,
+            "v4→v5 のバージョン不一致は破損ではないため cacheWarning は立たない"
+        )
+
+        // 検証 (d): memory.json が v5 で再書き込みされている
+        let reloadedData = try Data(contentsOf: memoryFileURL)
+        let reloadedRoot = try JSONSerialization.jsonObject(with: reloadedData) as? [String: Any]
+        XCTAssertEqual(
+            reloadedRoot?["cacheVersion"] as? Int,
+            5,
+            "再保存された memory.json は cacheVersion=5 に更新される"
         )
     }
 

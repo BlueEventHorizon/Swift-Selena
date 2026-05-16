@@ -34,7 +34,13 @@ actor ProjectMemory {
     private let projectName: String
     
     /// キャッシュフォーマットのバージョン（構造変更時にインクリメント）
-    private static let cacheVersion = 4
+    ///
+    /// v5 への bump 理由（2026/05/16）:
+    /// - v4 リリース後に SymbolInfo へ parentScope / extensionTarget / moduleName を追加した経緯がある
+    /// - 同一 cacheVersion 内でスキーマを拡張したため、3 フィールド時代に書かれた v4 キャッシュが温存され
+    ///   新フィールドが nil で読み出される潜在不具合が発生していた
+    /// - v5 に bump することで既存環境の旧フィールド欠落キャッシュを全破棄し再構築させる
+    private static let cacheVersion = 5
 
     struct Memory: Codable {
         var cacheVersion: Int
