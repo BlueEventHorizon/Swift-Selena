@@ -4,9 +4,16 @@
 //
 //  Created on 2025/12/14.
 //
-//  Purpose: Anthropicの「コード実行パターン」適用
-//  - 利用可能なツールの一覧を簡易形式で返す
-//  - トークン消費を削減するため、詳細なJSON Schemaは返さない
+//  [Code Header Format]
+//
+//  目的
+//  - 利用可能ツール一覧を簡易形式で返す（メタツール）
+//  - トークン消費削減のため詳細な JSON Schema は返さない
+//  - REQ-005 §4.7.1 ケーパビリティ通知に対応（CapabilityRegistry 経由）
+//
+//  主要機能
+//  - CapabilityRegistry.availableTools() で現環境で利用可能なツール名を取得
+//  - MetaToolRegistry でカテゴリ別に整形して返却
 //
 
 import Foundation
@@ -49,7 +56,11 @@ enum ListAvailableToolsTool: MCPTool {
     ) async throws -> CallTool.Result {
         logger.info("list_available_tools called")
 
-        let result = MetaToolRegistry.formatToolList()
+        // DES-104 §7.2 / TASK-013: CapabilityRegistry 経由で動作可能ツールを取得
+        // 本 Feature では全ツールが無条件で利用可能なため、整形結果は従来と同等。
+        // 将来、前提条件を持つツールが追加された際は availableToolNames で絞り込まれる。
+        let availableToolNames = Set(CapabilityRegistry.availableTools())
+        let result = MetaToolRegistry.formatToolList(filter: availableToolNames)
         return CallTool.Result(content: [.text(result)])
     }
 }

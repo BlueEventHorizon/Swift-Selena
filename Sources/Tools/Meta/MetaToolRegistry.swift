@@ -136,10 +136,25 @@ enum MetaToolRegistry {
 
     /// カテゴリ別にグループ化した出力を生成
     static func formatToolList() -> String {
-        var result = "Available Swift-Selena Tools (\(toolSummaries.count) tools):\n\n"
+        formatToolList(filter: nil)
+    }
+
+    /// カテゴリ別にグループ化した出力を生成（CapabilityRegistry によるフィルタ対応）
+    ///
+    /// - Parameter filter: 表示対象とするツール名集合。`nil` の場合は全ツール対象。
+    ///   DES-104 §7.2 / TASK-013 で CapabilityRegistry 経由化のために追加。
+    static func formatToolList(filter: Set<String>?) -> String {
+        let filteredSummaries: [ToolSummary]
+        if let filter = filter {
+            filteredSummaries = toolSummaries.filter { filter.contains($0.name) }
+        } else {
+            filteredSummaries = toolSummaries
+        }
+
+        var result = "Available Swift-Selena Tools (\(filteredSummaries.count) tools):\n\n"
 
         for category in Category.allCases {
-            let toolsInCategory = toolSummaries.filter { $0.category == category.rawValue }
+            let toolsInCategory = filteredSummaries.filter { $0.category == category.rawValue }
             if !toolsInCategory.isEmpty {
                 result += "\(category.displayName):\n"
                 for tool in toolsInCategory {

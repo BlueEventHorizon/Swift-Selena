@@ -4,10 +4,78 @@
 
 metadata:
   name: Project Specification Document Search Index
-  generated_at: 2026-03-28T12:58:12Z
-  file_count: 16
+  generated_at: 2026-05-15T16:32:07Z
+  file_count: 18
 
 docs:
+  project/improve/design/DES-104_search_symbol_tools_enhancement_design.md:
+    doc_type: design
+    title: DES-104 Search and Symbol Tools Enhancement Design
+    purpose: Specifies design for enhancing search_code and find_symbol_definition tools with output modes, result limits, multiple file patterns, structured output, symbol kind filters, scope information, and capability notification
+    content_details:
+      - Output mode support (match_detail / file_list / count_only)
+      - Result limit and truncation handling (1-10,000 max)
+      - Multiple file pattern support (include/exclude glob arrays)
+      - Structured JSON output appended to text results
+      - Symbol kind filter using SymbolKindMapper (9 predefined categories)
+      - Scope information for symbols (parentScope / extensionTarget / moduleName)
+      - CapabilityRegistry for tool availability notification
+      - Module name resolution via SwiftPM target detection
+      - SymbolVisitorV2 with scope stack management
+      - Cache version upgrade (v3 → v4) for SymbolInfoV2 compatibility
+    applicable_tasks:
+      - Implementation of search_code tool enhancement
+      - Implementation of find_symbol_definition tool enhancement
+      - Development of SymbolKindMapper utility
+      - Development of ResultEncoder utility
+      - Development of SymbolVisitorV2 component
+      - ProjectMemory cache schema update
+      - FileSearcher multi-pattern support implementation
+      - ToolHelpers parameter extraction method addition
+    keywords:
+      - search_code
+      - find_symbol_definition
+      - output mode
+      - file pattern
+      - symbol kind filter
+      - scope information
+      - structured output
+      - SymbolVisitorV2
+      - ResultEncoder
+      - CapabilityRegistry
+  project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md:
+    doc_type: spec
+    title: "REQ-005: Search and Symbol Tools Enhancement"
+    purpose: Enhances search_code and find_symbol_definition tools with output control, structured results, multiple file patterns, symbol type filtering, and scope information for improved usability and compatibility
+    content_details:
+      - Output mode selection (match details / file list / count only) and result limit control
+      - Structured search results with file path, line number, match content, total count, and truncation flag
+      - Multiple include/exclude file patterns with glob support
+      - Symbol type filtering with 9 categories (struct/class/enum/protocol/actor/function/variable/typealias/extension)
+      - Scope information (parent scope name / extension target / module name) for symbol disambiguation
+      - Backward compatibility with existing text output format
+      - Capability notification for environment-specific tool availability
+      - Error handling for input validation and cache failures
+      - "Out of scope: symbol name based reference search (LSP), comment/string literal filtering, layer-based filtering"
+    applicable_tasks:
+      - Search code result size control
+      - Find symbol definition refinement with type filtering
+      - File pattern filtering enhancement
+      - Symbol disambiguation in same-name cases
+      - Tool capability detection and environment adaptation
+      - Error message formatting for input validation
+      - Structured result format design
+    keywords:
+      - search_code
+      - find_symbol_definition
+      - output mode
+      - file pattern glob
+      - symbol type filter
+      - scope information
+      - capability notification
+      - result truncation
+      - structured results
+      - backward compatibility
   project/main/design/DES-004_swift_toc_generation_design.md:
     doc_type: design
     title: Swift Code Index Generation System Design

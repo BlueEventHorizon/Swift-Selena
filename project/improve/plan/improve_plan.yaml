@@ -1,0 +1,401 @@
+# improve Feature 実装計画書
+# 対象: REQ-005 検索・シンボルツール強化 / DES-104
+
+# === トレーサビリティ ===
+requirements_traceability:
+  - requirement_id: REQ-005
+    title: 検索・シンボルツール強化（improve feature）
+    design_id: DES-104
+    status: completed
+
+design_traceability:
+  - design_id: DES-104
+    title: 検索・シンボルツール強化 設計書
+    requirement_ids:
+      - REQ-005
+    task_ids:
+      - TASK-001
+      - TASK-002
+      - TASK-003
+      - TASK-004
+      - TASK-005
+      - TASK-006
+      - TASK-007
+      - TASK-008
+      - TASK-009
+      - TASK-010
+      - TASK-011
+      - TASK-012
+      - TASK-013
+      - TASK-014
+      - TASK-015
+      - TASK-016
+      - TASK-017
+
+# === タスク一覧 ===
+tasks:
+  - task_id: TASK-001
+    title: Constants にパラメータキー・エラーメッセージ拡張
+    priority: 75
+    status: completed
+    design_id: DES-104
+    depends_on: []
+    group_id: null
+    build_check: per_task
+    description:
+      - DES-104 §5.1 / §6.1 に従い ParameterKeys 定数を追加（output_mode / limit / include_patterns / exclude_patterns / symbol_kinds）
+      - DES-104 §5.1 注記に従い filePattern = "file_pattern" 定数の扱いを整理（SearchCodeTool 側参照削除のみ、定数削除可否は issue #34（他ツールの file_pattern 参照削除）連動とし、本タスクのスコープ外）
+      - DES-104 §8 に従い ErrorMessages の cause / suggestion 定数を追加（正規表現エラー / glob 構文エラー / 件数上限境界 / シンボル種別未定義 / 配列要素数上限）
+      - DES-104 §8.4 に従い maxSkippedFilesInResponse 定数を追加
+    acceptance_criteria: 既存ビルドが通り、後続タスクが新規定数を参照できる
+    required_reading:
+      - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+
+  - task_id: TASK-002
+    title: ToolHelpers に getStringArray / getOptionalInt 追加
+    priority: 75
+    status: completed
+    design_id: DES-104
+    depends_on: []
+    group_id: null
+    build_check: per_task
+    description:
+      - DES-104 §4.3 に従い ToolHelpers に配列取得ヘルパー（要素数上限・空配列/省略/null の扱い・上限超過時のエラー応答）を追加
+      - DES-104 §4.3 に従い ToolHelpers に Optional 整数取得ヘルパー（省略/null の扱い・変換不能時のエラー応答）を追加
+      - DES-104 §4.0 入力検証責務原則に従い検証ヘルパーは Tool 層内で完結する設計とする
+    acceptance_criteria: 単体ビルドが成功し、後続タスクから両ヘルパー API を参照できる
+    required_reading:
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+
+  - task_id: TASK-003
+    title: SymbolKindMapper 新規実装
+    priority: 72
+    status: completed
+    design_id: DES-104
+    depends_on:
+      - TASK-001
+    group_id: null
+    build_check: per_task
+    description:
+      - DES-104 §4.2 / §2 TBD-005 対応表に従い Sources/Tools/Symbols/SymbolKindMapper.swift を新規作成
+      - DES-104 §2 TBD-005 の対応表に従い利用者指定値と表示用 kind 値の双方向変換 API を実装
+      - DES-104 §4.2 に従い未定義種別文字列を検出するバリデーション API を実装（無効値を列挙してエラー応答）
+      - DES-104 §6.2 の優先返却分類（優先 / 非優先 / 対象外）に従う分類 API を実装
+      - DES-104 §4.2 に従い妥当な利用者指定値の集合を公開 API として提供（エラーメッセージ生成等から参照可能とする）
+    acceptance_criteria: 単体ビルドが通り、バリデーションと分類 API の振る舞いが受入テストで確認できる
+    required_reading:
+      - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+
+  - task_id: TASK-004
+    title: ModuleNameResolver 新規実装
+    priority: 65
+    status: cancelled
+    design_id: DES-104
+    depends_on: []
+    group_id: null
+    build_check: per_task
+    description:
+      - "[CANCELLED 2026-05-06] DES-104 v2.0 簡素化により独立モジュール化を撤回。ModuleNameResolver はヘルパーメソッドとして TASK-006 内で SymbolVisitorV2 に内包実装する"
+    acceptance_criteria: "(cancelled) TASK-006 内のヘルパー実装で代替"
+    required_reading: []
+
+  - task_id: TASK-005
+    title: SwiftSyntaxAnalyzer に SymbolInfoV2 と listSymbolsWithScope 追加
+    priority: 78
+    status: completed
+    design_id: DES-104
+    depends_on: []
+    group_id: null
+    build_check: per_task
+    description:
+      - DES-104 §4.5 に従い SwiftSyntaxAnalyzer に拡張シンボル情報型 SymbolInfoV2 を追加
+      - DES-104 §6.5 並存方針に従い既存型はそのまま残す
+      - DES-104 §6.7 シーケンス図に従いスコープ付きシンボル一覧取得 API を追加（スタブ可、本体実装は TASK-006 で完成）
+      - DES-104 §8.4 に従いファイルパース失敗時のスキップ挙動と skipped_files 連携を考慮した API 形状とする
+    acceptance_criteria: 既存ビルドが通り、新型と新メソッドが後続タスクから参照可能
+    required_reading:
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+
+  - task_id: TASK-006
+    title: SymbolVisitorV2 実装と SwiftSyntaxAnalyzer.listSymbolsWithScope 本体完成
+    priority: 75
+    status: completed
+    design_id: DES-104
+    depends_on:
+      - TASK-005
+    group_id: null
+    build_check: per_task
+    description:
+      - DES-104 §4.5 に従い Sources/Selena/Visitors/SymbolVisitorV2.swift を新規作成（SymbolVisitor は継承せず独立実装）
+      - DES-104 §4.5 のスコープ追跡仕様に従いスコープスタックを実装する（決定規則は §4.5 に従う）
+      - extension 自身も "Extension" 種別のシンボルとして登録する（REQ-005 §4.4.1 受入基準対応）
+      - DES-104 §4.5 のスタック整合性方針に従う
+      - DES-104 v2.0 簡素化に従い、SymbolVisitorV2 内部にヘルパーメソッドとして resolveModuleName(from:) を実装し、Package.swift を遡って探索・正規表現抽出・nil 返却（Package.swift 不在 / Sources/{target}/ 不一致 / パース失敗）を行う
+      - Sources/Selena/Core/SwiftSyntaxAnalyzer.swift の listSymbolsWithScope(filePath)（TASK-005 で追加されたスタブ）の本体実装を完成させ、SymbolVisitorV2 を呼び出して SymbolInfoV2 配列を返す形に置き換える（DES-104 §2 TBD-009 / TBD-010 の上限値は本タスクのスコープ外で TASK-014 の境界値テストにて検証）
+    acceptance_criteria: ルート型 / ネスト型 / extension 内型を区別する単体テストが通り、かつ visit/visitPost 対称性（push/pop 回数の一致）・defer によるスタック崩壊防止（早期 return パスを含む発火）・extension 自身の Extension 種別シンボル登録を検証する単体テストが通る
+    required_reading:
+      - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+
+  - task_id: TASK-007
+    title: FileSearcher に searchCode オーバーロード追加
+    priority: 78
+    status: completed
+    design_id: DES-104
+    depends_on:
+      - TASK-001
+    group_id: null
+    build_check: per_task
+    description:
+      - DES-104 §4.4 に従い Sources/Selena/Core/FileSearcher.swift に新オーバーロードを追加（include/exclude パターン・件数上限・出力モードに対応）
+      - DES-104 §6.1 / §4.4 に従い出力モード型と検索結果型を新規定義
+      - DES-104 §4.4 評価規則に従い include/exclude の OR 評価・衝突時の優先順・include 未指定時の既定パターン適用を実装
+      - DES-104 §4.4 に従い wildcard → 正規表現変換ヘルパーを内部公開化し、ワイルドカードのプレースホルダー方式展開を実装
+      - DES-104 §8.5 に従いディレクトリ列挙失敗時は明示的エラーを返す
+      - 既存シグネチャは残し、内部的に新シグネチャへ委譲する形に変更（後方互換維持）
+    acceptance_criteria: 既存呼び出しが破壊なく動作し、新シグネチャで include/exclude/limit/output_mode が機能する
+    required_reading:
+      - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+
+  - task_id: TASK-008
+    title: ResultEncoder 新規実装
+    priority: 73
+    status: completed
+    design_id: DES-104
+    depends_on:
+      - TASK-007
+    group_id: null
+    build_check: per_task
+    description:
+      - DES-104 §4.7 に従い Sources/Tools/ResultEncoder.swift を新規作成
+      - DES-104 §4.7 / §5.2 に従い検索結果のテキスト出力（モード別フォーマット）と JSON スキーマを生成する encodeSearchCode を実装
+      - DES-104 §4.7 に従い text と structured json を結合する buildFinalResponse を実装
+      - DES-104 §8.1 統一フォーマットに従い buildErrorResponse を実装
+      - encodeSymbolDefinition は API スケルトンのみ実装（本体は fatalError("unimplemented") など即時クラッシュさせるスタブ）、整形ロジックは TASK-012 で完成
+      - DES-104 §8.3 に従い構造化結果生成失敗時の付記ルールに対応する
+    acceptance_criteria: 単体ビルドが通り、encodeSearchCode の各モードでの出力が単体テストで検証可能
+    required_reading:
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+
+  - task_id: TASK-009
+    title: CapabilityRegistry 新規実装
+    priority: 70
+    status: cancelled
+    design_id: DES-104
+    depends_on: []
+    group_id: null
+    build_check: per_task
+    description:
+      - "[CANCELLED 2026-05-06] DES-104 v2.0 簡素化により actor + 並列前提条件チェック + タイムアウト + キャンセル協調 + 状態機械 を撤回。CapabilityRegistry は MetaToolRegistry.allTools をそのまま返す静的 enum 関数として最小化し、TASK-013 内で実装する"
+    acceptance_criteria: "(cancelled) TASK-013 内の最小実装で代替"
+    required_reading: []
+
+  - task_id: TASK-010
+    title: SearchCodeTool 拡張（新パラメータ対応・file_pattern 廃止）
+    priority: 82
+    status: completed
+    design_id: DES-104
+    depends_on:
+      - TASK-001
+      - TASK-002
+      - TASK-007
+      - TASK-008
+    group_id: null
+    build_check: per_task
+    description:
+      - DES-104 §5 に従い Sources/Tools/FileSystem/SearchCodeTool.swift を拡張
+      - output_mode / limit / include_patterns / exclude_patterns の入力検証を §5.3 入力検証フローに従い Tool 層内で完結（§4.0 設計原則）
+      - file_pattern は未知パラメータとして無視（§5.1 廃止パラメータ方針）
+      - DES-104 §2 TBD-010 に従い件数上限の最大値超過時は切り詰めと truncation 通知フラグの付与を行う
+      - FileSearcher 新オーバーロードを呼び出し、ResultEncoder 経由で最終応答を生成
+      - ProjectMemory.isCacheWarning() を await で取得し ResultEncoder に渡す（§8.2.1 伝達経路）
+    acceptance_criteria: §11.1 の正常系・異常系テストが通り、後方互換が維持される
+    required_reading:
+      - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+      - docs/rules/base/review_criteria.md
+
+  - task_id: TASK-011
+    title: ProjectMemory v4 移行（SymbolInfo スコープフィールド追加・cacheVersion=4・全破棄方式）
+    priority: 75
+    status: completed
+    design_id: DES-104
+    depends_on:
+      - TASK-005
+    group_id: "GROUP-001 (1/2)"
+    build_check: skip
+    description:
+      - DES-104 §4.6 に従い Sources/Selena/Core/ProjectMemory.swift の Memory.SymbolInfo をスコープ情報を含む拡張形に更新
+      - DES-104 §4.6 に従い cacheVersion をインクリメント（v3 → v4）
+      - DES-104 v2.0 簡素化に従い、バージョン不一致検出時は notes を含む全フィールドを破棄して空状態で再構築する（部分デコードによる notes 保持は行わない）
+      - DES-104 §4.6 に従い cacheWarning 状態とアクセサ API を追加
+      - DES-104 §6.4 並存方針に沿って cacheFileSymbols / getCachedFileSymbols のシグネチャを新型対応に更新
+      - DES-104 §6.4 に従い既存呼び出し側との境界変換方針を整える（このタスクの時点では呼び出し側が壊れる可能性があり、TASK-012 と同グループでまとめて完成させる）
+    acceptance_criteria: GROUP-001 (2/2) 完了時にビルド・既存テストが通る
+    required_reading:
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+
+  - task_id: TASK-012
+    title: FindSymbolDefinitionTool 拡張（種別フィルタ・スコープ情報・SymbolInfoV2 連携）
+    priority: 82
+    status: completed
+    design_id: DES-104
+    depends_on:
+      - TASK-002
+      - TASK-003
+      - TASK-005
+      - TASK-006
+      - TASK-008
+      - TASK-011
+    group_id: "GROUP-001 (2/2)"
+    build_check: on_group_complete
+    description:
+      - DES-104 §6 に従い Sources/Tools/Symbols/FindSymbolDefinitionTool.swift を拡張
+      - symbol_kinds 配列パラメータの受領と SymbolKindMapper.validate を §6.1 / §6.2 に従って実施
+      - 種別フィルタ未指定時は全 9 区分を返し、SymbolKindMapper.priorityGroup で優先返却順にソート（§6.2）
+      - SymbolInfoV2（SwiftSyntaxAnalyzer）と Memory.SymbolInfo（v4）間のインライン変換を §6.4 に従い FindSymbolDefinitionTool 内で実装
+      - SymbolDefinitionResult 構造体を本ファイル内に定義（§4.7 配置方針）
+      - ResultEncoder.encodeSymbolDefinition の本実装を §6.6 テキスト出力フォーマットに従って完成（TASK-008 のスケルトンを完成）
+      - キャッシュ未ヒット時は SwiftSyntaxAnalyzer.listSymbolsWithScope を呼び出し、ProjectMemory.cacheFileSymbols でキャッシュ保存
+      - パース失敗ファイルは DES-104 §8.4 に従い skipped_files に記録する（上限値・関連フィールドは設計書参照）
+      - ProjectMemory.isCacheWarning() を await で取得し ResultEncoder に渡す
+      - 既存テキスト出力フォーマットの後方互換（§9.2）を維持し、Scope 行は追加行として付記
+    acceptance_criteria: §11.2 の正常系・異常系テストが通り、ビルドと既存テストが GROUP-001 完了時点で全て通る
+    required_reading:
+      - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+      - docs/rules/base/review_criteria.md
+
+  - task_id: TASK-013
+    title: CapabilityRegistry（最小実装）作成と SwiftMCPServer ListTools 連携
+    priority: 60
+    status: completed
+    design_id: DES-104
+    depends_on: []
+    group_id: null
+    build_check: per_task
+    description:
+      - DES-104 §7 / v2.0 簡素化に従い Sources/Tools/Meta/CapabilityRegistry.swift を新規作成（actor ではなく enum + static func の最小実装）
+      - availableTools() は MetaToolRegistry.allTools をそのまま返すのみ（前提条件チェック・並列実行・タイムアウト・キャンセル協調・状態機械はいずれも持たない）
+      - SwiftMCPServer の ListTools / list_available_tools ハンドラを CapabilityRegistry.availableTools() 経由に変更し、MetaToolRegistry.getToolDefinition で Tool 定義を取得して応答
+    acceptance_criteria: ListTools / list_available_tools 応答が現状と同じツール一覧を返すことを単体テストで確認できる
+    required_reading:
+      - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+
+  - task_id: TASK-014
+    title: SearchCodeTool テストを追加
+    priority: 50
+    status: completed
+    design_id: DES-104
+    depends_on:
+      - TASK-010
+    group_id: null
+    build_check: per_task
+    description:
+      - DES-104 §11.1 の正常系（output_mode 各種・limit・include/exclude・既定挙動・file_pattern 無視）をカバー
+      - 境界値テストとして limit=10000 ちょうど（切り詰めなし）と limit=10001（境界 +1、切り詰めあり）の双方を検証（DES-104 §2 TBD-010 件数上限最大値 10,000 に従う）
+      - 異常系（不正正規表現・limit=0/-1・limit=20000 切り詰め・include 21 件・include_patterns / exclude_patterns 各々に不正 glob を含むケース・include/exclude 衝突）をカバー（配列要素数上限は DES-104 §2 TBD-009 に従う）
+      - 既存テストとの後方互換を破壊しない
+    acceptance_criteria: swift test が通り、追加ケースが緑になる
+    required_reading:
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+
+  - task_id: TASK-015
+    title: FindSymbolDefinitionTool テストを追加
+    priority: 50
+    status: completed
+    design_id: DES-104
+    depends_on:
+      - TASK-012
+    group_id: null
+    build_check: per_task
+    description:
+      - DES-104 §11.2 の正常系（symbol_kinds 未指定の優先返却順 / 単一・複数指定 OR / ルート vs ネスト型 vs extension 内型の区別）をカバー
+      - 異常系（unknown_type / 部分的不正値 / symbol_kinds 配列要素数 9 件超過（重複含む））をカバー（配列要素数上限は DES-104 §2 TBD-009 に従う）
+    acceptance_criteria: swift test が通り、3 ケース区別の受入確認ができる
+    required_reading:
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+
+  - task_id: TASK-016
+    title: ModuleNameResolver テストを追加
+    priority: 45
+    status: cancelled
+    design_id: DES-104
+    depends_on: []
+    group_id: null
+    build_check: per_task
+    description:
+      - "[CANCELLED 2026-05-06] DES-104 v2.0 簡素化により ModuleNameResolver は SymbolVisitorV2 内のヘルパーメソッドへ吸収。モジュール名解決の境界条件は TASK-015（FindSymbolDefinitionTool テスト）の正常系・異常系ケースで合わせて検証する"
+    acceptance_criteria: "(cancelled) TASK-015 のテストで代替"
+    required_reading: []
+
+  - task_id: TASK-017
+    title: 後方互換テストを追加
+    priority: 55
+    status: completed
+    design_id: DES-104
+    depends_on:
+      - TASK-010
+      - TASK-012
+    group_id: null
+    build_check: per_task
+    description:
+      - "DES-104 §11.4 に従い search_code 既存呼び出し（pattern のみ）の行頭フォーマット <file>:<line>: <content> が変更されないことを検証"
+      - find_symbol_definition の既存出力形式（[Kind] Name / File / Line）が維持されることを検証
+      - 構造化ブロック --- structured --- 以降の付加が既存行を変更しないことを検証
+      - file_pattern 廃止が破壊的変更として REQ-005 §4.6 で許容済みである旨をテスト名・コメントで明示
+      - DES-104 §4.6（v2.0 簡素化）に従い v3 形式キャッシュファイル fixture を投入し、cacheVersion 3→4 マイグレーション時にキャッシュが全破棄されて空状態で再構築されることを検証するケースを追加
+    acceptance_criteria: 既存出力契約の維持が機械的に検証可能
+    required_reading:
+      - project/improve/spec/REQ-005_Search_and_Symbol_Tools_Enhancement.md
+      - project/improve/design/DES-104_search_symbol_tools_enhancement_design.md
+      - docs/format/code_header_format.md
+      - docs/rules/base/coding_rule.md
+
+# === 改定履歴 ===
+revision_history:
+  - date: "2026-05-05"
+    content: 初版作成（REQ-005 / DES-104 全タスク抽出。GROUP-001 で ProjectMemory v4 と FindSymbolDefinitionTool 拡張をビルド単位として束ね、それ以外は per_task で並列実行可能とする）。REQ-005 / DES-104 2026-05-05 改定（`file_pattern` 廃止確定）反映済み
+  - date: "2026-05-06"
+    content: AI レビュー（対話モード）反映。TASK-006 acceptance_criteria に visit/visitPost 対称性・defer 発火・extension 自身登録のテスト要件を追加、TASK-009 priority を 60→70 に引き上げ、TASK-008 description に encodeSymbolDefinition の fatalError スタブ方式を明示、TASK-009 description にロガースタブ手段を併記し required_reading に Sources/Logging/ を追加、TASK-016 description に tmp ディレクトリでの fixture 構築手段を補記、TASK-006/008/012 の設計書実装詳細転記を §X.Y 参照に圧縮
+  - date: "2026-05-06"
+    content: |
+      DES-104 v2.0 全面是正反映（過剰設計の是正）。
+      - TASK-001: capabilityCheckTimeout 定数と [CapabilityWarning] プレフィックス定数の追加要求を削除（最小化された CapabilityRegistry には不要）
+      - TASK-004 (ModuleNameResolver 新規実装): cancelled。SymbolVisitorV2 内のヘルパーメソッドとして TASK-006 に内包
+      - TASK-006: ModuleNameResolver ヘルパー実装を description に追加、depends_on から TASK-004 を削除
+      - TASK-009 (CapabilityRegistry actor): cancelled。actor + 並列前提条件チェック + タイムアウト + キャンセル協調 + 状態機械 を撤回し、最小実装を TASK-013 に統合
+      - TASK-011: notes フィールド部分デコード保持機構を削除し、v3→v4 マイグレーション時は全破棄方式へ変更
+      - TASK-013: タイトルと description を更新（最小 CapabilityRegistry の作成 + ListTools 連携）。depends_on から TASK-009 を削除し、[CapabilityWarning] テスト要件を削除
+      - TASK-016 (ModuleNameResolver テスト): cancelled。境界条件は TASK-015 で吸収検証
+      - TASK-017: notes フィールド部分デコード fixture テストを削除し、cacheVersion 3→4 全破棄を検証する記述に変更

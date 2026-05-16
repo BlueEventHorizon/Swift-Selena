@@ -24,6 +24,10 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
 - **ToC ファイル直接編集禁止**: `.claude/doc-advisor/` 配下の ToC ファイルは直接編集せず、`/create-rules-toc` / `/create-specs-toc` で更新すること
 - **Swift-Selena MCP の利用検討**: Swift-Selena MCP が接続されている場合、コードの分析・解析作業で MCP の説明から効率的・効果的か判定し、利用を検討すること（実験は不要、MCP の説明で判断）
 - **Xcode MCP の利用検討**: Xcode MCP が接続されている場合、Skill（`/xcode:build` / `/xcode:test`）が対応していない場面でのみ、MCP の説明から効果的か判定し、利用を検討すること
+- **MCP サーバー再起動を伴うテストはユーザー依頼必須**: MCP サーバー（Swift-Selena MCP 等）の再起動を要するエンドツーエンドテスト（コード変更後の挙動確認、キャッシュ破棄を伴う動作確認など）は、**AI が独断で実施せず、必ずユーザーに再起動を依頼してから実施すること**
+  - AI 側からは別プロセスである MCP サーバーを再起動できない
+  - 再起動が必要な場合は、再起動手順（バイナリ再ビルド要否、必要なキャッシュ削除、確認したい挙動）を明示してユーザーに依頼する
+  - ユニットテストでの代替検証で済む場合はそれを優先し、E2E 検証の要否を判断する
 
 ## 開発言語・フレームワーク
 
@@ -96,7 +100,7 @@ Claude/Client
     ↓ JSON-RPC over stdio
 SwiftMCPServer (MCP SDK)
     ↓ ツール呼び出し
-Tool実装 (ToolProtocol準拠)
+Tool実装 (MCPTool 準拠)
     ↓ 解析処理
 Selena解析エンジン
     ↓ 結果
@@ -106,7 +110,7 @@ Claude/Client
 ```
 
 **重要原則**:
-- 全ツールはToolProtocolに準拠
+- 全ツールは MCPTool プロトコルに準拠
 - SwiftSyntaxによる静的解析（ビルド不要）
 - LSP統合によるセマンティック解析（ビルド可能時）
 
@@ -136,7 +140,7 @@ swift build -c release
 - **project_toc.yaml 自動更新**: project/{feature}/spec/、project/{feature}/design/ 配下のファイルを追加・変更・削除・移動したら、`project-toc-updater` Subagent を起動して project_toc.yaml を更新すること
 
 ### MCP Server実装原則
-- **ToolProtocol準拠**: 新規ツールは`ToolProtocol`を実装
+- **MCPTool 準拠**: 新規ツールは `MCPTool` プロトコル（`Sources/Tools/ToolProtocol.swift` で定義）を実装
 - **静的解析優先**: SwiftSyntaxベースの解析を基本とし、LSPは補助的に使用
 - **キャッシュ活用**: 解析結果はProjectMemoryでキャッシュ
 - **エラーハンドリング**: ツール実行エラーは適切にMCP応答として返却
@@ -162,7 +166,7 @@ swift build -c release
 ## Critical Implementation Constraints
 
 ### Sources/Tools/ - ツール実装制約
-- **ToolProtocol準拠**: 全ツールは`Sources/Tools/ToolProtocol.swift`に準拠
+- **MCPTool 準拠**: 全ツールは `Sources/Tools/ToolProtocol.swift` で定義された `MCPTool` プロトコルに準拠
 - **カテゴリ配置**:
   - `Analysis/` - コード解析（imports, type hierarchy等）
   - `FileSystem/` - ファイル操作（find_files, search_code等）
