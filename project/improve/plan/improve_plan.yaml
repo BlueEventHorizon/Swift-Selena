@@ -6,7 +6,7 @@ requirements_traceability:
   - requirement_id: REQ-005
     title: 検索・シンボルツール強化（improve feature）
     design_id: DES-104
-    status: pending
+    status: completed
 
 design_traceability:
   - design_id: DES-104
@@ -331,7 +331,7 @@ tasks:
   - task_id: TASK-015
     title: FindSymbolDefinitionTool テストを追加
     priority: 50
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on:
       - TASK-012
@@ -362,7 +362,7 @@ tasks:
   - task_id: TASK-017
     title: 後方互換テストを追加
     priority: 55
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on:
       - TASK-010

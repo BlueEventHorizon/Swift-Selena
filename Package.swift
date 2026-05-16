@@ -36,6 +36,18 @@ let package = Package(
             name: "SearchCodeToolTests",
             dependencies: ["Swift-Selena"],
             path: "Tests/SearchCodeToolTests"
+        ),
+        // FindSymbolDefinitionTool 単体テスト（DES-104 §11.2 / REQ-005）
+        .testTarget(
+            name: "FindSymbolDefinitionToolTests",
+            dependencies: ["Swift-Selena"],
+            path: "Tests/FindSymbolDefinitionToolTests"
+        ),
+        // 後方互換テスト（DES-104 §11.4 / REQ-005 §4.6）
+        .testTarget(
+            name: "BackwardCompatibilityTests",
+            dependencies: ["Swift-Selena"],
+            path: "Tests/BackwardCompatibilityTests"
         )
     ]
 )
