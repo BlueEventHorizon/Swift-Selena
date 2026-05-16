@@ -26,6 +26,8 @@ __pycache__/
 
 **/meta/
 **/meta
+!Sources/Tools/Meta/
+!Sources/Tools/Meta/**
 
 **/reference_projects/
 **/reference_projects

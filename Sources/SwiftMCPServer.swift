@@ -69,21 +69,17 @@ struct SwiftMCPServer {
             var tools: [Tool] = []
 
             if useLegacyMode {
-                // 従来モード: 全12ツールを公開
-                tools.append(contentsOf: [
-                    InitializeProjectTool.toolDefinition,
-                    FindFilesTool.toolDefinition,
-                    SearchCodeTool.toolDefinition,
-                    SearchFilesWithoutPatternTool.toolDefinition,
-                    ListSymbolsTool.toolDefinition,
-                    FindSymbolDefinitionTool.toolDefinition,
-                    ListPropertyWrappersTool.toolDefinition,
-                    ListProtocolConformancesTool.toolDefinition,
-                    ListExtensionsTool.toolDefinition,
-                    AnalyzeImportsTool.toolDefinition,
-                    GetTypeHierarchyTool.toolDefinition,
-                    FindTestCasesTool.toolDefinition
-                ])
+                // 従来モード: 全ツールを公開
+                // DES-104 §7.2 / TASK-013: CapabilityRegistry 経由でツール名一覧を取得し、
+                // MetaToolRegistry.getToolDefinition で Tool 定義に変換する
+                let availableToolNames = CapabilityRegistry.availableTools()
+                for toolName in availableToolNames {
+                    if let definition = MetaToolRegistry.getToolDefinition(toolName) {
+                        tools.append(definition)
+                    } else {
+                        logger.warning("Tool definition not found for: \(toolName)")
+                    }
+                }
             } else {
                 // v0.6.3 メタツールモード: 4ツールのみ公開（トークン削減）
                 // - initialize_project: 常に直接公開
@@ -149,7 +145,7 @@ struct SwiftMCPServer {
                 var isDirectory: ObjCBool = false
                 guard FileManager.default.fileExists(atPath: projectPath, isDirectory: &isDirectory),
                       isDirectory.boolValue else {
-                    throw MCPError.invalidParams("Project path does not exist or is not a directory")
+                    throw MCPError.invalidParams(ErrorMessages.projectPathNotDirectory)
                 }
 
                 // ProjectMemory初期化

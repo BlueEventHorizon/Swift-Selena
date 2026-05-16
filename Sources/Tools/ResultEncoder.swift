@@ -13,6 +13,8 @@
 //
 //  主要機能
 //  - コード検索結果のモード別テキスト整形と JSON スキーマ組み立て（マッチ行は前後空白除去）
+//  - シンボル定義検索結果のテキスト整形（Scope 行付与）と JSON スキーマ組み立て（DES-104 §6.5）
+//  - skipped_files（DES-104 §8.4）と cache_warning の JSON 反映
 //  - 最終応答文字列への structured セクション付与
 //  - ツール共通のエラー表示形式の生成
 //
@@ -45,12 +47,37 @@ enum ResultEncoder {
         }
     }
 
-    /// `find_symbol_definition` 用（TASK-012 で本体実装）
+    /// `find_symbol_definition` のテキストと構造化 JSON を生成する（DES-104 §6.5・§6.6）
+    ///
+    /// - Parameters:
+    ///   - symbols: 表示順に整列済みのシンボル一覧（Tool 層で priorityGroup ソート済み）
+    ///   - cacheWarning: ProjectMemory.isCacheWarning() の結果
+    ///   - skippedFiles: パース失敗ファイルのパス一覧（上限適用後）。DES-104 §8.4
+    ///   - skippedFilesTruncated: skippedFiles が上限超過で切り詰められた場合 true
+    ///   - totalSkippedCount: 上限適用前の総スキップ件数
+    /// - Returns: テキスト本文と JSON（生成失敗時は text 末尾に `[structured output unavailable]`、json は空）
     static func encodeSymbolDefinition(
         symbols: [SymbolDefinitionResult],
-        cacheWarning: Bool
+        cacheWarning: Bool,
+        skippedFiles: [String] = [],
+        skippedFilesTruncated: Bool = false,
+        totalSkippedCount: Int = 0
     ) -> (text: String, json: String) {
-        fatalError("encodeSymbolDefinition is not yet implemented — will be completed in TASK-012")
+        let textBody = buildSymbolDefinitionText(symbols: symbols)
+
+        do {
+            let jsonString = try encodeSymbolDefinitionJSON(
+                symbols: symbols,
+                cacheWarning: cacheWarning,
+                skippedFiles: skippedFiles,
+                skippedFilesTruncated: skippedFilesTruncated,
+                totalSkippedCount: totalSkippedCount
+            )
+            return (textBody, jsonString)
+        } catch {
+            let fallbackText = textBody + "\n[structured output unavailable]"
+            return (fallbackText, "")
+        }
     }
 
     /// テキスト本文と JSON を MCP 応答用に結合する（DES-104 §2 TBD-004）
@@ -139,5 +166,97 @@ enum ResultEncoder {
 
     private enum JSONEncodeFailure: Error {
         case invalidUTF8
+    }
+
+    // MARK: - find_symbol_definition テキスト
+
+    /// 1 シンボルあたりのスコープ行を組み立てる（DES-104 §6.5）
+    ///
+    /// - ルート定義（parent/extension 共に nil）: `Scope: (root)`
+    /// - ネスト型: `Scope: parent=Foo`
+    /// - extension 内定義: `Scope: extension=Foo`
+    /// - 親と extension が同時に存在する場合（extension 内のネスト等）: `Scope: parent=A, extension=B`
+    /// - moduleName が取得できた場合: ` (module=X)` を末尾に追加
+    private static func buildScopeLine(_ symbol: SymbolDefinitionResult) -> String {
+        var components: [String] = []
+        if let parent = symbol.parentScope {
+            components.append("parent=\(parent)")
+        }
+        if let ext = symbol.extensionTarget {
+            components.append("extension=\(ext)")
+        }
+        let core = components.isEmpty ? "(root)" : components.joined(separator: ", ")
+        if let module = symbol.moduleName {
+            return "  Scope: \(core) (module=\(module))"
+        }
+        return "  Scope: \(core)"
+    }
+
+    /// シンボル定義検索結果のテキスト本文を組み立てる（DES-104 §6.5・§9.2）
+    private static func buildSymbolDefinitionText(symbols: [SymbolDefinitionResult]) -> String {
+        guard let first = symbols.first else {
+            // 0 件時は呼び出し側で別ルートになる想定だが、念のため対応
+            return "Found 0 definition(s)."
+        }
+
+        var lines: [String] = []
+        lines.append("Found \(symbols.count) definition(s) for '\(first.symbolName)':")
+        lines.append("")
+        for symbol in symbols {
+            lines.append("[\(symbol.kind)] \(symbol.symbolName)")
+            lines.append("  File: \(symbol.file)")
+            lines.append("  Line: \(symbol.line)")
+            lines.append(buildScopeLine(symbol))
+            lines.append("")
+        }
+        // 末尾の空行を除去（末尾改行は buildFinalResponse 側で付与）
+        if lines.last == "" {
+            lines.removeLast()
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    // MARK: - find_symbol_definition JSON
+
+    private static func encodeSymbolDefinitionJSON(
+        symbols: [SymbolDefinitionResult],
+        cacheWarning: Bool,
+        skippedFiles: [String],
+        skippedFilesTruncated: Bool,
+        totalSkippedCount: Int
+    ) throws -> String {
+        let symbolObjects: [[String: Any]] = symbols.map { sym in
+            // 必須キーのみで初期化し、Optional フィールドは map で NSNull/値を一意に確定（DES-104 §7.1）
+            var obj: [String: Any] = [
+                "name": sym.symbolName,
+                "kind": sym.kind,
+                "file": sym.file,
+                "line": sym.line,
+            ]
+            obj["parent_scope"] = sym.parentScope.map { $0 as Any } ?? NSNull()
+            obj["extension_target"] = sym.extensionTarget.map { $0 as Any } ?? NSNull()
+            obj["module_name"] = sym.moduleName.map { $0 as Any } ?? NSNull()
+            return obj
+        }
+
+        var root: [String: Any] = [
+            "total_count": symbols.count,
+            "cache_warning": cacheWarning,
+            "symbols": symbolObjects,
+        ]
+
+        // skipped_files が空でも DES-104 §8.4 の挙動を観察可能にするため、
+        // パース失敗が発生した場合（totalSkippedCount > 0）のみ JSON ルートに含める
+        if totalSkippedCount > 0 {
+            root["skipped_files"] = skippedFiles
+            root["skipped_files_truncated"] = skippedFilesTruncated
+            root["total_skipped_count"] = totalSkippedCount
+        }
+
+        let data = try JSONSerialization.data(withJSONObject: root, options: [.sortedKeys])
+        guard let string = String(data: data, encoding: .utf8) else {
+            throw JSONEncodeFailure.invalidUTF8
+        }
+        return string
     }
 }

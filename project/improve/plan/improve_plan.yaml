@@ -259,7 +259,7 @@ tasks:
   - task_id: TASK-012
     title: FindSymbolDefinitionTool 拡張（種別フィルタ・スコープ情報・SymbolInfoV2 連携）
     priority: 82
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on:
       - TASK-002
@@ -292,7 +292,7 @@ tasks:
   - task_id: TASK-013
     title: CapabilityRegistry（最小実装）作成と SwiftMCPServer ListTools 連携
     priority: 60
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on: []
     group_id: null
@@ -311,7 +311,7 @@ tasks:
   - task_id: TASK-014
     title: SearchCodeTool テストを追加
     priority: 50
-    status: pending
+    status: completed
     design_id: DES-104
     depends_on:
       - TASK-010

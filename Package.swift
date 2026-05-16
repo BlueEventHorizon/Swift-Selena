@@ -30,6 +30,12 @@ let package = Package(
                 .product(name: "SwiftParser", package: "swift-syntax"),
             ],
             path: "Tests/SymbolVisitorV2Tests"
+        ),
+        // SearchCodeTool 単体テスト（DES-104 §11.1）
+        .testTarget(
+            name: "SearchCodeToolTests",
+            dependencies: ["Swift-Selena"],
+            path: "Tests/SearchCodeToolTests"
         )
     ]
 )
