@@ -145,7 +145,10 @@ UC: テストファイルを列挙
 
 **入力:**
 - `pattern`: 正規表現
-- `file_pattern`: ファイルフィルタ（オプション）
+- `include_patterns`: 対象に含める glob 配列（オプション、最大 20 件）
+- `exclude_patterns`: 対象から除外する glob 配列（オプション、最大 20 件、include に勝つ）
+
+> v0.6.8 (REQ-005 / DES-104 §5.1) で `file_pattern` 単独パラメータを廃止し、`search_files_without_pattern` と共通の `include_patterns` / `exclude_patterns` 配列に統一した。
 
 **出力:**
 ```

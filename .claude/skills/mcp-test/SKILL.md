@@ -53,8 +53,8 @@ mcp__swift-selena-debug__list_available_tools
 | ツール | テストパラメータ | 成功判定 |
 |--------|-----------------|----------|
 | `find_files` | `pattern: "*.swift"` | 1件以上のファイルが返る |
-| `search_code` | `pattern: "import", file_pattern: "*.swift"` | マッチが返る（file_pattern 修正の検証を兼ねる） |
-| `search_files_without_pattern` | `pattern: "ToolProtocol", file_pattern: "*.swift"` | パターン不含ファイルが返る |
+| `search_code` | `pattern: "import", include_patterns: ["**/*.swift"]` | マッチが返る（DES-104 §5.1 / REQ-005 の include_patterns 検証を兼ねる） |
+| `search_files_without_pattern` | `pattern: "ToolProtocol", include_patterns: ["**/*.swift"]` | パターン不含ファイルが返る（issue #34 の include_patterns 検証を兼ねる） |
 | `list_symbols` | `file_path:` Sources/ 配下の任意の .swift ファイル | シンボル一覧が返る |
 | `find_symbol_definition` | `symbol_name:` プロジェクト内の既知の型名 | 定義箇所が返る |
 | `list_property_wrappers` | `file_path:` Tests/Fixtures/TestSwiftUIView.swift | @State 等が検出される |
