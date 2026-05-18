@@ -408,7 +408,7 @@ final class BackwardCompatibilityTests: XCTestCase {
         let response = try await runSearchCode(arguments: [
             ParameterKeys.pattern: .string("hello"),
             ParameterKeys.outputMode: .string("file_list"),
-            ParameterKeys.filePattern: .string("*.md"),
+            "file_pattern": .string("*.md"),
         ])
 
         // エラー応答ではない（DES-104 §5.1 未知パラメータ無視方針）
@@ -440,6 +440,138 @@ final class BackwardCompatibilityTests: XCTestCase {
         XCTAssertTrue(
             files.allSatisfy { $0.hasSuffix(".swift") },
             "file_pattern 廃止後は include_patterns 未指定で .swift 既定挙動のみ"
+        )
+    }
+
+    // MARK: - search_files_without_pattern 入力契約テスト（issue #34）
+
+    /// 引数辞書から CallTool.Parameters を作成し SearchFilesWithoutPatternTool を実行する
+    private func runSearchFilesWithoutPattern(arguments: [String: Value]) async throws -> String {
+        let params = CallTool.Parameters(
+            name: ToolNames.searchFilesWithoutPattern,
+            arguments: arguments
+        )
+        let result = try await SearchFilesWithoutPatternTool.execute(
+            params: params,
+            projectMemory: projectMemory,
+            logger: logger
+        )
+        for content in result.content {
+            if case .text(let text, _, _) = content {
+                return text
+            }
+        }
+        XCTFail("CallTool.Result に text コンテンツが含まれていません")
+        return ""
+    }
+
+    /// `file_pattern` パラメータは issue #34 で `search_code` と同じ理由により廃止された
+    ///
+    /// 旧仕様: `file_pattern: String?` で単一 glob を受け付け
+    /// 新仕様: `include_patterns` / `exclude_patterns` の配列を受け付け
+    /// 互換挙動: 旧キー `file_pattern` を指定しても未知パラメータとして無視され、既定挙動（`.swift` のみ）が適用される
+    func test_searchFilesWithoutPattern_filePatternParameterIsRemoved_breakingChange_issue34() async throws {
+        // file_pattern="*.md" を渡しても無視され、include_patterns 未指定なら既定挙動（.swift のみ）が適用される
+        let response = try await runSearchFilesWithoutPattern(arguments: [
+            ParameterKeys.pattern: .string("hello"),
+            "file_pattern": .string("*.md"),
+        ])
+
+        // エラー応答ではない（未知パラメータ無視方針）
+        XCTAssertFalse(
+            response.hasPrefix("[Error]"),
+            "file_pattern 指定で InvalidParams は返さない（未知パラメータとして無視）"
+        )
+
+        // .md は対象に含まれてはならない（旧 file_pattern が効くと .md が走査されてしまう）
+        // 既定挙動: .swift のみ走査され、Sample.swift / SampleClass.swift（hello を含まない）が返る
+        let lines = response.components(separatedBy: "\n").filter { !$0.isEmpty }
+        let resultLines = lines.filter { $0.contains("/") }
+        XCTAssertFalse(
+            resultLines.contains(where: { $0.contains(".md") }),
+            "file_pattern 廃止後は .md ファイルが対象に含まれてはならない"
+        )
+        // Sample.swift / SampleClass.swift は hello を含まないため結果に含まれる
+        XCTAssertTrue(
+            resultLines.contains(where: { $0.hasSuffix("Sample.swift") }),
+            "既定挙動で hello を含まない Sample.swift が結果に含まれる"
+        )
+    }
+
+    /// include_patterns で対象を絞り込める（複数 glob OR）
+    func test_searchFilesWithoutPattern_includePatternsArrayRestrictsScope() async throws {
+        let response = try await runSearchFilesWithoutPattern(arguments: [
+            ParameterKeys.pattern: .string("hello"),
+            ParameterKeys.includePatterns: .array([.string("*Sample*")]),
+        ])
+
+        XCTAssertFalse(response.hasPrefix("[Error]"), "正常系で [Error] にならない")
+
+        // include_patterns=*Sample* で Sample.swift / SampleClass.swift のみ走査され
+        // 両者とも hello を含まないため、両方が結果に含まれる
+        let lines = response.components(separatedBy: "\n").filter { $0.contains("/") }
+        XCTAssertTrue(
+            lines.contains(where: { $0.hasSuffix("Sample.swift") }),
+            "Sample.swift（hello 非含有）が結果に含まれる"
+        )
+        XCTAssertTrue(
+            lines.contains(where: { $0.hasSuffix("SampleClass.swift") }),
+            "SampleClass.swift（hello 非含有）が結果に含まれる"
+        )
+        // Foo.swift / Bar.swift は include_patterns でそもそも走査対象外
+        XCTAssertFalse(
+            lines.contains(where: { $0.hasSuffix("Foo.swift") }),
+            "include_patterns=*Sample* なら Foo.swift は走査対象外"
+        )
+    }
+
+    /// exclude_patterns は include_patterns より優先される
+    func test_searchFilesWithoutPattern_excludePatternsOverridesInclude() async throws {
+        let response = try await runSearchFilesWithoutPattern(arguments: [
+            ParameterKeys.pattern: .string("hello"),
+            ParameterKeys.includePatterns: .array([.string("*.swift")]),
+            ParameterKeys.excludePatterns: .array([.string("*SampleClass*")]),
+        ])
+
+        XCTAssertFalse(response.hasPrefix("[Error]"), "正常系で [Error] にならない")
+
+        let lines = response.components(separatedBy: "\n").filter { $0.contains("/") }
+        // SampleClass.swift は exclude で除外され結果に含まれない
+        XCTAssertFalse(
+            lines.contains(where: { $0.hasSuffix("SampleClass.swift") }),
+            "exclude_patterns=*SampleClass* で除外されたファイルは結果に含まれない"
+        )
+        // Sample.swift（hello 非含有・除外対象外）は結果に含まれる
+        XCTAssertTrue(
+            lines.contains(where: { $0.hasSuffix("Sample.swift") }),
+            "exclude に該当しない Sample.swift は結果に残る"
+        )
+    }
+
+    /// include_patterns / exclude_patterns の配列要素 20 件超過は InvalidParams エラーを返す
+    func test_searchFilesWithoutPattern_arrayCountExceededReturnsError() async throws {
+        let manyPatterns: [Value] = (0..<21).map { _ in .string("*.swift") }
+        let response = try await runSearchFilesWithoutPattern(arguments: [
+            ParameterKeys.pattern: .string("hello"),
+            ParameterKeys.includePatterns: .array(manyPatterns),
+        ])
+
+        XCTAssertTrue(
+            response.contains("配列要素数が上限を超えています") || response.contains("[Error]"),
+            "include_patterns 21 件超で配列上限エラー応答（cause / suggestion 形式）"
+        )
+    }
+
+    /// 不正な正規表現は構文エラー応答を返す（Tool 層の事前検証）
+    func test_searchFilesWithoutPattern_invalidRegexReturnsError() async throws {
+        // 未閉じグループの不正な正規表現
+        let response = try await runSearchFilesWithoutPattern(arguments: [
+            ParameterKeys.pattern: .string("("),
+        ])
+
+        XCTAssertTrue(
+            response.contains("正規表現の構文が不正です") || response.contains("[Error]"),
+            "不正な正規表現で正規表現構文エラー応答（cause / suggestion 形式）"
         )
     }
 

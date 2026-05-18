@@ -245,11 +245,19 @@ enum FileSearcher {
         }
     }
 
-    /// パターンにマッチしないファイルを検索（grep -L相当）
+    /// パターンにマッチしないファイルを検索（grep -L 相当・include/exclude glob 対応）
+    ///
+    /// - Parameters:
+    ///   - directory: 走査開始ディレクトリ
+    ///   - pattern: マッチ判定に用いる正規表現（マルチラインモード）
+    ///   - includePatterns: 走査対象を絞り込む glob 配列（OR 結合）。空のときは `.swift` のみが対象
+    ///   - excludePatterns: 走査から除外する glob 配列（OR 結合、include より優先）
+    /// - Note: 評価規則は `searchCode` と共通の `shouldSearchFile` を使用する
     static func searchFilesWithoutPattern(
         in directory: String,
         pattern: String,
-        filePattern: String?
+        includePatterns: [String],
+        excludePatterns: [String]
     ) throws -> (filesWithoutPattern: [String], totalChecked: Int) {
         var filesWithoutPattern: [String] = []
         var totalChecked = 0
@@ -257,6 +265,20 @@ enum FileSearcher {
 
         // マルチラインモード（^と$が各行の先頭・末尾にマッチ）
         let regex = try NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines])
+
+        let includeRegexes: [NSRegularExpression]
+        if includePatterns.isEmpty {
+            includeRegexes = []
+        } else {
+            includeRegexes = try compiledGlobRegexes(patterns: includePatterns)
+        }
+
+        let excludeRegexes: [NSRegularExpression]
+        if excludePatterns.isEmpty {
+            excludeRegexes = []
+        } else {
+            excludeRegexes = try compiledGlobRegexes(patterns: excludePatterns)
+        }
 
         let enumerator = try directoryEnumerator(at: directory, fileManager: fileManager)
 
@@ -267,29 +289,25 @@ enum FileSearcher {
                 continue
             }
 
-            let shouldSearch: Bool
-            if let filePattern {
-                let fileRegex = try NSRegularExpression(
-                    pattern: wildcardToRegex(filePattern),
-                    options: [.caseInsensitive]
-                )
-                let range = NSRange(file.startIndex..., in: file)
-                shouldSearch = fileRegex.firstMatch(in: file, range: range) != nil
-            } else {
-                shouldSearch = file.hasSuffix(".swift")
+            guard shouldSearchFile(
+                relativePath: file,
+                includePatterns: includePatterns,
+                excludePatterns: excludePatterns,
+                includeRegexes: includeRegexes,
+                excludeRegexes: excludeRegexes
+            ) else {
+                continue
             }
 
-            if shouldSearch {
-                totalChecked += 1
-                // ファイル全体を読み込んでパターンマッチング
-                if let content = try? String(contentsOfFile: fullPath) {
-                    let range = NSRange(content.startIndex..., in: content)
-                    let hasMatch = regex.firstMatch(in: content, range: range) != nil
+            totalChecked += 1
+            // ファイル全体を読み込んでパターンマッチング
+            if let content = try? String(contentsOfFile: fullPath) {
+                let range = NSRange(content.startIndex..., in: content)
+                let hasMatch = regex.firstMatch(in: content, range: range) != nil
 
-                    // マッチしないファイルを収集
-                    if !hasMatch {
-                        filesWithoutPattern.append(fullPath)
-                    }
+                // マッチしないファイルを収集
+                if !hasMatch {
+                    filesWithoutPattern.append(fullPath)
                 }
             }
         }
