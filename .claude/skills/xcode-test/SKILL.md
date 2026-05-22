@@ -1,5 +1,5 @@
 ---
-name: test
+name: xcode-test
 description: |
   Xcode プロジェクトのテストを実行し、失敗を構造化して報告する。iOS/macOS を scheme から自動判定。
   トリガー: "テスト", "test", "テストして", "テスト実行", "ユニットテスト"
