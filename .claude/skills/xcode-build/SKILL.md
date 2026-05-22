@@ -1,5 +1,5 @@
 ---
-name: build
+name: xcode-build
 description: |
   Xcode プロジェクトをビルドし、エラーを構造化して報告する。iOS/macOS を scheme から自動判定。
   トリガー: "ビルド", "build", "ビルドして", "コンパイルエラー確認"
