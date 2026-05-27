@@ -19,9 +19,9 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
 - **Use existing code** before creating new ones (Tools/, Library/)
 - **既存コード参考必須**: 新規コード作成前に、既存の類似実装を検索して参考にすること
 - **ファイルヘッダーのCreated by**: git config user.nameの値を使用
-- **作業開始時の文書検索**: 文書読解が必要な作業は、`/query-rules` `/query-specs` で関連文書を特定し、該当する文書を読んでから作業に入ること
-- **ToC 自動更新**: rules/ 配下の文書を追加・変更・削除したら `/create-rules-toc`、specs/{feature}/requirements/ または specs/{feature}/design/ 配下の文書を追加・変更・削除したら `/create-specs-toc` を実行すること
-- **ToC ファイル直接編集禁止**: `.claude/doc-advisor/` 配下の ToC ファイルは直接編集せず、`/create-rules-toc` / `/create-specs-toc` で更新すること
+- **作業開始時の文書検索**: 文書読解が必要な作業は、`/forge:query-db-rules` `/forge:query-db-specs` で関連文書を特定し、該当する文書を読んでから作業に入ること
+- **DB インデックス自動更新**: rules/ 配下の文書を追加・変更・削除したら `/forge:update-db-rules`、specs/{feature}/requirements/ または specs/{feature}/design/ 配下の文書を追加・変更・削除したら `/forge:update-db-specs` を実行すること
+- **DB インデックス直接編集禁止**: `.claude/doc-advisor/` および `.claude/doc-db/` 配下のインデックスファイルは直接編集せず、`/forge:update-db-rules` / `/forge:update-db-specs` で更新すること
 - **Swift-Selena MCP の利用検討**: Swift-Selena MCP が接続されている場合、コードの分析・解析作業で MCP の説明から効率的・効果的か判定し、利用を検討すること（実験は不要、MCP の説明で判断）
 - **Xcode MCP の利用検討**: Xcode MCP が接続されている場合、Skill（`/xcode:build` / `/xcode:test`）が対応していない場面でのみ、MCP の説明から効果的か判定し、利用を検討すること
 - **MCP サーバー再起動を伴うテストはユーザー依頼必須**: MCP サーバー（Swift-Selena MCP 等）の再起動を要するエンドツーエンドテスト（コード変更後の挙動確認、キャッシュ破棄を伴う動作確認など）は、**AI が独断で実施せず、必ずユーザーに再起動を依頼してから実施すること**
