@@ -13,8 +13,8 @@
 ## 主な特徴
 
 - **ビルド不要**: SwiftSyntaxベースの静的解析により、ビルドエラーがあっても動作
-- **LSP統合**: ビルド可能時はSourceKit-LSPで高度な機能を提供（v0.5.1+）
-- **メタツールモード**: 動的ツールロードでコンテキストウィンドウ使用量を削減（v0.6.2+）
+- **LSP統合**: 利用可能な場合はSourceKit-LSPで対応ツールを強化し、不可の場合はSwiftSyntaxで動作
+- **メタツールモード**: 動的ツールロードでコンテキストウィンドウ使用量を削減（v0.6.3+）
 - **Swift Testing対応**: XCTestとSwift Testing（@Test, @Suite）の両方を検出
 - **SwiftUI対応**: Property Wrapper（@State, @Binding等）を自動検出
 - **高速検索**: ファイルシステムベースの検索で大規模プロジェクトでも高速
@@ -23,7 +23,7 @@
 
 ## 提供ツール
 
-### メタツールモード（v0.6.2+）
+### メタツールモード（v0.6.3+）
 
 Swift-Selenaは**メタツールモード**を採用しており、Claudeには4つのツールのみを公開します。これによりコンテキストウィンドウの使用量を削減します。実際の解析ツールはオンデマンドで動的にロードされます。
 
@@ -37,12 +37,12 @@ Swift-Selenaは**メタツールモード**を採用しており、Claudeには4
 
 #### ファイル検索
 - **`find_files`** - ワイルドカードパターンでファイル検索（例: `*ViewModel.swift`）
-- **`search_code`** - 正規表現でコード内容を検索
-- **`search_files_without_pattern`** - パターンにマッチしないファイルを検索（grep -L相当）
+- **`search_code`** - 正規表現でコード内容を検索。`output_mode`、`limit`、`include_patterns`、`exclude_patterns` に対応
+- **`search_files_without_pattern`** - パターンにマッチしないファイルを検索（grep -L相当）。`include_patterns`、`exclude_patterns` に対応
 
 #### シンボル解析
 - **`list_symbols`** - Class, Struct, Function等のシンボル一覧
-- **`find_symbol_definition`** - プロジェクト全体でシンボル定義を検索
+- **`find_symbol_definition`** - プロジェクト全体でシンボル定義を検索。`symbol_kinds` とスコープ情報に対応
 
 #### SwiftUI解析
 - **`list_property_wrappers`** - SwiftUI Property Wrapper（@State, @Binding等）を検出
@@ -53,6 +53,15 @@ Swift-Selenaは**メタツールモード**を採用しており、Claudeには4
 - **`analyze_imports`** - プロジェクト全体のImport依存関係を解析（モジュール使用統計、キャッシュ利用）
 - **`get_type_hierarchy`** - 型の継承階層を取得（スーパークラス、サブクラス、Protocol準拠型、キャッシュ利用）
 - **`find_test_cases`** - XCTestとSwift Testing（@Test, @Suite）のテストケースを検出
+
+### 現行ツール仕様の補足
+
+- `search_code` の `output_mode` は `match_detail`（既定）、`file_list`、`count_only`
+- `search_code` の `limit` は 1〜10,000。10,000 を超える値は内部上限に切り詰められ、結果に通知される
+- `search_code` と `search_files_without_pattern` は `include_patterns` / `exclude_patterns` を使用。旧 `file_pattern` は意図的に廃止済みで、指定されても無視される
+- `find_symbol_definition` の `symbol_kinds` は `struct`、`class`、`enum`、`protocol`、`actor`、`function`、`variable`、`typealias`、`extension` を指定可能
+- `search_code` と `find_symbol_definition` は、人間向けテキスト出力の末尾に `--- structured ---` JSONブロックを付加する
+- LSP強化はベストエフォート。`.xcodeproj` を含むXcodeプロジェクトディレクトリでは現在LSPを無効化し、SwiftSyntax解析にフォールバックする
 
 ## インストール
 
@@ -91,6 +100,13 @@ make help  # 全コマンドを表示
 | `make build` | DEBUGビルド |
 | `make build-release` | RELEASEビルド |
 | `make clean` | ビルド成果物をクリーン |
+
+#### MCP補助
+
+| コマンド | 対象 | 説明 |
+|---------|------|------|
+| `make connect_gemini` | Claude Code | gemini-cli MCPサーバーを接続 |
+| `make disconnect_gemini` | Claude Code | gemini-cli MCPサーバーを切断 |
 
 #### 登録・解除
 
@@ -288,6 +304,30 @@ Claude: search_code を実行（正規表現: do\s*\{）
 結果: 15箇所のdo-catchブロックを発見
 ```
 
+#### 本番コードのSwiftファイルだけを検索
+```
+Claude: search_code を実行
+Params:
+{
+  "pattern": "URLSession\\.shared",
+  "output_mode": "file_list",
+  "include_patterns": ["Sources/**/*.swift"],
+  "exclude_patterns": ["*Tests*"],
+  "limit": 100
+}
+```
+
+#### シンボル定義を種別で絞り込む
+```
+Claude: find_symbol_definition を実行
+Params:
+{
+  "symbol_name": "Button",
+  "symbol_kinds": ["struct", "class"]
+}
+結果には Scope 行と structured JSON ブロックが含まれます。
+```
+
 ## データ保存場所
 
 解析キャッシュは以下のディレクトリに保存されます:
@@ -316,10 +356,13 @@ Claude: search_code を実行（正規表現: do\s*\{）
 ### MCPサーバーが起動しない
 
 ```bash
-# ビルドを確認
+# DEBUGビルドを確認
 swift build
 
-# 実行テスト
+# またはRELEASEビルドを確認
+swift build -c release -Xswiftc -Osize
+
+# RELEASE実行ファイルをテスト
 .build/release/Swift-Selena
 # "Starting Swift MCP Server..." が表示されればOK
 # Ctrl+Cで終了
@@ -346,7 +389,7 @@ rm -rf ~/.swift-selena/
 
 ### レガシーモード（全ツール直接公開）
 
-デフォルトでは Swift-Selena は**メタツールモード**（v0.6.2+）を使用します。メタツールを経由せず全12の解析ツールを直接公開したい場合は、`SWIFT_SELENA_LEGACY=1` 環境変数を設定してください：
+デフォルトでは Swift-Selena は**メタツールモード**（v0.6.3+）を使用します。メタツールを経由せず12個のツールを直接公開したい場合は、`SWIFT_SELENA_LEGACY=1` 環境変数を設定してください：
 
 #### Claude Desktop
 ```json

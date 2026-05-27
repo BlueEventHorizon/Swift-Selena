@@ -13,8 +13,8 @@
 ## Key Features
 
 - **Build-Free**: Works even with build errors through SwiftSyntax-based static analysis
-- **LSP Integration**: Advanced features with SourceKit-LSP when project is buildable (v0.5.1+)
-- **Meta Tool Mode**: Reduces context window usage with dynamic tool loading (v0.6.2+)
+- **LSP Integration**: Enhances supported tools with SourceKit-LSP when available; SwiftSyntax remains the fallback
+- **Meta Tool Mode**: Reduces context window usage with dynamic tool loading (v0.6.3+)
 - **Swift Testing Support**: Detects both XCTest and Swift Testing (@Test, @Suite) test cases
 - **SwiftUI Support**: Automatically detects Property Wrappers (@State, @Binding, etc.)
 - **Fast Search**: Filesystem-based search for fast performance even on large projects
@@ -23,7 +23,7 @@
 
 ## Provided Tools
 
-### Meta Tool Mode (v0.6.2+)
+### Meta Tool Mode (v0.6.3+)
 
 Swift-Selena uses a **Meta Tool Mode** that exposes only 4 tools to Claude, reducing context window usage. The actual analysis tools are loaded dynamically on demand.
 
@@ -37,12 +37,12 @@ Swift-Selena uses a **Meta Tool Mode** that exposes only 4 tools to Claude, redu
 
 #### File Search
 - **`find_files`** - Search files by wildcard pattern (e.g., `*ViewModel.swift`)
-- **`search_code`** - Search code content using regex
-- **`search_files_without_pattern`** - Search files WITHOUT a pattern (grep -L equivalent)
+- **`search_code`** - Search code content using regex; supports `output_mode`, `limit`, `include_patterns`, and `exclude_patterns`
+- **`search_files_without_pattern`** - Search files WITHOUT a pattern (grep -L equivalent); supports `include_patterns` and `exclude_patterns`
 
 #### Symbol Analysis
 - **`list_symbols`** - List all symbols (Class, Struct, Function, etc.)
-- **`find_symbol_definition`** - Find symbol definitions across the project
+- **`find_symbol_definition`** - Find symbol definitions across the project; supports `symbol_kinds` and scope information
 
 #### SwiftUI Analysis
 - **`list_property_wrappers`** - Detect SwiftUI Property Wrappers (@State, @Binding, etc.)
@@ -53,6 +53,15 @@ Swift-Selena uses a **Meta Tool Mode** that exposes only 4 tools to Claude, redu
 - **`analyze_imports`** - Analyze import dependencies across the project (module usage statistics, cached)
 - **`get_type_hierarchy`** - Get type inheritance hierarchy (superclass, subclasses, conforming types, cached)
 - **`find_test_cases`** - Detect XCTest and Swift Testing (@Test, @Suite) test cases
+
+### Current Tool Notes
+
+- `search_code` output modes are `match_detail` (default), `file_list`, and `count_only`
+- `search_code` accepts `limit` from 1 to 10,000; values above 10,000 are clamped and reported
+- `search_code` and `search_files_without_pattern` use `include_patterns` / `exclude_patterns`; the old `file_pattern` parameter is intentionally removed and ignored if passed
+- `find_symbol_definition` accepts `symbol_kinds`: `struct`, `class`, `enum`, `protocol`, `actor`, `function`, `variable`, `typealias`, `extension`
+- `search_code` and `find_symbol_definition` append a `--- structured ---` JSON block after the human-readable text output
+- LSP enhancement is best-effort. Xcode project directories containing `.xcodeproj` currently disable LSP, and SwiftSyntax analysis is used instead
 
 ## Installation
 
@@ -91,6 +100,13 @@ make help  # Show all available commands
 | `make build` | Build debug version |
 | `make build-release` | Build release version |
 | `make clean` | Clean build artifacts |
+
+#### MCP Helpers
+
+| Command | Target | Description |
+|---------|--------|-------------|
+| `make connect_gemini` | Claude Code | Connect gemini-cli MCP server |
+| `make disconnect_gemini` | Claude Code | Disconnect gemini-cli MCP server |
 
 #### Register / Unregister
 
@@ -288,6 +304,30 @@ Claude: Executes search_code (regex: do\s*\{)
 Result: Found 15 do-catch blocks
 ```
 
+#### Search only production Swift files
+```
+Claude: Executes search_code
+Params:
+{
+  "pattern": "URLSession\\.shared",
+  "output_mode": "file_list",
+  "include_patterns": ["Sources/**/*.swift"],
+  "exclude_patterns": ["*Tests*"],
+  "limit": 100
+}
+```
+
+#### Narrow symbol definitions by kind
+```
+Claude: Executes find_symbol_definition
+Params:
+{
+  "symbol_name": "Button",
+  "symbol_kinds": ["struct", "class"]
+}
+Result includes Scope lines and a structured JSON block.
+```
+
 ## Data Storage
 
 Analysis cache is stored in the following directory:
@@ -316,10 +356,13 @@ Analysis cache is stored in the following directory:
 ### MCP server won't start
 
 ```bash
-# Verify build
+# Verify debug build
 swift build
 
-# Test execution
+# Or verify release build
+swift build -c release -Xswiftc -Osize
+
+# Test release executable
 .build/release/Swift-Selena
 # "Starting Swift MCP Server..." should appear
 # Press Ctrl+C to exit
@@ -346,7 +389,7 @@ Will be rebuilt on next `initialize_project` execution.
 
 ### Legacy Mode (All Tools Exposed)
 
-By default, Swift-Selena uses **Meta Tool Mode** (v0.6.2+). If you prefer to have all 12 analysis tools exposed directly without meta tool indirection, set the `SWIFT_SELENA_LEGACY=1` environment variable:
+By default, Swift-Selena uses **Meta Tool Mode** (v0.6.3+). If you prefer to have 12 tools exposed directly without meta tool indirection, set the `SWIFT_SELENA_LEGACY=1` environment variable:
 
 #### Claude Desktop
 ```json
