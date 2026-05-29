@@ -28,11 +28,28 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
   - AI 側からは別プロセスである MCP サーバーを再起動できない
   - 再起動が必要な場合は、再起動手順（バイナリ再ビルド要否、必要なキャッシュ削除、確認したい挙動）を明示してユーザーに依頼する
   - ユニットテストでの代替検証で済む場合はそれを優先し、E2E 検証の要否を判断する
-- **リリースタグは main ブランチで作成する**: `v{version}` 形式のリリースタグは、必ず **main ブランチ上のコミット**に対して作成すること
+- **バージョン表記規約**（Issue #38 で確立。プロジェクト全体で参照すべき正規）:
+  - **canonical（真実の源）**: `Sources/Constants.swift` の `AppConstants.version`（例: `"0.6.10"`）。`/forge:update-version` で更新する
+  - **git tag**: `MAJOR.MINOR.PATCH` 形式（**`v` プレフィックスなし**、例: `0.6.10`）。既存 16 個の tag と整合
+  - **CHANGELOG.md header (新規 entry)**: `## VERSION - YYYY-MM-DD` 形式（**`v` プレフィックスなし**、例: `## 0.6.10 - 2026-05-27`）。過去 entry (`## v0.6.X` 形式) は historical record として遡及修正しない
+  - **`.version-config.yaml`** の `tag_format` は `"{version}"`（`v` なし）
+  - **例外**: `README.md` / `README.ja.md` 内の「機能 X は v0.6.3 以降で利用可能」等の**機能登場版マーカー**は `v` 付きを許容（独立した文脈表記）
+  - **検証**: `scripts/verify_version_consistency.sh` で全 source の一致を確認。CI ワークフロー `.github/workflows/version_check.yml` で PR ごとに自動検証
+- **リリースタグは main ブランチで作成する**: `{version}` 形式（**`v` プレフィックスなし**）のリリースタグは、必ず **main ブランチ上のコミット**に対して作成すること
   - `develop` 等の作業ブランチ上で `git tag` を実行しない
-  - 通常フロー: `develop` の変更を `main` にマージ（PR / merge commit）→ `main` に checkout → `git tag v{version}` → `git push <remote> v{version}`
+  - 通常フロー: `develop` の変更を `main` にマージ（PR / merge commit）→ `main` に checkout → `git tag {version}` → `git push <remote> {version}`
   - タグ作成前に `git branch --show-current` で必ず main ブランチに居ることを確認する
   - 誤って別ブランチで作成したタグは `git tag -d <tag> && git push <remote> :<tag>` で削除し、正しいブランチで切り直す
+- **release PR の運用順序（同一 PR で完結させる）**: version bump を含む release PR は以下を**同一 PR 内**で実施する。CI が赤になる期間を作らないため
+  1. `/forge:update-version <target> <patch|minor|major>` を実行（Constants.swift 更新 + CHANGELOG への新規 entry 挿入）
+  2. `Formula/swift-selena.rb` の `tag:` と `revision:` を**手動で同時更新**
+     - tag 作成前の段階では HEAD commit SHA を仮で記入し、tag 作成後に最終 revision に差し替える運用も可（または tag 作成 → revision 取得 → Formula 更新 → tag 振り直しの順序でも可）
+  3. `scripts/verify_version_consistency.sh` でローカル検証
+  4. `brew style Formula/swift-selena.rb` で Formula 文法検証
+  5. commit & push（PR は同一 PR で）
+  6. PR merge 後、`main` に checkout して `git tag {version}` → `git push <remote> {version}` でリリースタグ作成
+  7. tap merge 後、`brew install --build-from-source` で実 install 検証
+- **既存 release artifact の drift について（documented limitation）**: 本規約は HEAD 以降で commit される変更にのみ適用される。既存 release tag（例: `0.6.10`）のソース内 `AppConstants.version` 等が drift していても、本規約では遡及修正しない（git 履歴の整合性保持）。Homebrew で install される既存 release バイナリの `serverInfo.version` が canonical と一致しない場合、それは「既知の historical drift」として受容し、次回 release で初めて完全整合する
 
 ## 開発言語・フレームワーク
 

@@ -2,8 +2,8 @@
 
 targets:
   - name: swift-selena
-    version_file: CHANGELOG.md
-    version_path: changelog_header
+    version_file: Sources/Constants.swift
+    version_path: "version"
     sync_files: []
 
 changelog:
@@ -13,7 +13,7 @@ changelog:
   section_per_target: false
 
 git:
-  tag_format: "v{version}"
+  tag_format: "{version}"
   commit_message: "chore: bump version to {version}"
   auto_tag: false
   auto_commit: false
