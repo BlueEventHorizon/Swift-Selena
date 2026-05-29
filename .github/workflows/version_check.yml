@@ -8,7 +8,6 @@ on:
     paths:
       - 'Sources/Constants.swift'
       - '.version-config.yaml'
-      - 'Formula/swift-selena.rb'
       - 'CHANGELOG.md'
       - 'scripts/verify_version_consistency.sh'
       - '.github/workflows/version_check.yml'

@@ -3,7 +3,7 @@
 targets:
   - name: swift-selena
     version_file: Sources/Constants.swift
-    version_path: "version"
+    version_path: version
     sync_files: []
 
 changelog:
