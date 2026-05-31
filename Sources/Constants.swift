@@ -35,7 +35,7 @@ import Foundation
 /// アプリケーション全体の定数
 enum AppConstants {
     static let name = "Swift-Selena"
-    static let version = "0.6.3"
+    static let version = "0.6.11"
     static let loggerLabel = "swift-selena"
     static let storageDirectory = ".swift-selena"
 }

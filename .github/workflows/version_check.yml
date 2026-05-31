@@ -1,0 +1,27 @@
+name: Version Consistency Check
+
+# Issue #38: バージョン表記の統一
+# Sources/Constants.swift を canonical として、.version-config.yaml / Formula / CHANGELOG の整合性を検証する。
+
+on:
+  pull_request:
+    paths:
+      - 'Sources/Constants.swift'
+      - '.version-config.yaml'
+      - 'CHANGELOG.md'
+      - 'scripts/verify_version_consistency.sh'
+      - '.github/workflows/version_check.yml'
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run version consistency check
+        run: |
+          chmod +x scripts/verify_version_consistency.sh
+          ./scripts/verify_version_consistency.sh

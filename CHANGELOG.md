@@ -4,6 +4,46 @@ Swift-Selenaのリリース履歴
 
 ---
 
+## 0.6.11 - 2026-05-31
+
+### Issue #37: Homebrew install 対応
+
+- **feat**: Homebrew Formula（`Formula/swift-selena.rb`）を追加。本リポジトリ自身を tap する source-build 方式で、`brew install` による 1 ステップ導入に対応（commit `4bb3f68`）
+  - `caveats` に Claude Code / Claude Desktop 別の MCP 登録手順を明示し、`test` で MCP `initialize` ハンドシェイク（`serverInfo.name`）を検証
+- **docs**: README.md / README.ja.md に Homebrew（推奨）セクションを追加し、source-build 手順と併記（commit `4bb3f68`, `7f111db`）
+- **docs**: 設計書 DES-101 §10.2 の install フローを Homebrew シーケンスへ更新（commit `4bb3f68`）
+
+### Issue #38: バージョン表記の統一
+
+- **chore**: バージョン表記をプロジェクト全体で統一。canonical を `Sources/Constants.swift` の `AppConstants.version` に定め、git tag / CHANGELOG header を `v` プレフィックスなしへ統一（commit `366da88`）
+- **feat**: バージョン整合性検証スクリプト `scripts/verify_version_consistency.sh` を追加し、CI ワークフロー `version_check.yml` で PR ごとに canonical・CHANGELOG 先頭 entry・`.version-config.yaml` の一致を自動検証（commit `366da88`）
+- **chore**: release 運用を 3 フェーズフロー（version bump → main で tag → Formula bump）として CLAUDE.md に明文化し、`.version-config.yaml` の `version_path` を引用符なしへ修正（commit `39e7485`）
+
+### 開発インフラ
+
+- **ci**: develop マージ時に対応 Issue を自動クローズする `close-issues-on-develop.yaml` を追加（commit `5ef3554`）
+- **chore**: git 管理から doc-advisor 検索インデックス（`.claude/doc-advisor/index/{rules,specs}/*`）を削除（commit `df17fcc`）
+
+### 補足
+
+- 本 release は Homebrew 導入対応（#37）とバージョン表記統一（#38）が中心で、Swift-Selena MCP server 自体の公開ツール API・解析機能には変更がない
+- canonical（`Sources/Constants.swift`）を 0.6.10 → 0.6.11 に更新
+
+## 0.6.10 - 2026-05-27
+
+### 開発インフラ
+
+- **feat**: `.claude/skills/xcode-build` および `.claude/skills/xcode-test` の Skill を追加（commit `4b57a94`）
+- **fix**: xcode SKILL の不具合を修正（commit `ce0a40b`）
+- **fix**: forge-db 関連の不具合を修正（commit `74cd007`）
+- **chore**: 不要な `.claude/skills/skill-creator` ファイル群および `.claude/doc-db/index/rules/*` を削除（commit `35e43c5`）
+
+### 補足
+
+- 本 release は `.claude/` 配下の開発支援 Skill とドキュメントインデックスのみの変更で、Swift-Selena MCP server 自体の機能・公開ツール API には変更がない
+- 本 entry は Issue #38（バージョン表記の統一）で実 release 後に back-fill されたもの。`git log 0.6.9..0.6.10` と `git diff --name-status 0.6.9..0.6.10` を一次情報として再構成（GitHub Release v0.6.10 の release notes body が空であったため）
+- 本 entry から `v` プレフィックスなしの header 形式（`## VERSION - YYYY-MM-DD`）を採用。過去 entry（`## v0.6.X` 形式）は historical record として未改変
+
 ## v0.6.9 - 2026-05-17
 
 ### Issue #34: `search_files_without_pattern` のパラメータ API 統一

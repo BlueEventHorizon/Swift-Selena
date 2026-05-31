@@ -71,7 +71,56 @@ Swift-Selenaは**メタツールモード**を採用しており、Claudeには4
 - Swift 5.9以上
 - [Claude Desktop](https://claude.ai/download) または [Claude Code](https://docs.claude.com/claude-code)
 
-### ビルド手順
+### Homebrew（推奨）
+
+**tap と install**（明示 URL 形式の `brew tap` により、本リポジトリ自体を tap として利用できます。専用の `homebrew-*` リポジトリは不要です）:
+
+```bash
+brew tap blueeventhorizon/swift-selena https://github.com/BlueEventHorizon/Swift-Selena
+brew install blueeventhorizon/swift-selena/swift-selena
+# tap 後は短縮形も使えます:
+# brew install swift-selena
+```
+
+`brew install` 後、`swift-selena` バイナリが `PATH` 上（通常 `$(brew --prefix)/bin/swift-selena`）に配置されます。
+
+> **Swift toolchain 要件:** ビルドには macOS 13.0+ 上で Swift 5.9+ が必要です。フル Xcode 15+ で Swift 5.9+ を提供する環境で動作確認済み。Command Line Tools のみによるビルドは技術的に成立する見込みですが、**本リリース時点では未検証**です。CLT のみインストールしている環境で `brew install` が失敗する場合は、回避策として Xcode 15+ をインストールしてください。
+
+#### Claude Code への登録
+
+バイナリは `PATH` 上にあるため、絶対パスは不要です:
+
+```bash
+claude mcp add -s user swift-selena -- swift-selena
+```
+
+#### Claude Desktop への登録
+
+Claude Desktop は GUI から起動されるため、対話シェルの `PATH` を必ずしも継承しません。`brew --prefix` で得られる**絶対パス**を使用してください:
+
+```bash
+# インストール先 prefix を確認（典型例: Apple Silicon → /opt/homebrew / Intel → /usr/local）
+brew --prefix
+```
+
+`~/Library/Application Support/Claude/claude_desktop_config.json` を編集し、**実際のパス**を貼り付けます（シェル展開はされないので、シェル式をそのまま書いてはいけません）:
+
+```json
+{
+  "mcpServers": {
+    "swift-selena": {
+      "command": "/opt/homebrew/bin/swift-selena",
+      "env": { "MCP_CLIENT_ID": "claude-desktop" }
+    }
+  }
+}
+```
+
+> ⚠️ JSON 内に `$(brew --prefix)` をそのまま書かないでください — JSON は shell 展開されません。`brew --prefix` を実行し、得られた絶対パスを貼り付けてください。
+
+編集後、Claude Desktop を再起動します。
+
+### ビルド手順（代替: ソースビルド）
 
 ```bash
 # リポジトリをクローン
@@ -153,7 +202,7 @@ tail -f ~/.swift-selena/logs/server.log
 
 ## セットアップ
 
-### 簡単セットアップ（推奨）
+### 簡単セットアップ（ソースビルド時）
 
 Swift-Selenaプロジェクトルートでmakeコマンドを使用します：
 

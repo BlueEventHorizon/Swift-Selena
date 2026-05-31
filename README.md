@@ -71,7 +71,56 @@ Swift-Selena uses a **Meta Tool Mode** that exposes only 4 tools to Claude, redu
 - Swift 5.9 or later
 - [Claude Desktop](https://claude.ai/download) or [Claude Code](https://docs.claude.com/claude-code)
 
-### Build Steps
+### Homebrew (Recommended)
+
+**Tap and install** (the explicit-URL `brew tap` form lets this repository serve as a tap directly — no separate `homebrew-*` repository is required):
+
+```bash
+brew tap blueeventhorizon/swift-selena https://github.com/BlueEventHorizon/Swift-Selena
+brew install blueeventhorizon/swift-selena/swift-selena
+# After tap, the short form also works:
+# brew install swift-selena
+```
+
+After `brew install`, the `swift-selena` binary is on your `PATH` (typically `$(brew --prefix)/bin/swift-selena`).
+
+> **Swift toolchain requirement:** Building requires Swift 5.9+ on macOS 13.0+. Verified with full Xcode 15+ providing Swift 5.9+. The Command Line Tools-only path is plausible but **was not verified at the time of this release**; if you have only CLT installed and `brew install` fails, install Xcode 15+ as a workaround.
+
+#### Register to Claude Code
+
+The binary is on `PATH`, so no absolute path is required:
+
+```bash
+claude mcp add -s user swift-selena -- swift-selena
+```
+
+#### Register to Claude Desktop
+
+Claude Desktop is launched from the GUI and does **not** always inherit the interactive shell `PATH`. Use the absolute path returned by `brew --prefix`:
+
+```bash
+# Find the install prefix (typical: /opt/homebrew on Apple Silicon, /usr/local on Intel)
+brew --prefix
+```
+
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json` and paste the **actual** path (not a shell expression — JSON is not shell-expanded):
+
+```json
+{
+  "mcpServers": {
+    "swift-selena": {
+      "command": "/opt/homebrew/bin/swift-selena",
+      "env": { "MCP_CLIENT_ID": "claude-desktop" }
+    }
+  }
+}
+```
+
+> ⚠️ Do **not** write `$(brew --prefix)` literally inside the JSON — JSON is not shell-expanded. Run `brew --prefix` first and paste the resulting absolute path.
+
+Restart Claude Desktop after editing.
+
+### Build from source (Alternative)
 
 ```bash
 # Clone the repository
@@ -153,7 +202,7 @@ tail -f ~/.swift-selena/logs/server.log
 
 ## Setup
 
-### Easy Setup (Recommended)
+### Easy Setup (for source builds)
 
 Use make commands from the Swift-Selena project root:
 

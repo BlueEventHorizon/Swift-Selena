@@ -2,7 +2,7 @@
 
 **設計ID**: DES-101
 **作成日**: 2025-10-24
-**対象**: Swift-Selena v0.5.3（現在）
+**対象**: Swift-Selena v0.5.3（作成時点）
 **ステータス**: 承認待ち
 **関連文書**: REQ-001, REQ-002, REQ-003
 
@@ -11,7 +11,7 @@
 | 項目 | 値 |
 |-----|-----|
 | 設計ID | DES-101 |
-| 対象バージョン | v0.5.3 |
+| 対象バージョン | v0.5.3（作成時点） |
 | 関連要件 | REQ-001（全体要件）, REQ-002（LSP統合） |
 | 主要コンポーネント | SwiftMCPServer, ProjectMemory, LSPState, LSPClient, SwiftSyntaxAnalyzer, FileSearcher |
 | ツール数 | 18個（SwiftSyntax: 17, LSP: 1） |
@@ -936,26 +936,40 @@ graph TD
 
 ### 10.2 インストールフロー
 
+推奨導線は Homebrew tap 経由。本リポジトリ自体を tap 化しており、専用の `homebrew-*` リポジトリは不要。
+
 ```mermaid
 sequenceDiagram
     participant Dev as Developer
-    participant Script as Setup Script
+    participant Brew as Homebrew
+    participant Repo as Tap (this repo)
     participant Config as MCP Config
     participant Claude as Claude App
 
-    Dev->>Script: ./register-selena-to-claude-code.sh
-    Script->>Script: Verify executable exists
-    Script->>Config: Backup existing config
-    Script->>Config: Add Swift-Selena entry
-    Script->>Script: Set MCP_CLIENT_ID
-    Script-->>Dev: ✅ Setup complete
+    Note over Dev,Repo: 推奨: Homebrew 経由インストール
 
-    Dev->>Claude: Restart Claude Code
+    Dev->>Brew: brew tap blueeventhorizon/swift-selena <URL>
+    Brew->>Repo: Fetch Formula/swift-selena.rb
+    Dev->>Brew: brew install blueeventhorizon/swift-selena/swift-selena
+    Brew->>Brew: swift build -c release (--disable-sandbox)
+    Brew-->>Dev: swift-selena → $(brew --prefix)/bin/
+
+    Note over Dev,Config: MCP クライアント登録
+
+    alt Claude Code
+        Dev->>Config: claude mcp add -s user swift-selena -- swift-selena
+    else Claude Desktop
+        Dev->>Config: claude_desktop_config.json を編集（絶対パス）
+    end
+
+    Dev->>Claude: Restart
     Claude->>Config: Load MCP config
-    Claude->>Claude: Spawn Swift-Selena process
+    Claude->>Claude: Spawn swift-selena process
     Claude->>Claude: ListTools request
     Claude-->>Dev: Swift-Selena tools available
 ```
+
+**ソースビルド代替（開発者向け）**: `git clone` 後に `make build-release` でローカルビルドし、`make register-release` / `make register-debug` / `make register-desktop` でクライアントに登録する経路も維持される（リポジトリ `scripts/register-release.sh` 等を参照）。Homebrew 導線で十分なエンドユーザーは利用しなくてよい。
 
 ---
 
