@@ -15,8 +15,8 @@ class SwiftSelena < Formula
   desc "MCP Server for Swift code analysis"
   homepage "https://github.com/BlueEventHorizon/Swift-Selena"
   url "https://github.com/BlueEventHorizon/Swift-Selena.git",
-      tag:      "0.6.10",
-      revision: "6fa795275cc49ddc063e6980a037975f84b8d995"
+      tag:      "0.6.11",
+      revision: "c2cdc78b08d27fc7392f2e66096ee2c967ef654d"
   license "MIT"
 
   # macOS 13.0+ requirement matches Package.swift's .macOS(.v13).
