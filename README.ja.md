@@ -482,6 +482,8 @@ claude mcp add swift-selena -e SWIFT_SELENA_LEGACY=1 -- /path/to/Swift-Selena/.b
 
 Issue、Pull Requestを歓迎します！
 
+メンテナ向けのリリース手順（バージョン更新 + Homebrew Formula、図解付き）は [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を参照してください。
+
 ## ライセンス
 
 MIT License - 詳細は[LICENSE](LICENSE)ファイルを参照

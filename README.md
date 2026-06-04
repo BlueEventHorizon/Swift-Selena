@@ -482,6 +482,8 @@ In legacy mode, the following 12 tools are exposed directly:
 
 Issues and Pull Requests are welcome!
 
+For the maintainer release procedure (version bump + Homebrew Formula, with diagrams), see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 MIT License - See [LICENSE](LICENSE) file for details
