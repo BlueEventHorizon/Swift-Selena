@@ -1,0 +1,27 @@
+name: Release Tag Consistency Check
+
+# Issue #38 follow-up: git tag が指す commit と Formula の revision の一致を
+# tag push 時に検証する。今回の brew install エラー
+# 「0.6.11 tag should be <X> but is actually <Y>」の再発防止。
+#
+# 検証対象は「main の最新 Formula」と「push された tag が指す commit」。
+# Formula は release フローで tag commit より後の commit (②) に置かれるため、
+# tag commit ではなく main の Formula を読む（CLAUDE.md「release の運用順序」参照）。
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main          # main の最新 Formula を検証対象にする
+          fetch-depth: 0      # tag を rev-parse するため全履歴 + tag を取得
+      - name: Verify Formula revision matches the pushed tag
+        run: |
+          chmod +x scripts/verify_release_tag.sh
+          ./scripts/verify_release_tag.sh "${GITHUB_REF_NAME}"
