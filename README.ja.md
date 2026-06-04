@@ -88,11 +88,20 @@ brew install blueeventhorizon/swift-selena/swift-selena
 
 #### Claude Code への登録
 
-バイナリは `PATH` 上にあるため、絶対パスは不要です:
+バイナリは `PATH` 上にあるため、絶対パスは不要です。スコープを選んでください:
+
+| スコープ | コマンド | 有効範囲 |
+| --- | --- | --- |
+| `local`（デフォルト） | `claude mcp add swift-selena -- swift-selena` | このプロジェクトのみ・自分だけ |
+| `project` | `claude mcp add -s project swift-selena -- swift-selena` | このプロジェクト・`.mcp.json` でチーム共有 |
+| `user` | `claude mcp add -s user swift-selena -- swift-selena` | 自分の全プロジェクト |
 
 ```bash
-claude mcp add -s user swift-selena -- swift-selena
+# このプロジェクトのみ（local・デフォルト）
+claude mcp add swift-selena -- swift-selena
 ```
+
+> **`project` スコープの注意:** `-s project` は `.mcp.json` をリポジトリにコミットしてチーム共有します。登録される `command` が `swift-selena`（`PATH` で解決）なので、**チームメンバー全員が `swift-selena` を `PATH` 上に持っている**（例: この Homebrew formula で導入）必要があります。未インストールのメンバーでは起動しません。
 
 #### Claude Desktop への登録
 

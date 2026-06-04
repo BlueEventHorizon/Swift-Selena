@@ -88,11 +88,20 @@ After `brew install`, the `swift-selena` binary is on your `PATH` (typically `$(
 
 #### Register to Claude Code
 
-The binary is on `PATH`, so no absolute path is required:
+The binary is on `PATH`, so no absolute path is required. Pick a scope:
+
+| Scope | Command | Availability |
+| --- | --- | --- |
+| `local` (default) | `claude mcp add swift-selena -- swift-selena` | This project only, just you |
+| `project` | `claude mcp add -s project swift-selena -- swift-selena` | This project, shared with your team via `.mcp.json` |
+| `user` | `claude mcp add -s user swift-selena -- swift-selena` | All of your projects |
 
 ```bash
-claude mcp add -s user swift-selena -- swift-selena
+# This project only (local, default)
+claude mcp add swift-selena -- swift-selena
 ```
+
+> **`project` scope note:** `-s project` commits `.mcp.json` to the repository and shares it with your team. Because the registered `command` is `swift-selena` (resolved via `PATH`), every teammate must have `swift-selena` installed on their `PATH` (e.g. via this Homebrew formula); otherwise it won't start for them.
 
 #### Register to Claude Desktop
 
