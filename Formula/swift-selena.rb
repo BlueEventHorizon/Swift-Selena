@@ -16,7 +16,7 @@ class SwiftSelena < Formula
   homepage "https://github.com/BlueEventHorizon/Swift-Selena"
   url "https://github.com/BlueEventHorizon/Swift-Selena.git",
       tag:      "0.6.11",
-      revision: "c2cdc78b08d27fc7392f2e66096ee2c967ef654d"
+      revision: "4c636a53319f58fd192857fb079417c42ebeb68d"
   license "MIT"
 
   # macOS 13.0+ requirement matches Package.swift's .macOS(.v13).
