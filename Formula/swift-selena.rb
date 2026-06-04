@@ -43,8 +43,15 @@ class SwiftSelena < Formula
     <<~EOS
       Swift-Selena is installed as `swift-selena` and is on your PATH.
 
-      To register with Claude Code:
+      To register with Claude Code (pick a scope):
+        # This project only (local, default):
+        claude mcp add swift-selena -- swift-selena
+        # Share with your team via this project's .mcp.json (project scope):
+        claude mcp add -s project swift-selena -- swift-selena
+        # All of your projects (user scope):
         claude mcp add -s user swift-selena -- swift-selena
+      (project scope commits .mcp.json to the repo; every teammate must
+       have swift-selena on PATH, e.g. via this formula.)
 
       To register with Claude Desktop, add the following to
       ~/Library/Application Support/Claude/claude_desktop_config.json
