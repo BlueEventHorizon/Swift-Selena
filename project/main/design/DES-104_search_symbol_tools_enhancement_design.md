@@ -1,15 +1,17 @@
 # DES-104 検索・シンボルツール強化 設計書
 
 **設計ID**: DES-104
-**関連要件**: REQ-005
+**関連要件**: REQ-003（search_code / find_symbol_definition 強化）
 **ファイル**: design/DES-104_search_symbol_tools_enhancement_design.md
+
+> ℹ️ **本設計書は旧 REQ-005（improve feature「検索・シンボルツール強化」）に対応する。** REQ-005 は v0.6.8 で実装完了し、その要件は REQ-003（コア機能要件）へ統合のうえ削除された（improve → main の spec マージ）。本書中の「REQ-005 §X.X」参照は統合前の要件節を指す歴史的記録であり、対応する現行要件は REQ-003 §2.2 search_code / §2.3 find_symbol_definition である。
 
 ## メタデータ
 
 | 項目 | 値 |
 |------|-----|
 | 設計ID | DES-104 |
-| 関連要件 | REQ-005 |
+| 関連要件 | REQ-003（旧 REQ-005、v0.6.8 で統合） |
 | 実装層 | Tools 層 / Selena Core 層 |
 | 主要モジュール | |
 | - Tool | SearchCodeTool, FindSymbolDefinitionTool |

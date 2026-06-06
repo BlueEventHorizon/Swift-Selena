@@ -123,6 +123,8 @@ mindmap
       think_about_analysis
 ```
 
+> ⚠️ 上記は v0.5.x 時点の分類。`find_symbol_references`（LSP）は 2025-10-27 `commit f0a547f` で、`find_type_usages`（Analysis）は 2025-12-06 `commit 580b1f7` で削除済み（§4.4 / REQ-005 §6.3）。
+
 ---
 
 ### 2.2 ツール間の関係
@@ -343,6 +345,8 @@ flowchart TD
 ---
 
 ### 4.4 find_symbol_references（LSP専用）
+
+> ⚠️ **削除済み**（2025-10-27 `commit f0a547f`「find_symbol_referencesを削除」、REQ-005 §6.3）。以下は削除前の実装設計を歴史的記録として保持する。LSP 系参照検索ツールの再導入可否は別途独立 Feature として検討する。
 
 ```mermaid
 flowchart TD
@@ -736,8 +740,8 @@ mindmap
 This tool requires a buildable project with SourceKit-LSP.
 
 💡 Alternatives:
-- Use 'find_type_usages' for type-level reference search
-- Use 'search_code' for text-based search
+- Use 'search_code' for text-based reference search
+- Use 'find_symbol_definition' to locate the definition and its scope
 ```
 
 ---
