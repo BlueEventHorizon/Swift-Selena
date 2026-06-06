@@ -2,117 +2,117 @@
 
 <img width="400" src="selena.png">
 
-**Swift Selena** is an MCP (Model Context Protocol) server that provides Swift code analysis capabilities to Claude AI. It works even with build errors and strongly supports SwiftUI app development.
+**Swift Selena**は、Swiftプロジェクトのコード解析をClaude（AI）に提供するMCP (Model Context Protocol) サーバーです。ビルドエラーがあるコードでも動作し、SwiftUIアプリ開発を強力にサポートします。
 
 [![Swift 5.9+](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
 [![Platform macOS](https://img.shields.io/badge/platform-macOS%2013+-lightgrey.svg)](https://www.apple.com/macos/)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-[日本語版はこちら / Japanese version](README.ja.md)
+[English version](README.md)
 
-## Key Features
+## 主な特徴
 
-- **Build-Free**: Works even with build errors through SwiftSyntax-based static analysis
-- **LSP Integration**: Enhances supported tools with SourceKit-LSP when available; SwiftSyntax remains the fallback
-- **Meta Tool Mode**: Reduces context window usage with dynamic tool loading (v0.6.3+)
-- **Swift Testing Support**: Detects both XCTest and Swift Testing (@Test, @Suite) test cases
-- **SwiftUI Support**: Automatically detects Property Wrappers (@State, @Binding, etc.)
-- **Fast Search**: Filesystem-based search for fast performance even on large projects
-- **Smart Caching**: Caches analysis results for fast repeated queries
-- **Multi-Client Support**: Use with Claude Code and Claude Desktop simultaneously
+- **ビルド不要**: SwiftSyntaxベースの静的解析により、ビルドエラーがあっても動作
+- **LSP統合**: 利用可能な場合はSourceKit-LSPで対応ツールを強化し、不可の場合はSwiftSyntaxで動作
+- **メタツールモード**: 動的ツールロードでコンテキストウィンドウ使用量を削減（v0.6.3+）
+- **Swift Testing対応**: XCTestとSwift Testing（@Test, @Suite）の両方を検出
+- **SwiftUI対応**: Property Wrapper（@State, @Binding等）を自動検出
+- **高速検索**: ファイルシステムベースの検索で大規模プロジェクトでも高速
+- **スマートキャッシュ**: 解析結果をキャッシュし、繰り返しクエリを高速化
+- **複数クライアント対応**: Claude CodeとClaude Desktopを同時使用可能
 
-## Provided Tools
+## 提供ツール
 
-### Meta Tool Mode (v0.6.3+)
+### メタツールモード（v0.6.3+）
 
-Swift-Selena uses a **Meta Tool Mode** that exposes only 4 tools to Claude, reducing context window usage. The actual analysis tools are loaded dynamically on demand.
+Swift-Selenaは**メタツールモード**を採用しており、Claudeには4つのツールのみを公開します。これによりコンテキストウィンドウの使用量を削減します。実際の解析ツールはオンデマンドで動的にロードされます。
 
-**Exposed Tools:**
-- **`initialize_project`** - Initialize a project (must be called first)
-- **`list_available_tools`** - List all available analysis tools with descriptions
-- **`get_tool_schema`** - Get the JSON schema for a specific tool
-- **`execute_tool`** - Execute any analysis tool by name
+**公開ツール:**
+- **`initialize_project`** - プロジェクトを初期化（最初に必ず実行）
+- **`list_available_tools`** - 利用可能な解析ツール一覧と説明を表示
+- **`get_tool_schema`** - 特定ツールのJSONスキーマを取得
+- **`execute_tool`** - 解析ツールを名前で実行
 
-### Available Analysis Tools (via execute_tool)
+### 利用可能な解析ツール（execute_tool経由）
 
-#### File Search
-- **`find_files`** - Search files by wildcard pattern (e.g., `*ViewModel.swift`)
-- **`search_code`** - Search code content using regex; supports `output_mode`, `limit`, `include_patterns`, and `exclude_patterns`
-- **`search_files_without_pattern`** - Search files WITHOUT a pattern (grep -L equivalent); supports `include_patterns` and `exclude_patterns`
+#### ファイル検索
+- **`find_files`** - ワイルドカードパターンでファイル検索（例: `*ViewModel.swift`）
+- **`search_code`** - 正規表現でコード内容を検索。`output_mode`、`limit`、`include_patterns`、`exclude_patterns` に対応
+- **`search_files_without_pattern`** - パターンにマッチしないファイルを検索（grep -L相当）。`include_patterns`、`exclude_patterns` に対応
 
-#### Symbol Analysis
-- **`list_symbols`** - List all symbols (Class, Struct, Function, etc.)
-- **`find_symbol_definition`** - Find symbol definitions across the project; supports `symbol_kinds` and scope information
+#### シンボル解析
+- **`list_symbols`** - Class, Struct, Function等のシンボル一覧
+- **`find_symbol_definition`** - プロジェクト全体でシンボル定義を検索。`symbol_kinds` とスコープ情報に対応
 
-#### SwiftUI Analysis
-- **`list_property_wrappers`** - Detect SwiftUI Property Wrappers (@State, @Binding, etc.)
-- **`list_protocol_conformances`** - Analyze protocol conformances and inheritance (UITableViewDelegate, ObservableObject, etc.)
-- **`list_extensions`** - Analyze extensions (extended type, protocol conformance, members)
+#### SwiftUI解析
+- **`list_property_wrappers`** - SwiftUI Property Wrapper（@State, @Binding等）を検出
+- **`list_protocol_conformances`** - Protocol準拠と継承関係を解析（UITableViewDelegate, ObservableObject等）
+- **`list_extensions`** - Extension解析（拡張対象の型、プロトコル準拠、メンバー一覧）
 
-#### Code Analysis
-- **`analyze_imports`** - Analyze import dependencies across the project (module usage statistics, cached)
-- **`get_type_hierarchy`** - Get type inheritance hierarchy (superclass, subclasses, conforming types, cached)
-- **`find_test_cases`** - Detect XCTest and Swift Testing (@Test, @Suite) test cases
+#### コード解析
+- **`analyze_imports`** - プロジェクト全体のImport依存関係を解析（モジュール使用統計、キャッシュ利用）
+- **`get_type_hierarchy`** - 型の継承階層を取得（スーパークラス、サブクラス、Protocol準拠型、キャッシュ利用）
+- **`find_test_cases`** - XCTestとSwift Testing（@Test, @Suite）のテストケースを検出
 
-### Current Tool Notes
+### 現行ツール仕様の補足
 
-- `search_code` output modes are `match_detail` (default), `file_list`, and `count_only`
-- `search_code` accepts `limit` from 1 to 10,000; values above 10,000 are clamped and reported
-- `search_code` and `search_files_without_pattern` use `include_patterns` / `exclude_patterns`; the old `file_pattern` parameter is intentionally removed and ignored if passed
-- `find_symbol_definition` accepts `symbol_kinds`: `struct`, `class`, `enum`, `protocol`, `actor`, `function`, `variable`, `typealias`, `extension`
-- `search_code` and `find_symbol_definition` append a `--- structured ---` JSON block after the human-readable text output
-- LSP enhancement is best-effort. Xcode project directories containing `.xcodeproj` currently disable LSP, and SwiftSyntax analysis is used instead
+- `search_code` の `output_mode` は `match_detail`（既定）、`file_list`、`count_only`
+- `search_code` の `limit` は 1〜10,000。10,000 を超える値は内部上限に切り詰められ、結果に通知される
+- `search_code` と `search_files_without_pattern` は `include_patterns` / `exclude_patterns` を使用。旧 `file_pattern` は意図的に廃止済みで、指定されても無視される
+- `find_symbol_definition` の `symbol_kinds` は `struct`、`class`、`enum`、`protocol`、`actor`、`function`、`variable`、`typealias`、`extension` を指定可能
+- `search_code` と `find_symbol_definition` は、人間向けテキスト出力の末尾に `--- structured ---` JSONブロックを付加する
+- LSP強化はベストエフォート。`.xcodeproj` を含むXcodeプロジェクトディレクトリでは現在LSPを無効化し、SwiftSyntax解析にフォールバックする
 
-## Installation
+## インストール
 
-### Requirements
+### 必要要件
 
-- macOS 13.0 or later
-- Swift 5.9 or later
-- [Claude Desktop](https://claude.ai/download) or [Claude Code](https://docs.claude.com/claude-code)
+- macOS 13.0以上
+- Swift 5.9以上
+- [Claude Desktop](https://claude.ai/download) または [Claude Code](https://docs.claude.com/claude-code)
 
-### Homebrew (Recommended)
+### Homebrew（推奨）
 
-**Tap and install** (the explicit-URL `brew tap` form lets this repository serve as a tap directly — no separate `homebrew-*` repository is required):
+**tap と install**（明示 URL 形式の `brew tap` により、本リポジトリ自体を tap として利用できます。専用の `homebrew-*` リポジトリは不要です）:
 
 ```bash
 brew tap blueeventhorizon/swift-selena https://github.com/BlueEventHorizon/Swift-Selena
 brew install blueeventhorizon/swift-selena/swift-selena
-# After tap, the short form also works:
+# tap 後は短縮形も使えます:
 # brew install swift-selena
 ```
 
-After `brew install`, the `swift-selena` binary is on your `PATH` (typically `$(brew --prefix)/bin/swift-selena`).
+`brew install` 後、`swift-selena` バイナリが `PATH` 上（通常 `$(brew --prefix)/bin/swift-selena`）に配置されます。
 
-> **Swift toolchain requirement:** Building requires Swift 5.9+ on macOS 13.0+. Verified with full Xcode 15+ providing Swift 5.9+. The Command Line Tools-only path is plausible but **was not verified at the time of this release**; if you have only CLT installed and `brew install` fails, install Xcode 15+ as a workaround.
+> **Swift toolchain 要件:** ビルドには macOS 13.0+ 上で Swift 5.9+ が必要です。フル Xcode 15+ で Swift 5.9+ を提供する環境で動作確認済み。Command Line Tools のみによるビルドは技術的に成立する見込みですが、**本リリース時点では未検証**です。CLT のみインストールしている環境で `brew install` が失敗する場合は、回避策として Xcode 15+ をインストールしてください。
 
-#### Register to Claude Code
+#### Claude Code への登録
 
-The binary is on `PATH`, so no absolute path is required. Pick a scope:
+バイナリは `PATH` 上にあるため、絶対パスは不要です。スコープを選んでください:
 
-| Scope | Command | Availability |
+| スコープ | コマンド | 有効範囲 |
 | --- | --- | --- |
-| `local` (default) | `claude mcp add swift-selena -- swift-selena` | This project only, just you |
-| `project` | `claude mcp add -s project swift-selena -- swift-selena` | This project, shared with your team via `.mcp.json` |
-| `user` | `claude mcp add -s user swift-selena -- swift-selena` | All of your projects |
+| `local`（デフォルト） | `claude mcp add swift-selena -- swift-selena` | このプロジェクトのみ・自分だけ |
+| `project` | `claude mcp add -s project swift-selena -- swift-selena` | このプロジェクト・`.mcp.json` でチーム共有 |
+| `user` | `claude mcp add -s user swift-selena -- swift-selena` | 自分の全プロジェクト |
 
 ```bash
-# This project only (local, default)
+# このプロジェクトのみ（local・デフォルト）
 claude mcp add swift-selena -- swift-selena
 ```
 
-> **`project` scope note:** `-s project` commits `.mcp.json` to the repository and shares it with your team. Because the registered `command` is `swift-selena` (resolved via `PATH`), every teammate must have `swift-selena` installed on their `PATH` (e.g. via this Homebrew formula); otherwise it won't start for them.
+> **`project` スコープの注意:** `-s project` は `.mcp.json` をリポジトリにコミットしてチーム共有します。登録される `command` が `swift-selena`（`PATH` で解決）なので、**チームメンバー全員が `swift-selena` を `PATH` 上に持っている**（例: この Homebrew formula で導入）必要があります。未インストールのメンバーでは起動しません。
 
-#### Register to Claude Desktop
+#### Claude Desktop への登録
 
-Claude Desktop is launched from the GUI and does **not** always inherit the interactive shell `PATH`. Use the absolute path returned by `brew --prefix`:
+Claude Desktop は GUI から起動されるため、対話シェルの `PATH` を必ずしも継承しません。`brew --prefix` で得られる**絶対パス**を使用してください:
 
 ```bash
-# Find the install prefix (typical: /opt/homebrew on Apple Silicon, /usr/local on Intel)
+# インストール先 prefix を確認（典型例: Apple Silicon → /opt/homebrew / Intel → /usr/local）
 brew --prefix
 ```
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` and paste the **actual** path (not a shell expression — JSON is not shell-expanded):
+`~/Library/Application Support/Claude/claude_desktop_config.json` を編集し、**実際のパス**を貼り付けます（シェル展開はされないので、シェル式をそのまま書いてはいけません）:
 
 ```json
 {
@@ -125,81 +125,81 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` and paste
 }
 ```
 
-> ⚠️ Do **not** write `$(brew --prefix)` literally inside the JSON — JSON is not shell-expanded. Run `brew --prefix` first and paste the resulting absolute path.
+> ⚠️ JSON 内に `$(brew --prefix)` をそのまま書かないでください — JSON は shell 展開されません。`brew --prefix` を実行し、得られた絶対パスを貼り付けてください。
 
-Restart Claude Desktop after editing.
+編集後、Claude Desktop を再起動します。
 
-### Build from source (Alternative)
+### ビルド手順（代替: ソースビルド）
 
 ```bash
-# Clone the repository
+# リポジトリをクローン
 git clone https://github.com/BlueEventHorizon/Swift-Selena.git
 cd Swift-Selena
 
-# Build (release mode for production)
+# ビルド（本番用リリースモード）
 make build-release
 
-# Or using swift directly:
+# または直接swiftコマンドを使用：
 # swift build -c release -Xswiftc -Osize
 ```
 
-The build artifact is generated at `.build/release/Swift-Selena`.
+ビルド成果物は `.build/release/Swift-Selena` に生成されます。
 
-### Available Make Commands
+### 利用可能なMakeコマンド
 
 ```bash
-make help  # Show all available commands
+make help  # 全コマンドを表示
 ```
 
-#### Build
+#### ビルド
 
-| Command | Description |
-|---------|-------------|
-| `make build` | Build debug version |
-| `make build-release` | Build release version |
-| `make clean` | Clean build artifacts |
+| コマンド | 説明 |
+|---------|------|
+| `make build` | DEBUGビルド |
+| `make build-release` | RELEASEビルド |
+| `make clean` | ビルド成果物をクリーン |
 
-#### MCP Helpers
+#### MCP補助
 
-| Command | Target | Description |
-|---------|--------|-------------|
-| `make connect_gemini` | Claude Code | Connect gemini-cli MCP server |
-| `make disconnect_gemini` | Claude Code | Disconnect gemini-cli MCP server |
+| コマンド | 対象 | 説明 |
+|---------|------|------|
+| `make connect_gemini` | Claude Code | gemini-cli MCPサーバーを接続 |
+| `make disconnect_gemini` | Claude Code | gemini-cli MCPサーバーを切断 |
 
-#### Register / Unregister
+#### 登録・解除
 
-| Command | Target | Description |
-|---------|--------|-------------|
-| `make register-release` | Claude Code | Register RELEASE version (prompts for project path) |
-| `make unregister-release` | Claude Code | Unregister RELEASE version (prompts for project path) |
-| `make register-debug` | Claude Code | Build & register DEBUG version to Swift-Selena project |
-| `make unregister-debug` | Claude Code | Unregister DEBUG version from Swift-Selena project |
-| `make register-desktop` | Claude Desktop | Register to Claude Desktop |
-| `make unregister-desktop` | Claude Desktop | Unregister from Claude Desktop |
+| コマンド | 対象 | 説明 |
+|---------|------|------|
+| `make register-release` | Claude Code | RELEASE版を登録（プロジェクトパスを入力） |
+| `make unregister-release` | Claude Code | RELEASE版の登録を解除（プロジェクトパスを入力） |
+| `make register-debug` | Claude Code | DEBUG版をビルド＆Swift-Selenaプロジェクトに登録 |
+| `make unregister-debug` | Claude Code | DEBUG版をSwift-Selenaプロジェクトから解除 |
+| `make register-desktop` | Claude Desktop | Claude Desktopに登録 |
+| `make unregister-desktop` | Claude Desktop | Claude Desktopから解除 |
 
-## Debugging & Logging
+## デバッグ・ログ機能
 
-### Log File Monitoring (v0.5.3+)
+### ログファイル監視（v0.5.3+）
 
-Swift-Selena outputs logs to a file for debugging and troubleshooting:
+Swift-Selenaはデバッグとトラブルシューティングのためにログファイルに出力します：
 
-**Log file location:**
+**ログファイル位置:**
 ```
 ~/.swift-selena/logs/server.log
 ```
 
-**Monitor logs in real-time:**
+**リアルタイムでログを監視:**
 ```bash
 tail -f ~/.swift-selena/logs/server.log
 ```
 
-**What you can see:**
-- Server startup messages
-- Tool execution logs
-- LSP connection status (success/failure)
-- Error messages and diagnostics
+**確認できる内容:**
+- サーバー起動メッセージ
+- ツール実行ログ
+- LSP接続状態（成功/失敗）
+- エラーメッセージと診断情報
 
-**Example log output:**
+**ログ出力例:**
 ```
 [17:29:24] ℹ️ [info] Starting Swift MCP Server...
 [17:29:50] ℹ️ [info] Tool called: initialize_project
@@ -207,56 +207,56 @@ tail -f ~/.swift-selena/logs/server.log
 [17:29:51] ℹ️ [info] ✅ LSP connected successfully
 ```
 
-**Tip:** Keep `tail -f` running in a separate terminal while using Swift-Selena for real-time debugging.
+**ヒント:** Swift-Selena使用中は、別のターミナルで`tail -f`を実行し続けておくと、リアルタイムデバッグが可能です。
 
-## Setup
+## セットアップ
 
-### Easy Setup (for source builds)
+### 簡単セットアップ（ソースビルド時）
 
-Use make commands from the Swift-Selena project root:
+Swift-Selenaプロジェクトルートでmakeコマンドを使用します：
 
-#### For Claude Desktop
+#### Claude Desktopの場合
 ```bash
 make register-desktop
 ```
 
-#### For Claude Code
+#### Claude Codeの場合
 
 ```bash
-# For production use (register to target project)
+# 本番用（ターゲットプロジェクトに登録）
 make register-release
-# → Prompts: Enter the target project path
+# → プロンプト: 登録先プロジェクトのパスを入力
 
-# For development/testing (register to Swift-Selena project itself)
+# 開発・テスト用（Swift-Selenaプロジェクト自体に登録）
 make register-debug
 ```
 
-#### Unregister
+#### 登録解除
 
 ```bash
-# Unregister from Claude Desktop
+# Claude Desktopから解除
 make unregister-desktop
 
-# Unregister from target project
+# ターゲットプロジェクトから解除
 make unregister-release
-# → Prompts: Enter the target project path (leave blank for current directory)
+# → プロンプト: 登録解除するプロジェクトのパスを入力（空白でカレントディレクトリ）
 
-# Unregister debug version from this project
+# DEBUG版をこのプロジェクトから解除
 make unregister-debug
 ```
 
-### Manual Setup
+### 手動セットアップ
 
-If you prefer manual configuration:
+スクリプトを使わず手動で設定する場合：
 
-#### Claude Desktop Setup
+#### Claude Desktop の設定
 
-1. Open the config file (create if it doesn't exist):
+1. 設定ファイルを開く（存在しない場合は作成）:
 ```bash
 open ~/Library/Application\ Support/Claude/claude_desktop_config.json
 ```
 
-2. Add the following content:
+2. 以下の内容を追加:
 ```json
 {
   "mcpServers": {
@@ -271,100 +271,100 @@ open ~/Library/Application\ Support/Claude/claude_desktop_config.json
 }
 ```
 
-**Important**: Replace `/path/to/Swift-Selena` with the actual path.
+**重要**: `/path/to/Swift-Selena` を実際のパスに置き換えてください。
 
-3. Restart Claude Desktop
+3. Claude Desktopを再起動
 
-#### Claude Code Manual Setup
+#### Claude Code 手動設定
 
-In your target project directory:
+ターゲットプロジェクトのディレクトリで：
 
 ```bash
 cd /path/to/your/project
 claude mcp add swift-selena -- /path/to/Swift-Selena/.build/release/Swift-Selena
 ```
 
-This creates a local configuration for that project only.
+これでそのプロジェクトのみで有効なローカル設定が作成されます。
 
-**To use globally** (all projects):
+**グローバルに使用する場合**（全プロジェクトで有効）：
 ```bash
 cd ~
 claude mcp add -s user swift-selena -- /path/to/Swift-Selena/.build/release/Swift-Selena
 ```
 
-Refer to [Claude Code documentation](https://docs.claude.com/claude-code) for more MCP server configuration options.
+詳細は[Claude Codeドキュメント](https://docs.claude.com/claude-code)を参照してください。
 
-## Usage
+## 使い方
 
-### Basic Workflow
+### 基本的なワークフロー
 
-1. **Initialize project**
+1. **プロジェクトを初期化**
 ```
-Ask Claude: "Analyze this Swift project"
-→ initialize_project is automatically executed
-```
-
-2. **Search and analyze code**
-```
-"Find ViewModels"
-→ find_files searches for *ViewModel.swift
-
-"Which files use @State?"
-→ list_property_wrappers detects them
+Claudeに「このSwiftプロジェクトを解析して」と依頼
+→ initialize_project が自動実行される
 ```
 
-3. **Analyze code structure**
+2. **コードを検索・解析**
 ```
-"Show me the type hierarchy for ViewController"
-→ get_type_hierarchy displays inheritance
+「ViewModelを探して」
+→ find_files で *ViewModel.swift を検索
+
+「@Stateを使っているファイルは？」
+→ list_property_wrappers で検出
 ```
 
-### Practical Examples
-
-#### Check SwiftUI Property Wrappers
+3. **コード構造を解析**
 ```
-You: Tell me what Property Wrappers are used in ContentView.swift
+「ViewControllerの型階層を表示して」
+→ get_type_hierarchy で継承関係を表示
+```
 
-Claude: Executes list_property_wrappers
-Result:
+### 実践例
+
+#### SwiftUIのProperty Wrapperを確認
+```
+あなた: ContentView.swiftで使われているProperty Wrapperを教えて
+
+Claude: list_property_wrappers を実行
+結果:
 [@State] counter: Int (line 12)
 [@ObservedObject] viewModel: ViewModel (line 13)
 [@EnvironmentObject] appState: AppState (line 14)
 ```
 
-#### Find a specific function
+#### 特定の関数を探す
 ```
-You: Find where the fetchData function is defined
+あなた: fetchDataという関数がどこにあるか探して
 
-Claude: Executes find_symbol_definition
-Result:
+Claude: find_symbol_definition を実行
+結果:
 [Function] fetchData
   File: /path/to/NetworkManager.swift
   Line: 45
 ```
 
-#### Check protocol conformance
+#### Protocol準拠を確認
 ```
-You: Tell me what protocols ViewController conforms to
+あなた: ViewControllerがどのプロトコルに準拠しているか教えて
 
-Claude: Executes list_protocol_conformances
-Result:
+Claude: list_protocol_conformances を実行
+結果:
 [Class] ViewController (line 25)
   Inherits from: UIViewController
   Conforms to: UITableViewDelegate, UITableViewDataSource
 ```
 
-#### Search for error handling across the project
+#### プロジェクト全体でエラーハンドリングを検索
 ```
-You: Find all do-catch blocks
+あなた: do-catchブロックを全部探して
 
-Claude: Executes search_code (regex: do\s*\{)
-Result: Found 15 do-catch blocks
+Claude: search_code を実行（正規表現: do\s*\{）
+結果: 15箇所のdo-catchブロックを発見
 ```
 
-#### Search only production Swift files
+#### 本番コードのSwiftファイルだけを検索
 ```
-Claude: Executes search_code
+Claude: search_code を実行
 Params:
 {
   "pattern": "URLSession\\.shared",
@@ -375,25 +375,25 @@ Params:
 }
 ```
 
-#### Narrow symbol definitions by kind
+#### シンボル定義を種別で絞り込む
 ```
-Claude: Executes find_symbol_definition
+Claude: find_symbol_definition を実行
 Params:
 {
   "symbol_name": "Button",
   "symbol_kinds": ["struct", "class"]
 }
-Result includes Scope lines and a structured JSON block.
+結果には Scope 行と structured JSON ブロックが含まれます。
 ```
 
-## Data Storage
+## データ保存場所
 
-Analysis cache is stored in the following directory:
+解析キャッシュは以下のディレクトリに保存されます:
 
 ```
 ~/.swift-selena/
 └── clients/
-    ├── default/              # Claude Code (default)
+    ├── default/              # Claude Code（デフォルト）
     │   └── projects/
     │       └── YourProject-abc12345/
     │           └── memory.json
@@ -403,51 +403,51 @@ Analysis cache is stored in the following directory:
                 └── memory.json
 ```
 
-- Projects are identified by SHA256 hash of project path
-- Different projects are automatically separated
-- Claude Code (`default`) and Claude Desktop (`claude-desktop`) data is automatically separated by `MCP_CLIENT_ID`
+- プロジェクトパスのSHA256ハッシュで同一プロジェクトを識別
+- 異なるプロジェクトは自動的に分離
+- Claude Code（`default`）とClaude Desktop（`claude-desktop`）は`MCP_CLIENT_ID`により自動的にデータが分離される
 
-**Note**: When the same `MCP_CLIENT_ID` (e.g., multiple Claude Code windows) opens the same project simultaneously, memory file write conflicts may occur. If working on the same project in multiple windows, set different `MCP_CLIENT_ID` values.
+**注意**: 同じ`MCP_CLIENT_ID`（例: 複数のClaude Codeウィンドウ）で同じプロジェクトを同時に開くと、メモリファイルへの書き込み競合が発生する可能性があります。同じプロジェクトを複数のウィンドウで作業する場合は、異なる`MCP_CLIENT_ID`を設定してください。
 
-## Troubleshooting
+## トラブルシューティング
 
-### MCP server won't start
+### MCPサーバーが起動しない
 
 ```bash
-# Verify debug build
+# DEBUGビルドを確認
 swift build
 
-# Or verify release build
+# またはRELEASEビルドを確認
 swift build -c release -Xswiftc -Osize
 
-# Test release executable
+# RELEASE実行ファイルをテスト
 .build/release/Swift-Selena
-# "Starting Swift MCP Server..." should appear
-# Press Ctrl+C to exit
+# "Starting Swift MCP Server..." が表示されればOK
+# Ctrl+Cで終了
 ```
 
-### Tools not found
+### ツールが見つからない
 
-1. Restart Claude Desktop/Code
-2. Verify config file paths are correct
-3. Check logs:
+1. Claude Desktop/Codeを再起動
+2. 設定ファイルのパスが正しいか確認
+3. ログを確認:
 ```bash
 tail -f ~/Library/Logs/Claude/mcp*.log
 ```
 
-### Clear old cache
+### 古いキャッシュをクリア
 
 ```bash
 rm -rf ~/.swift-selena/
 ```
 
-Will be rebuilt on next `initialize_project` execution.
+次回`initialize_project`実行時に再構築されます。
 
-## Advanced Configuration
+## 高度な設定
 
-### Legacy Mode (All Tools Exposed)
+### レガシーモード（全ツール直接公開）
 
-By default, Swift-Selena uses **Meta Tool Mode** (v0.6.3+). If you prefer to have 12 tools exposed directly without meta tool indirection, set the `SWIFT_SELENA_LEGACY=1` environment variable:
+デフォルトでは Swift-Selena は**メタツールモード**（v0.6.3+）を使用します。メタツールを経由せず12個のツールを直接公開したい場合は、`SWIFT_SELENA_LEGACY=1` 環境変数を設定してください：
 
 #### Claude Desktop
 ```json
@@ -469,36 +469,36 @@ By default, Swift-Selena uses **Meta Tool Mode** (v0.6.3+). If you prefer to hav
 claude mcp add swift-selena -e SWIFT_SELENA_LEGACY=1 -- /path/to/Swift-Selena/.build/release/Swift-Selena
 ```
 
-In legacy mode, the following 12 tools are exposed directly:
-`initialize_project`, `find_files`, `search_code`, `search_files_without_pattern`, `list_symbols`, `find_symbol_definition`, `list_property_wrappers`, `list_protocol_conformances`, `list_extensions`, `analyze_imports`, `get_type_hierarchy`, `find_test_cases`
+レガシーモードでは、以下12個のツールが直接公開されます：
+`initialize_project`、`find_files`、`search_code`、`search_files_without_pattern`、`list_symbols`、`find_symbol_definition`、`list_property_wrappers`、`list_protocol_conformances`、`list_extensions`、`analyze_imports`、`get_type_hierarchy`、`find_test_cases`
 
-## Architecture
+## アーキテクチャ
 
-### Core Components
+### コアコンポーネント
 
-- **FileSearcher**: Fast filesystem-based search
-- **SwiftSyntaxAnalyzer**: Symbol extraction via AST analysis
-- **ProjectMemory**: Persists analysis results and manages cache
+- **FileSearcher**: ファイルシステムベースの高速検索
+- **SwiftSyntaxAnalyzer**: AST解析によるシンボル抽出
+- **ProjectMemory**: 解析結果の永続化とキャッシュ管理
 
-### Technology Stack
+### 技術スタック
 
-- **[MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)** (0.12.0) - MCP protocol implementation
-- **[SwiftSyntax](https://github.com/apple/swift-syntax)** (602.0.0) - Syntax parsing
-- **CryptoKit** - Project path hashing
-- **swift-log** (via MCP Swift SDK) - Logging
+- **[MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)** (0.12.0) - MCPプロトコル実装
+- **[SwiftSyntax](https://github.com/apple/swift-syntax)** (602.0.0) - 構文解析
+- **CryptoKit** - プロジェクトパスのハッシュ化
+- **swift-log** (MCP Swift SDK経由) - ロギング
 
-## Contributing
+## コントリビューション
 
-Issues and Pull Requests are welcome!
+Issue、Pull Requestを歓迎します！
 
-For the maintainer release procedure (version bump + Homebrew Formula, with diagrams), see [CONTRIBUTING.md](CONTRIBUTING.md).
+メンテナ向けのリリース手順（バージョン更新 + Homebrew Formula、図解付き）は [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を参照してください。
 
-## License
+## ライセンス
 
-MIT License - See [LICENSE](LICENSE) file for details
+MIT License - 詳細は[LICENSE](LICENSE)ファイルを参照
 
-## Acknowledgments
+## 参考
 
-- [Model Context Protocol](https://modelcontextprotocol.io/) - MCP protocol specification
-- [SwiftSyntax](https://github.com/apple/swift-syntax) - Swift syntax parsing library
+- [Model Context Protocol](https://modelcontextprotocol.io/) - MCPプロトコル仕様
+- [SwiftSyntax](https://github.com/apple/swift-syntax) - Swift構文解析ライブラリ
 - [Anthropic](https://www.anthropic.com/) - Claude AI
