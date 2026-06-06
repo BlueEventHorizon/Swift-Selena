@@ -8,7 +8,7 @@
 [![Platform macOS](https://img.shields.io/badge/platform-macOS%2013+-lightgrey.svg)](https://www.apple.com/macos/)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-[English version](README.md)
+[English version](README_en.md)
 
 ## 主な特徴
 
@@ -131,51 +131,22 @@ brew --prefix
 
 ### ビルド手順（代替: ソースビルド）
 
+Homebrew が使えない環境（制限された環境など）では、手動でビルド・登録します:
+
 ```bash
-# リポジトリをクローン
 git clone https://github.com/BlueEventHorizon/Swift-Selena.git
 cd Swift-Selena
-
-# ビルド（本番用リリースモード）
-make build-release
-
-# または直接swiftコマンドを使用：
-# swift build -c release -Xswiftc -Osize
+swift build -c release -Xswiftc -Osize
+# 成果物: .build/release/Swift-Selena
 ```
 
-ビルド成果物は `.build/release/Swift-Selena` に生成されます。
-
-### 利用可能なMakeコマンド
+ビルドしたバイナリを Claude Code に登録:
 
 ```bash
-make help  # 全コマンドを表示
+claude mcp add -s user swift-selena -- "$(pwd)/.build/release/Swift-Selena"
 ```
 
-#### ビルド
-
-| コマンド | 説明 |
-|---------|------|
-| `make build` | DEBUGビルド |
-| `make build-release` | RELEASEビルド |
-| `make clean` | ビルド成果物をクリーン |
-
-#### MCP補助
-
-| コマンド | 対象 | 説明 |
-|---------|------|------|
-| `make connect_gemini` | Claude Code | gemini-cli MCPサーバーを接続 |
-| `make disconnect_gemini` | Claude Code | gemini-cli MCPサーバーを切断 |
-
-#### 登録・解除
-
-| コマンド | 対象 | 説明 |
-|---------|------|------|
-| `make register-release` | Claude Code | RELEASE版を登録（プロジェクトパスを入力） |
-| `make unregister-release` | Claude Code | RELEASE版の登録を解除（プロジェクトパスを入力） |
-| `make register-debug` | Claude Code | DEBUG版をビルド＆Swift-Selenaプロジェクトに登録 |
-| `make unregister-debug` | Claude Code | DEBUG版をSwift-Selenaプロジェクトから解除 |
-| `make register-desktop` | Claude Desktop | Claude Desktopに登録 |
-| `make unregister-desktop` | Claude Desktop | Claude Desktopから解除 |
+> すべての `make` コマンド・ローカル開発時の登録・リリース手順は **[CONTRIBUTING.ja.md](CONTRIBUTING.ja.md)** を参照してください。
 
 ## デバッグ・ログ機能
 
@@ -208,91 +179,6 @@ tail -f ~/.swift-selena/logs/server.log
 ```
 
 **ヒント:** Swift-Selena使用中は、別のターミナルで`tail -f`を実行し続けておくと、リアルタイムデバッグが可能です。
-
-## セットアップ
-
-### 簡単セットアップ（ソースビルド時）
-
-Swift-Selenaプロジェクトルートでmakeコマンドを使用します：
-
-#### Claude Desktopの場合
-```bash
-make register-desktop
-```
-
-#### Claude Codeの場合
-
-```bash
-# 本番用（ターゲットプロジェクトに登録）
-make register-release
-# → プロンプト: 登録先プロジェクトのパスを入力
-
-# 開発・テスト用（Swift-Selenaプロジェクト自体に登録）
-make register-debug
-```
-
-#### 登録解除
-
-```bash
-# Claude Desktopから解除
-make unregister-desktop
-
-# ターゲットプロジェクトから解除
-make unregister-release
-# → プロンプト: 登録解除するプロジェクトのパスを入力（空白でカレントディレクトリ）
-
-# DEBUG版をこのプロジェクトから解除
-make unregister-debug
-```
-
-### 手動セットアップ
-
-スクリプトを使わず手動で設定する場合：
-
-#### Claude Desktop の設定
-
-1. 設定ファイルを開く（存在しない場合は作成）:
-```bash
-open ~/Library/Application\ Support/Claude/claude_desktop_config.json
-```
-
-2. 以下の内容を追加:
-```json
-{
-  "mcpServers": {
-    "swift-selena": {
-      "command": "/path/to/Swift-Selena/.build/release/Swift-Selena",
-      "env": {
-        "MCP_CLIENT_ID": "claude-desktop"
-      }
-    }
-  },
-  "isUsingBuiltInNodeForMcp": true
-}
-```
-
-**重要**: `/path/to/Swift-Selena` を実際のパスに置き換えてください。
-
-3. Claude Desktopを再起動
-
-#### Claude Code 手動設定
-
-ターゲットプロジェクトのディレクトリで：
-
-```bash
-cd /path/to/your/project
-claude mcp add swift-selena -- /path/to/Swift-Selena/.build/release/Swift-Selena
-```
-
-これでそのプロジェクトのみで有効なローカル設定が作成されます。
-
-**グローバルに使用する場合**（全プロジェクトで有効）：
-```bash
-cd ~
-claude mcp add -s user swift-selena -- /path/to/Swift-Selena/.build/release/Swift-Selena
-```
-
-詳細は[Claude Codeドキュメント](https://docs.claude.com/claude-code)を参照してください。
 
 ## 使い方
 
@@ -413,18 +299,15 @@ Params:
 
 ### MCPサーバーが起動しない
 
+バイナリが起動し、開始バナーを表示するか確認します:
+
 ```bash
-# DEBUGビルドを確認
-swift build
-
-# またはRELEASEビルドを確認
-swift build -c release -Xswiftc -Osize
-
-# RELEASE実行ファイルをテスト
-.build/release/Swift-Selena
-# "Starting Swift MCP Server..." が表示されればOK
-# Ctrl+Cで終了
+# Homebrew でインストールした場合
+swift-selena
+# "Starting Swift MCP Server..." が表示されればOK。Ctrl+C で終了
 ```
+
+ソースからビルドした場合は `.build/release/Swift-Selena` を実行してください（[CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) 参照）。
 
 ### ツールが見つからない
 
@@ -454,7 +337,7 @@ rm -rf ~/.swift-selena/
 {
   "mcpServers": {
     "swift-selena": {
-      "command": "/path/to/Swift-Selena/.build/release/Swift-Selena",
+      "command": "/opt/homebrew/bin/swift-selena",
       "env": {
         "MCP_CLIENT_ID": "claude-desktop",
         "SWIFT_SELENA_LEGACY": "1"
@@ -466,7 +349,7 @@ rm -rf ~/.swift-selena/
 
 #### Claude Code
 ```bash
-claude mcp add swift-selena -e SWIFT_SELENA_LEGACY=1 -- /path/to/Swift-Selena/.build/release/Swift-Selena
+claude mcp add swift-selena -e SWIFT_SELENA_LEGACY=1 -- swift-selena
 ```
 
 レガシーモードでは、以下12個のツールが直接公開されます：
