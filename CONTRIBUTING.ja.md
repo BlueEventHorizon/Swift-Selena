@@ -2,9 +2,96 @@
 
 Issue、Pull Request を歓迎します！
 
-ビルド・セットアップ・使い方は [README](README.ja.md) を参照してください。
+使い方と Homebrew でのインストールは [README](README.md) を参照してください。本ガイドは **ソースからのビルド**・**ローカル開発セットアップ**・**リリース手順** を扱います。
 
 English version: [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## ソースからのビルド
+
+```bash
+git clone https://github.com/BlueEventHorizon/Swift-Selena.git
+cd Swift-Selena
+
+# リリースビルド（本番用）
+make build-release
+# または直接: swift build -c release -Xswiftc -Osize
+
+# デバッグビルド
+make build
+```
+
+ビルド成果物は `.build/release/Swift-Selena`（または `.build/debug/Swift-Selena`）に生成されます。
+
+### 利用可能な Make コマンド
+
+```bash
+make help  # 全コマンドを表示
+```
+
+| コマンド | 対象 | 説明 |
+|---------|------|------|
+| `make build` | — | DEBUG ビルド |
+| `make build-release` | — | RELEASE ビルド |
+| `make clean` | — | ビルド成果物をクリーン |
+| `make connect_gemini` | Claude Code | gemini-cli MCP サーバーを接続 |
+| `make disconnect_gemini` | Claude Code | gemini-cli MCP サーバーを切断 |
+| `make register-release` | Claude Code | RELEASE 版を登録（プロジェクトパスを入力） |
+| `make unregister-release` | Claude Code | RELEASE 版の登録を解除（プロジェクトパスを入力） |
+| `make register-debug` | Claude Code | DEBUG 版をビルド＆Swift-Selena プロジェクトに登録 |
+| `make unregister-debug` | Claude Code | DEBUG 版を Swift-Selena プロジェクトから解除 |
+| `make register-desktop` | Claude Desktop | Claude Desktop に登録 |
+| `make unregister-desktop` | Claude Desktop | Claude Desktop から解除 |
+
+## 開発セットアップ
+
+ローカルでビルドしたバイナリを（Homebrew のリリース版ではなく）Claude に登録するには、make ヘルパーか手動設定を使います。
+
+### make を使う（開発時の推奨）
+
+```bash
+# Claude Desktop
+make register-desktop
+
+# Claude Code — 対象プロジェクトに登録
+make register-release       # → 対象プロジェクトのパスを入力
+
+# Claude Code — DEBUG ビルドを Swift-Selena プロジェクト自体に登録
+make register-debug
+```
+
+登録解除:
+
+```bash
+make unregister-desktop
+make unregister-release      # → 対象プロジェクトのパスを入力（空白でカレントディレクトリ）
+make unregister-debug
+```
+
+### 手動設定
+
+**Claude Desktop** — `~/Library/Application Support/Claude/claude_desktop_config.json` を編集:
+
+```json
+{
+  "mcpServers": {
+    "swift-selena": {
+      "command": "/path/to/Swift-Selena/.build/release/Swift-Selena",
+      "env": { "MCP_CLIENT_ID": "claude-desktop" }
+    }
+  },
+  "isUsingBuiltInNodeForMcp": true
+}
+```
+
+`/path/to/Swift-Selena` を実際のパスに置き換え、Claude Desktop を再起動してください。
+
+**Claude Code** — 対象プロジェクトのディレクトリで:
+
+```bash
+claude mcp add swift-selena -- /path/to/Swift-Selena/.build/release/Swift-Selena
+# グローバル（全プロジェクト）:
+claude mcp add -s user swift-selena -- /path/to/Swift-Selena/.build/release/Swift-Selena
+```
 
 ## リリース手順（メンテナ向け）
 
