@@ -8,7 +8,7 @@
 [![Platform macOS](https://img.shields.io/badge/platform-macOS%2013+-lightgrey.svg)](https://www.apple.com/macos/)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-[日本語版はこちら / Japanese version](README.ja.md)
+[日本語版はこちら / Japanese version](README.md)
 
 ## Key Features
 
@@ -129,53 +129,24 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` and paste
 
 Restart Claude Desktop after editing.
 
-### Build from source (Alternative)
+### Build from source (alternative)
+
+If Homebrew is unavailable (e.g. a restricted environment), build and register manually:
 
 ```bash
-# Clone the repository
 git clone https://github.com/BlueEventHorizon/Swift-Selena.git
 cd Swift-Selena
-
-# Build (release mode for production)
-make build-release
-
-# Or using swift directly:
-# swift build -c release -Xswiftc -Osize
+swift build -c release -Xswiftc -Osize
+# Artifact: .build/release/Swift-Selena
 ```
 
-The build artifact is generated at `.build/release/Swift-Selena`.
-
-### Available Make Commands
+Register the built binary with Claude Code:
 
 ```bash
-make help  # Show all available commands
+claude mcp add -s user swift-selena -- "$(pwd)/.build/release/Swift-Selena"
 ```
 
-#### Build
-
-| Command | Description |
-|---------|-------------|
-| `make build` | Build debug version |
-| `make build-release` | Build release version |
-| `make clean` | Clean build artifacts |
-
-#### MCP Helpers
-
-| Command | Target | Description |
-|---------|--------|-------------|
-| `make connect_gemini` | Claude Code | Connect gemini-cli MCP server |
-| `make disconnect_gemini` | Claude Code | Disconnect gemini-cli MCP server |
-
-#### Register / Unregister
-
-| Command | Target | Description |
-|---------|--------|-------------|
-| `make register-release` | Claude Code | Register RELEASE version (prompts for project path) |
-| `make unregister-release` | Claude Code | Unregister RELEASE version (prompts for project path) |
-| `make register-debug` | Claude Code | Build & register DEBUG version to Swift-Selena project |
-| `make unregister-debug` | Claude Code | Unregister DEBUG version from Swift-Selena project |
-| `make register-desktop` | Claude Desktop | Register to Claude Desktop |
-| `make unregister-desktop` | Claude Desktop | Unregister from Claude Desktop |
+> For all `make` commands, local development registration, and the release procedure, see **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
 ## Debugging & Logging
 
@@ -208,91 +179,6 @@ tail -f ~/.swift-selena/logs/server.log
 ```
 
 **Tip:** Keep `tail -f` running in a separate terminal while using Swift-Selena for real-time debugging.
-
-## Setup
-
-### Easy Setup (for source builds)
-
-Use make commands from the Swift-Selena project root:
-
-#### For Claude Desktop
-```bash
-make register-desktop
-```
-
-#### For Claude Code
-
-```bash
-# For production use (register to target project)
-make register-release
-# → Prompts: Enter the target project path
-
-# For development/testing (register to Swift-Selena project itself)
-make register-debug
-```
-
-#### Unregister
-
-```bash
-# Unregister from Claude Desktop
-make unregister-desktop
-
-# Unregister from target project
-make unregister-release
-# → Prompts: Enter the target project path (leave blank for current directory)
-
-# Unregister debug version from this project
-make unregister-debug
-```
-
-### Manual Setup
-
-If you prefer manual configuration:
-
-#### Claude Desktop Setup
-
-1. Open the config file (create if it doesn't exist):
-```bash
-open ~/Library/Application\ Support/Claude/claude_desktop_config.json
-```
-
-2. Add the following content:
-```json
-{
-  "mcpServers": {
-    "swift-selena": {
-      "command": "/path/to/Swift-Selena/.build/release/Swift-Selena",
-      "env": {
-        "MCP_CLIENT_ID": "claude-desktop"
-      }
-    }
-  },
-  "isUsingBuiltInNodeForMcp": true
-}
-```
-
-**Important**: Replace `/path/to/Swift-Selena` with the actual path.
-
-3. Restart Claude Desktop
-
-#### Claude Code Manual Setup
-
-In your target project directory:
-
-```bash
-cd /path/to/your/project
-claude mcp add swift-selena -- /path/to/Swift-Selena/.build/release/Swift-Selena
-```
-
-This creates a local configuration for that project only.
-
-**To use globally** (all projects):
-```bash
-cd ~
-claude mcp add -s user swift-selena -- /path/to/Swift-Selena/.build/release/Swift-Selena
-```
-
-Refer to [Claude Code documentation](https://docs.claude.com/claude-code) for more MCP server configuration options.
 
 ## Usage
 
@@ -413,18 +299,15 @@ Analysis cache is stored in the following directory:
 
 ### MCP server won't start
 
+Check that the binary runs and prints its startup banner:
+
 ```bash
-# Verify debug build
-swift build
-
-# Or verify release build
-swift build -c release -Xswiftc -Osize
-
-# Test release executable
-.build/release/Swift-Selena
-# "Starting Swift MCP Server..." should appear
-# Press Ctrl+C to exit
+# Homebrew install
+swift-selena
+# "Starting Swift MCP Server..." should appear; press Ctrl+C to exit
 ```
+
+If you built from source, run `.build/release/Swift-Selena` instead (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 
 ### Tools not found
 
@@ -454,7 +337,7 @@ By default, Swift-Selena uses **Meta Tool Mode** (v0.6.3+). If you prefer to hav
 {
   "mcpServers": {
     "swift-selena": {
-      "command": "/path/to/Swift-Selena/.build/release/Swift-Selena",
+      "command": "/opt/homebrew/bin/swift-selena",
       "env": {
         "MCP_CLIENT_ID": "claude-desktop",
         "SWIFT_SELENA_LEGACY": "1"
@@ -466,7 +349,7 @@ By default, Swift-Selena uses **Meta Tool Mode** (v0.6.3+). If you prefer to hav
 
 #### Claude Code
 ```bash
-claude mcp add swift-selena -e SWIFT_SELENA_LEGACY=1 -- /path/to/Swift-Selena/.build/release/Swift-Selena
+claude mcp add swift-selena -e SWIFT_SELENA_LEGACY=1 -- swift-selena
 ```
 
 In legacy mode, the following 12 tools are exposed directly:
