@@ -4,7 +4,11 @@
 **作成日**: 2025-10-24
 **対象**: 全18ツール（v0.5.3時点）
 **ステータス**: 承認待ち
-**関連文書**: REQ-001, REQ-002, CLAUDE.md
+**関連文書**: REQ-001, REQ-002, CLAUDE.md / 設計: DES-104（search_code・find_symbol_definition 強化の詳細設計）
+
+---
+
+> ℹ️ **旧 REQ-005（improve feature「検索・シンボルツール強化」）の統合について**: REQ-005 は v0.6.8 で実装完了し、その要件は本 REQ-003（§2.2 search_code / §2.3 find_symbol_definition）へ統合のうえ削除された（improve → main の spec マージ）。本書中の「REQ-005 §X.X」参照は統合元の要件節を指す歴史的トレーサビリティ記録であり、設計詳細は DES-104 が対応する。
 
 ---
 
@@ -39,7 +43,7 @@ LSP機能: 1ツール（条件付き）
 **条件付き利用（1ツール）:**
 - ビルド可能時のみ
 - LSPベース
-- find_symbol_references
+- find_symbol_references（⚠️ v0.5.3 時点の記述。2025-10-27 `commit f0a547f` で削除済み。§2.9 参照）
 
 ---
 
@@ -136,17 +140,21 @@ UC: テストファイルを列挙
 #### search_code
 
 **要件:**
-正規表現でコード内容を検索（grep的）
+正規表現でコード内容を検索（grep的）。結果量が膨大化する場合に備え、**出力モード**と**件数上限**で結果を制御でき、テキスト出力に加え**構造化結果**を併記する（v0.6.8、REQ-005 §4.1 / §4.2）
 
 **なぜ必要か:**
 - 特定の関数呼び出しを検索
 - パターンマッチング
 - コメント検索
+- 巨大プロジェクトで一般語を検索する際の結果量制御（「どのファイルにあるか」だけ知りたいケースに対応）
+- 呼び出し側（AI/Agent）がテキストパースなしで結果を加工できる構造化データの提供
 
 **入力:**
 - `pattern`: 正規表現
 - `include_patterns`: 対象に含める glob 配列（オプション、最大 20 件）
 - `exclude_patterns`: 対象から除外する glob 配列（オプション、最大 20 件、include に勝つ）
+- `output_mode`: 出力モード（`match_detail`（既定・後方互換、ファイル/行番号/該当行）/ `file_list`（マッチを含むファイル一覧、重複排除）/ `count_only`（マッチ数とファイル数））（v0.6.8、REQ-005 §4.1）
+- `limit`: 件数上限（1〜10,000 の整数。超過分は切り詰め、省略があった旨を通知。`count_only` では対象外）（v0.6.8、REQ-005 §4.1）
 
 > v0.6.8 (REQ-005 / DES-104 §5.1) で `file_pattern` 単独パラメータを廃止し、`search_files_without_pattern` と共通の `include_patterns` / `exclude_patterns` 配列に統一した。
 
@@ -157,12 +165,21 @@ Found 12 matches:
   UserManager.swift:15: func createUser
   UserRepository.swift:28: func createUser
   ...
+
+--- structured ---
+{ "matches": [ { "file": "...", "line": 15, "content": "func createUser" }, ... ],
+  "total": 12, "truncated": false }
 ```
+人間可読テキスト（既存の行頭フォーマット `<file>:<line>: <content>` を維持）の末尾に、フィールド名で識別可能な構造化結果（`--- structured ---` JSON ブロック）を併記する（v0.6.8、REQ-005 §4.2）
 
 **受入基準:**
 - ✅ 正規表現対応
-- ✅ ファイルフィルタ対応
+- ✅ ファイルフィルタ対応（include / exclude patterns）
 - ✅ grep並みの速度
+- ✅ 出力モード（`match_detail` / `file_list` / `count_only`）を選択でき、既定は `match_detail`（後方互換）（v0.6.8）
+- ✅ 件数上限を 1〜10,000 で指定でき、超過時はテキスト・構造化結果の双方で省略を明示（v0.6.8）
+- ✅ テキスト出力の末尾に構造化結果（`--- structured ---` JSON、ファイルパス・行番号・マッチ行内容・総数・省略フラグ）を併記（v0.6.8）
+- ✅ 正規表現・glob の構文エラーは原因と修正案を含むエラーメッセージで明示（v0.6.8、REQ-005 §4.8）
 
 **ユースケース:**
 ```
@@ -170,9 +187,15 @@ UC: TODO コメント検索
   → search_code("// TODO")
   → 全TODOコメントを発見
 
-UC: 特定APIの使用箇所
-  → search_code("URLSession\\.shared")
-  → URLSession.sharedの使用箇所を検索
+UC: 本実装のみ検索（テスト・モック除外）
+  → search_code("URLSession\\.shared",
+                include_patterns: ["Sources/**/*.swift"], exclude_patterns: ["*Tests*"])
+
+UC: どのファイルにあるかだけ知りたい
+  → search_code("func createUser", output_mode: "file_list")
+
+UC: 件数だけ把握したい
+  → search_code("import", output_mode: "count_only")
 ```
 
 ---
@@ -236,23 +259,31 @@ UC: リファクタリング前の確認
 #### find_symbol_definition
 
 **要件:**
-プロジェクト全体でシンボル定義を検索
+プロジェクト全体でシンボル定義を検索。同名シンボルが複数存在する場合に、**種別フィルタ**と**所属スコープ情報**で絞り込み・識別でき、構造化結果も併記する（v0.6.8、REQ-005 §4.4 / §4.2）
 
 **なぜ必要か:**
 - 「UserManagerクラスはどのファイル？」に答える
 - 定義箇所を特定
 - 複数ファイルにまたがる検索
+- 同名シンボルが異なるスコープ（ネスト型・extension・別モジュール）に複数存在する場合の判別
 
 **入力:**
 - `symbol_name`: シンボル名（例: "UserManager"）
+- `symbol_kinds`: シンボル種別フィルタ配列（オプション、最大 9 件、OR 結合）。`struct` / `class` / `enum` / `protocol` / `actor` / `function` / `variable` / `typealias` / `extension` の小文字スネーク 9 区分（v0.6.8、REQ-005 §4.4.1）
 
 **出力:**
 ```
 Found 2 definitions for 'UserManager':
 
-  Domain/UserManager.swift:10 [Class]
+  Domain/UserManager.swift:10 [Class]  (module: MyApp)
   Tests/MockUserManager.swift:5 [Class]
+
+--- structured ---
+{ "definitions": [
+    { "file": "...", "line": 10, "kind": "class",
+      "parent_scope": null, "extension_target": null, "module_name": "MyApp" }, ... ] }
 ```
+所属スコープ情報（**親スコープ名** / **extension 対象型** / **モジュール名**）を付与し、ルート定義・ネスト型・extension 由来の同名シンボルを区別できる。テキスト出力の末尾に構造化結果（`--- structured ---` JSON）を併記する（v0.6.8、REQ-005 §4.4.2 / §4.2）
 
 **受入基準:**
 - ✅ プロジェクト全体を検索
@@ -261,12 +292,17 @@ Found 2 definitions for 'UserManager':
 - ✅ Class/Struct/Enum/Protocol/Actor の定義を優先して返す（v0.6.5+）
 - ✅ 複数候補がある場合は全候補を返す
 - ✅ シンボルが見つからない場合は「検索ファイル数・考えられる原因」を含むメッセージを返す（v0.6.5+）
+- ✅ `symbol_kinds` を配列で指定でき、指定種別のいずれかに合致する定義を OR 結合で返す。未指定時は全 9 区分（v0.6.8、REQ-005 §4.4.1）
+- ✅ 配列に未定義の種別文字列が含まれる場合は入力エラーで明示（部分的無視は行わない）（v0.6.8）
+- ✅ 結果に所属スコープ情報（親スコープ名・extension 対象型・モジュール名）を付与し、ルート定義 / ネスト型 / extension 由来の同名シンボルを区別可能（v0.6.8、REQ-005 §4.4.2）
+- ✅ テキスト出力の末尾に構造化結果（`--- structured ---` JSON）を併記（v0.6.8、REQ-005 §4.2）
 
 **エラー時の挙動（v0.6.5+）:**
 - シンボルが見つからない場合、以下を含むメッセージを返す:
   - 検索したファイル数
   - 考えられる原因（スペルミス / 外部パッケージ定義 / 存在しない）
 - プロジェクト未初期化: `initialize_project` の案内を含むエラー
+- `symbol_kinds` に未定義の種別が含まれる場合: 原因と有効な 9 区分を含む入力エラー（v0.6.8）
 
 **ユースケース:**
 ```
@@ -288,6 +324,8 @@ UC: シンボルが見つからない場合（v0.6.5+）
 ---
 
 #### find_references
+
+> ⚠️ **未実装**（2026-05 時点）。本ツールは仕様として記述されたが、実装されたことがない（REQ-005 §6.1 / §6.3）。LSP 系参照検索ツールの再導入可否は別途独立 Feature として検討する。以下は当時の仕様記述を歴史的記録として保持する。
 
 **要件:**
 シンボルの参照箇所をプロジェクト全体から検索（LSP不要）
@@ -772,6 +810,8 @@ UC: 最大ファイルの確認
 
 #### find_type_usages
 
+> ⚠️ **削除済み**（2025-12-06 `commit 580b1f7`「不要な分析機能を削除」、REQ-005 §6.3）。以下は削除前の仕様記述を歴史的記録として保持する。
+
 **要件:**
 型の使用箇所を検出
 
@@ -978,6 +1018,8 @@ OAuth実装時の注意: リフレッシュトークンの保存場所
 
 #### find_symbol_references
 
+> ⚠️ **削除済み**（2025-10-27 `commit f0a547f`「find_symbol_referencesを削除」、REQ-005 §6.3）。以下は削除前の仕様サマリを歴史的記録として保持する。LSP 系参照検索ツールの再導入可否は別途独立 Feature として検討する。
+
 **（REQ-002で詳細説明済み）**
 
 **要件サマリ:**
@@ -1018,14 +1060,16 @@ Step 5: 詳細確認
 
 #### ワークフロー2: リファクタリング
 
-```
-Step 1: 影響範囲確認（ビルド可能時）
-  find_symbol_references("UserManager.swift", line: 15, column: 10)
-  → createUser()の全呼び出し箇所
+> ⚠️ 旧ワークフローは削除済みツール（`find_symbol_references` / `find_type_usages`）を前提としていた。現在は `search_code`（テキストベースの参照検索）と `find_symbol_definition`（定義・所属スコープ確認）で代替する。
 
-Step 2: 影響範囲確認（ビルド不可時）
-  find_type_usages("UserManager")
-  → UserManager型の使用箇所
+```
+Step 1: 参照箇所の確認
+  search_code("UserManager", output_mode: "file_list")
+  → UserManager を参照するファイル一覧
+
+Step 2: 定義の確認
+  find_symbol_definition("UserManager", symbol_kinds: ["class"])
+  → 定義箇所と所属スコープ情報
 
 Step 3: テスト確認
   find_test_cases()
@@ -1065,7 +1109,7 @@ Step 3: メソッド確認（LSP版）
 | ファイル検索 | find_files | find_files |
 | コード検索 | search_code | search_code |
 | シンボル一覧 | list_symbols（LSP版）| list_symbols（SwiftSyntax版）|
-| 参照検索 | find_symbol_references | find_type_usages + search_code |
+| 参照検索 | find_symbol_references（削除済み・§2.9）| search_code（テキスト参照検索）。find_type_usages は削除済み（§2.5）|
 | 型階層 | get_type_hierarchy（LSP版）| get_type_hierarchy（SwiftSyntax版）|
 | SwiftUI状態 | list_property_wrappers | list_property_wrappers |
 
@@ -1083,10 +1127,10 @@ Step 3: メソッド確認（LSP版）
 | list_property_wrappers | 100% | <1秒 | ✅ v0.5.3達成 |
 | list_protocol_conformances | 100% | <1秒 | ✅ v0.5.3達成 |
 | list_extensions | 100% | <1秒 | ✅ v0.5.3達成 |
-| find_symbol_references | 95%+ | <2秒 | ✅ v0.5.3達成 |
+| find_symbol_references | 95%+ | <2秒 | ⚠️ 削除済み（f0a547f、§2.9）|
 | get_type_hierarchy | 100% | 初回<5秒 / 2回目<500ms | v0.6.5目標 |
 | find_symbol_definition | 100% | <500ms | v0.6.5目標 |
-| find_references | - | - | v0.6.5新規 |
+| find_references | - | - | ⚠️ 未実装（§2.3）|
 | analyze_file_metrics | 100% | <1秒（340ファイル） | v0.6.5新規 |
 
 ---
