@@ -124,6 +124,8 @@ gantt
 
 ### 2.2 実装済み vs 計画中
 
+> 注: `find_symbol_references` は v0.5.2 で実装されたが、2025-10-27 `commit f0a547f` で削除済み。以下のロードマップは v0.5.x 当時の履歴として保持する。
+
 ```mermaid
 mindmap
   rootv0.5.4+
@@ -567,6 +569,8 @@ graph TD
 - 実行時にLSP利用可能性をチェック
 - 利用不可ならエラーメッセージで代替案提示
 
+> 現行実装では `find_symbol_references` は削除済み。参照候補確認は `search_code` と `find_symbol_definition` を組み合わせる。
+
 ---
 
 ## 9. v0.5.4実装ガイド
@@ -575,7 +579,7 @@ graph TD
 
 ```mermaid
 graph TB
-    V53[v0.5.3完了<br/>find_symbol_references]
+    V53[v0.5.3完了<br/>find_symbol_references<br/>削除済み]
 
     subgraph V054Impl["v0.5.4実装"]
         LC1[LSPClient.<br/>documentSymbol]
@@ -712,7 +716,7 @@ Using SwiftSyntax for list_symbols
 ```
 
 **影響範囲:**
-- find_symbol_references: ✅ 動作（非同期通知が少ない）
+- find_symbol_references: ✅ 当時は動作（非同期通知が少ない）。現行では削除済み
 - documentSymbol: ❌ 不安定（フォールバック）
 - typeHierarchy: ❌ 不安定（フォールバック）
 
@@ -891,7 +895,7 @@ sequenceDiagram
 
 | API | 接続 | レスポンス取得 | パース | 動作 |
 |-----|------|---------------|--------|------|
-| find_symbol_references | ✅ | ✅ | ✅ | ✅ 完全動作 |
+| find_symbol_references | ✅ | ✅ | ✅ | ✅ 当時は完全動作（現行では削除済み） |
 | documentSymbol | ✅ | ✅ (16KB) | ❌ 非同期通知混入 | △ フォールバック |
 | typeHierarchy | ✅ | ✅ (196byte) | ❌ 非同期通知混入 | △ フォールバック |
 

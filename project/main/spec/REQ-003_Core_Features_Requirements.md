@@ -18,6 +18,8 @@
 
 Swift-Selenaは**18個のツール**を提供（v0.5.3時点）
 
+> ℹ️ 以下のカテゴリ別内訳は **v0.5.3 時点**の分類である。**現行の公開ツールは `Sources/Constants.swift` の `ToolNames` / `Sources/Tools/Meta/MetaToolRegistry.swift` を正とする。** 現行で提供されないもの: 効率的読み取り（`read_symbol`）は計画のみで**未実装**、LSP機能（`find_symbol_references`）は 2025-10-27 `commit f0a547f` で**削除済み**、依存関係解析の `find_type_usages` は 2025-12-06 `commit 580b1f7` で**削除済み**。現行は v0.6.3+ のメタツールモード（`list_available_tools` / `get_tool_schema` / `execute_tool`）経由で解析ツールを公開する。
+
 **カテゴリ別:**
 ```
 プロジェクト管理: 1ツール
@@ -323,16 +325,16 @@ UC: シンボルが見つからない場合（v0.6.5+）
 
 ---
 
-#### find_references
+#### find_references（未実装・歴史的記録）
 
-> ⚠️ **未実装**（2026-05 時点）。本ツールは仕様として記述されたが、実装されたことがない（REQ-005 §6.1 / §6.3）。LSP 系参照検索ツールの再導入可否は別途独立 Feature として検討する。以下は当時の仕様記述を歴史的記録として保持する。
+> ⚠️ **未実装**（2026-05 時点）。本ツールは仕様として記述されたが、実装されたことがない（REQ-005 §6.1 / §6.3）。LSP 系参照検索ツールの再導入可否は別途独立 Feature として検討する。以下は当時の仕様記述を歴史的記録として保持する。現行の参照候補検索では `search_code` を使用する。
 
 **要件:**
 シンボルの参照箇所をプロジェクト全体から検索（LSP不要）
 
 **なぜ必要か:**
 - LSP利用不可環境でも参照検索が必要
-- `find_symbol_references`（LSP版）の代替（テキストベース）
+- 削除済み `find_symbol_references`（LSP版）の代替として検討されたテキストベース検索
 - 単語境界を考慮した精度の高い検索
 
 **入力:**
@@ -368,12 +370,12 @@ Total: 15 references in 8 files
 ```
 UC: LSP無効環境でのリファクタリング影響確認
   開発者: 「User型がどこで使われてる？」
-  find_references("User")
+  search_code("User")
   → 15箇所を発見（LSP不要）
 
 UC: find_symbol_references との使い分け
-  ビルド可能時: find_symbol_references（型情報ベース、正確）
-  ビルド不可時: find_references（テキストベース、LSP不要）
+  過去案: ビルド可能時は find_symbol_references、ビルド不可時は find_references
+  現行: search_code と find_symbol_definition を組み合わせる
 ```
 
 ---
@@ -808,9 +810,9 @@ UC: 最大ファイルの確認
 
 ---
 
-#### find_type_usages
+#### find_type_usages（削除済み・歴史的記録）
 
-> ⚠️ **削除済み**（2025-12-06 `commit 580b1f7`「不要な分析機能を削除」、REQ-005 §6.3）。以下は削除前の仕様記述を歴史的記録として保持する。
+> ⚠️ **削除済み**（2025-12-06 `commit 580b1f7`「不要な分析機能を削除」、REQ-005 §6.3）。以下は削除前の仕様記述を歴史的記録として保持する。現行の型参照候補確認では `search_code` と `find_symbol_definition` を組み合わせる。
 
 **要件:**
 型の使用箇所を検出
@@ -818,7 +820,7 @@ UC: 最大ファイルの確認
 **なぜ必要か:**
 - リファクタリング影響範囲の確認
 - 型がどこで使われているか
-- LSP版（find_symbol_references）の代替（ビルド不可時）
+- 削除済みLSP版（find_symbol_references）の代替（ビルド不可時）として利用されていた
 
 **入力:**
 - `type_name`: 型名（例: "User"）
@@ -844,12 +846,12 @@ Total: 15 usages
 ```
 UC: リファクタリング影響確認（ビルド不可時）
   開発者: 「User型を変更したい、どこで使ってる？」
-  find_type_usages("User")
-  → 15箇所で使用（型レベル）
+  search_code("User", output_mode: "file_list")
+  → 15ファイルに参照候補（テキストベース）
 
 UC: LSP版との使い分け
-  ビルド可能時: find_symbol_references（メソッドレベル、正確）
-  ビルド不可時: find_type_usages（型レベル、おおまか）
+  過去案: ビルド可能時は find_symbol_references、ビルド不可時は find_type_usages
+  現行: search_code と find_symbol_definition を組み合わせる
 ```
 
 ---
@@ -884,7 +886,7 @@ Analysis mode set to: SwiftUI
 推奨ツール:
 - list_property_wrappers: SwiftUI状態管理の把握
 - list_protocol_conformances: View Protocolの確認
-- find_type_usages: @Stateプロパティの使用箇所
+- search_code: @Stateプロパティの参照候補
 
 分析のポイント:
 - Property Wrapperに注目
@@ -1016,7 +1018,7 @@ OAuth実装時の注意: リフレッシュトークンの保存場所
 
 ### 2.9 LSP機能
 
-#### find_symbol_references
+#### find_symbol_references（削除済み・歴史的記録）
 
 > ⚠️ **削除済み**（2025-10-27 `commit f0a547f`「find_symbol_referencesを削除」、REQ-005 §6.3）。以下は削除前の仕様サマリを歴史的記録として保持する。LSP 系参照検索ツールの再導入可否は別途独立 Feature として検討する。
 

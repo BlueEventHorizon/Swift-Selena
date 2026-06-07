@@ -1,0 +1,24 @@
+{
+  "json": {
+    "trailingCommas": "never"
+  },
+  "markdown": {
+  },
+  "toml": {},
+  "yaml": {},
+  "excludes": [
+    "**/ios/Runner/",
+    "**/macos/Runner/",
+    "**/.dart_tool/",
+    // 機械生成の検索 Index（embedding vector を含む。pretty 化するとファイルサイズが
+    // 数倍に膨らむため整形対象外にする。スクリプトが minified JSON で書き出す前提）
+    ".claude/doc-advisor/index/**",
+    ".claude/doc-db/index/**"
+  ],
+  "plugins": [
+    "https://plugins.dprint.dev/json-0.20.0.wasm",
+    "https://plugins.dprint.dev/toml-0.7.0.wasm",
+    "https://plugins.dprint.dev/markdown-0.18.0.wasm",
+    "https://plugins.dprint.dev/g-plane/pretty_yaml-v0.5.1.wasm"
+  ]
+}
