@@ -45,7 +45,7 @@ Grep("phone.*format", path="Library")
 
 ### 実装前の確認（必須）
 - **類似実装検索**: `search_code` - 既存パターン確認
-- **型の影響範囲**: `find_type_usages` - リファクタリング影響把握
+- **型の影響範囲**: `search_code` + `find_symbol_definition` - テキスト参照検索と定義確認を組み合わせて影響範囲を把握
 - **シンボル一覧**: `list_symbols` - メソッド・プロパティ一覧
 - **プロトコル準拠**: `list_protocol_conformances` - Entity検証
 - **依存関係**: `analyze_imports` - レイヤー違反検出
@@ -53,14 +53,14 @@ Grep("phone.*format", path="Library")
 ### 主要ユースケース
 
 #### 新規実装時
-- **Service**: `search_code`で既存Service → `list_symbols`でメソッド確認 → `find_type_usages`でFactory登録漏れ防止
-- **Entity**: `list_protocol_conformances`で必須プロトコル確認（Sendable等5つ） → `find_type_usages`で使用箇所確認
-- **ViewModel**: `search_code`で@MainActor @Observable → `list_property_wrappers`で誤用チェック（0件が正常） → `find_type_usages`でSharedData連携パターン
+- **Service**: `search_code`で既存Service → `list_symbols`でメソッド確認 → `search_code`でFactory登録・呼び出しパターン確認
+- **Entity**: `list_protocol_conformances`で必須プロトコル確認（Sendable等5つ） → `search_code`で使用箇所確認
+- **ViewModel**: `search_code`で@MainActor @Observable → `list_property_wrappers`で誤用チェック（0件が正常） → `search_code`でSharedData連携パターン確認
 
 #### リファクタリング時
-- **型変更**: `find_type_usages`で全箇所特定 → `get_type_hierarchy`で継承確認 → 変更 → `search_code`で0件確認
+- **型変更**: `find_symbol_definition`で定義特定 → `search_code`で参照候補を全箇所確認 → `get_type_hierarchy`で継承確認 → 変更 → `search_code`で旧名0件確認
 - **関数変更**: `find_symbol_definition`で定義特定 → `search_code`で全呼び出し → 変更 → 0件確認
-- **削除**: `find_type_usages`で0件確認後に削除実行
+- **削除**: `search_code`で参照候補0件を確認後に削除実行
 
 #### 検証時
 - **依存関係**: `analyze_imports` - Domain→Infrastructure、Tools→他層等の違反検出

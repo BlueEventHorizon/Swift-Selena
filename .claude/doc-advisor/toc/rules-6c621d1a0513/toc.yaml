@@ -5,7 +5,7 @@
 metadata:
   name: Document Search Index (rules)
   key: rules
-  generated_at: 2026-06-06T15:22:49Z
+  generated_at: 2026-06-07T03:16:56Z
   file_count: 11
 
 docs:
@@ -161,34 +161,31 @@ docs:
       - AsyncStream
       - Protocol-based DI
   docs/rules/base/develop_with_agent_rule.md:
-    title: Developing with Agent and MCP
-    purpose: Guidelines for using Swift-Selena MCP and other agents to prevent code duplication, validate architecture, and enable efficient code analysis
+    title: Developing with Agent and MCP Integration
+    purpose: Defines best practices for code search and analysis using AI agents and MCP tools to prevent duplication, manage refactoring impacts, verify architecture, and accumulate knowledge
     content_details:
-      - Swift-Selena MCP usage patterns for duplicate checking and refactoring impact analysis
-      - Essential pre-implementation verification workflow using MCP tools
-      - Refactoring techniques with type usage tracking and hierarchy verification
-      - Validation patterns including dependency analysis and mock verification
-      - Alternative strategies when Swift-Selena is unavailable (Grep and Glob tools)
-      - Gemini MCP integration for OS framework and external API consultation
-      - Codex MCP for deep source code and complex reasoning analysis
-      - Code search examples and practical use case patterns
+      - Swift-Selena MCP usage patterns and best practices
+      - Code duplication prevention through prior search
+      - Refactoring impact analysis and change tracking
+      - Architecture verification and layer violation detection
+      - Knowledge accumulation through symbol analysis
+      - Alternative methods (Grep, Glob) when MCP is unavailable
+      - Gemini MCP usage for OS framework and external API inquiries
+      - Codex MCP usage for deep analysis and complex reasoning
     applicable_tasks:
-      - New feature implementation with code duplication prevention
-      - Refactoring with impact analysis and change verification
-      - Architecture validation and layer violation detection
-      - Code understanding and project structure analysis
-      - Symbol and type usage tracking
+      - Code implementation planning before development
+      - Refactoring impact assessment and change verification
+      - Architecture review and layer violation detection
+      - Code reuse evaluation
+      - Test coverage analysis
     keywords:
       - Swift-Selena MCP
-      - code duplication prevention
+      - code search
       - refactoring
-      - type usage tracking
-      - architecture validation
-      - dependency analysis
-      - search_code tool
-      - protocol conformance
-      - symbol definition
-      - layer violation
+      - architecture verification
+      - symbol analysis
+      - duplication prevention
+      - MCP integration
   docs/rules/base/principles_of_software_development.md:
     title: Principles of Software Development
     purpose: Establishes fundamental software engineering principles including SOLID, DRY, KISS, and YAGNI that guide code quality and architecture decisions

@@ -188,26 +188,26 @@ sequenceDiagram
 graph TB
     Start[ListTools Request]
     Check{LSP Available?}
-    Add17[Add 17 SwiftSyntax Tools]
-    Add1[Add find_symbol_references]
+    AddCore[Add current SwiftSyntax/Core Tools]
+    AddMeta[Add Meta Tools]
     Return[Return Tool List]
 
-    Start --> Add17
-    Add17 --> Add1
-    Add1 --> Check
+    Start --> AddCore
+    AddCore --> AddMeta
+    AddMeta --> Check
     Check -->|Yes| Log1[Log - LSP available]
     Check -->|No| Log2[Log - LSP not available]
     Log1 --> Return
     Log2 --> Return
 
-    Return --> |18 tools| Client[MCP Client]
+    Return --> Client[MCP Client]
 
-    style Add17 fill:#c8e6c9
-    style Add1 fill:#ffe0b2
+    style AddCore fill:#c8e6c9
+    style AddMeta fill:#ffe0b2
     style Check fill:#fff59d
 ```
 
-**重要:** v0.5.3からfind_symbol_referencesを**常に含める**（実行時にLSPチェック）
+**現行:** 公開ツール一覧は `Sources/Constants.swift` の `ToolNames` / `MetaToolNames` と `Sources/Tools/Meta/MetaToolRegistry.swift` を正とする。`find_symbol_references` は 2025-10-27 `commit f0a547f` で削除済み。
 
 ---
 
@@ -319,7 +319,7 @@ graph TB
     LSPState -->|tryConnect| LSPClient
     LSPClient -->|stdin/stdout<br/>pipes| SKLSP
 
-    Tools -->|find_symbol_references| LSPClient
+    Tools -.->|LSP-assisted paths| LSPClient
     Tools -.->|executeWithLSP<br/>v0.5.4+| LSPClient
 
     LSPClient -->|initialize<br/>initialized<br/>didOpen<br/>references| SKLSP
@@ -836,7 +836,7 @@ graph LR
 This tool requires a buildable project with SourceKit-LSP.
 
 💡 Alternatives:
-- Use 'find_type_usages' for type-level reference search
+- Use 'find_symbol_definition' to locate the definition and scope
 - Use 'search_code' for text-based search
 ```
 

@@ -226,8 +226,8 @@ class UserManager {
 list_symbols("OldUserManager.swift")
 → ✅ createUser, deleteUser メソッドが見える
 
-find_type_usages("OldUserManager")
-→ ✅ 使用箇所が分かる
+search_code("OldUserManager", output_mode: "file_list")
+→ ✅ 参照候補ファイルが分かる
 ```
 
 ---
@@ -369,9 +369,11 @@ analyze_imports()
 - 動的ツールリスト生成
 
 **受入基準:**
-- ビルド可能時: find_symbol_referencesが利用可能
+- ビルド可能時: LSP拡張が利用可能なツールではLSP結果を優先し、利用不可時はSwiftSyntax結果へフォールバックする
 - ビルド不可時: 17個のSwiftSyntaxツールが動作
 - LSP接続失敗でもクラッシュしない
+
+> 注: `find_symbol_references` は v0.5.2 で実装されたが、2025-10-27 `commit f0a547f` で削除済み。現行の参照候補確認は `search_code` と `find_symbol_definition` を組み合わせる。
 
 ---
 
@@ -462,16 +464,18 @@ class UserViewModel { ... }
 **フロー:**
 ```
 1. 開発者: 「UserViewModelの使用箇所を教えて」
-2. Claude: find_type_usages("UserViewModel")
-3. Claude: 「15箇所で使用されています」
+2. Claude: search_code("UserViewModel", output_mode: "file_list")
+3. Claude: 「15ファイルに参照候補があります」
 4. 開発者: リファクタリング実施
 ```
 
-**LSP版（v0.5.2+、ビルド可能時）:**
+**過去のLSP版（v0.5.2、削除済み）:**
 ```
 2. Claude: find_symbol_references("UserViewModel.swift", line, column)
 3. Claude: 「18箇所で使用されています（より正確）」
 ```
+
+> 現行版では `find_symbol_references` は利用できない。必要に応じて `find_symbol_definition` で定義・スコープを確認し、`search_code` で参照候補を検索する。
 
 **期待される結果:**
 - 全ての使用箇所を漏れなく発見
@@ -699,7 +703,7 @@ class UserRepository: RepositoryProtocol, Loggable {
 **マイルストーン:**
 - ✅ v0.5.0: リファクタリング、22ツール
 - ✅ v0.5.1: LSP基盤整備
-- ✅ v0.5.2: find_symbol_references
+- ✅ v0.5.2: find_symbol_references（後に 2025-10-27 `commit f0a547f` で削除）
 - ✅ v0.5.3: LSP安定化、デバッグ機能
 - ⏳ v0.5.4: list_symbols/get_type_hierarchy強化
 - ⏳ v0.5.5: get_call_hierarchy

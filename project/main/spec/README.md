@@ -34,7 +34,7 @@
 ---
 
 ### REQ-003: コア機能要件
-**対象:** 全18ツール
+**対象:** コアツール群（現行の公開ツール一覧は `Sources/Constants.swift` の `ToolNames` と `Sources/Tools/Meta/MetaToolRegistry.swift` を正とする）
 **内容:**
 - ツール分類とカテゴリ
 - 各ツールの要件（なぜ必要か、何ができるか、どう使うか）
@@ -76,7 +76,7 @@ REQ-001: 全体要件
     └─ FR-006: LSP統合
         │
         └─ REQ-002: LSP統合要件
-            ├─ FR-LSP-001: find_symbol_references（v0.5.2）
+            ├─ FR-LSP-001: find_symbol_references（v0.5.2、現行では削除済み）
             ├─ FR-LSP-002: list_symbols強化（v0.5.4）
             ├─ FR-LSP-003: get_type_hierarchy強化（v0.5.4）
             ├─ FR-LSP-004: get_call_hierarchy（v0.5.5）
@@ -87,13 +87,11 @@ REQ-001: 全体要件
 
 REQ-003: コア機能要件
     ├─ プロジェクト管理（initialize_project）
-    ├─ ファイル検索（find_files, search_code）
-    ├─ シンボル解析（list_symbols, find_symbol_definition, read_symbol）
+    ├─ ファイル検索（find_files, search_code, search_files_without_pattern）
+    ├─ シンボル解析（list_symbols, find_symbol_definition）
     ├─ SwiftUI解析（list_property_wrappers, list_protocol_conformances, list_extensions）
-    ├─ 依存関係解析（analyze_imports, get_type_hierarchy, find_test_cases, find_type_usages）
-    ├─ 分析モード（set_analysis_mode, think_about_analysis）
-    ├─ プロジェクトノート（add_note, search_notes）
-    └─ LSP機能（find_symbol_references）
+    ├─ 依存関係解析（analyze_imports, get_type_hierarchy, find_test_cases）
+    └─ メタツール（list_available_tools, get_tool_schema, execute_tool）
 ```
 
 ---
@@ -124,7 +122,7 @@ REQ-003: コア機能要件
 ### カバー範囲
 
 **実装済み機能:**
-- ✅ 全18ツールの要件定義（REQ-003）
+- ✅ コアツール群の要件定義（REQ-003）
 - ✅ v0.5.1〜v0.5.3の要件と検証結果（REQ-002）
 - ✅ プロジェクト全体の要件（REQ-001）
 

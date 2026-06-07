@@ -5,7 +5,7 @@
 metadata:
   name: Document Search Index (specs)
   key: specs
-  generated_at: 2026-06-06T22:50:39Z
+  generated_at: 2026-06-07T03:15:54Z
   file_count: 17
 
 docs:
@@ -101,100 +101,108 @@ docs:
       - database construction
       - search engine
   project/main/design/DES-101_System_Architecture.md:
-    title: Swift-Selena System Architecture Design
-    purpose: Comprehensive architecture specification for the Swift-Selena MCP Server, defining core components, data flows, deployment patterns, and design principles for code analysis capability
+    title: "DES-101: Swift-Selena System Architecture Design"
+    purpose: Defines the complete MCP server architecture for Swift-Selena, including system components, data flows, deployment strategy, and design principles for build-independent code analysis
     content_details:
-      - "System overview with core values: build-independent, Swift-specialized, hybrid SwiftSyntax+LSP, local-only"
-      - MCP server entry point, lifecycle management, and stdio transport protocol
-      - "Core components: ProjectMemory (persistence/cache), SwiftSyntaxAnalyzer (AST analysis), FileSearcher, LSPState (connection management), LSPClient"
-      - "Dynamic tool list generation: 17 SwiftSyntax tools plus 1 LSP-enhanced tool (find_symbol_references)"
-      - Tool execution flow with LSP availability detection and graceful degradation
-      - "LSP integration architecture: SourceKit-LSP subprocess communication, JSON-RPC pipes, non-blocking initialization"
-      - "Cache management strategy: file modification tracking, cache invalidation, multi-type caches (fileIndex, symbolCache, importCache, typeConformanceCache)"
-      - "Error handling design: error classification (invalidParams, invalidRequest, internalError, LSPError) and fallback strategies"
-      - "Security and privacy: file access control, path validation, local-only operation with no remote communication"
-      - "Deployment: build configurations (Debug vs Release), Homebrew tap installation flow, multi-client support with isolated storage"
+      - SwiftMCPServer entry point with MCP protocol handling and lifecycle management
+      - LSPState Actor for connection state management with graceful degradation
+      - SwiftSyntaxAnalyzer and FileSearcher core analysis engines
+      - ProjectMemory persistent cache with file modification tracking
+      - 18 tool implementations across Project, FileSystem, Symbols, SwiftUI, Analysis, and Meta categories
+      - LSP integration architecture with SourceKit-LSP async connection flow
+      - Cache strategy with lastModified comparison and automatic invalidation
+      - Error handling hierarchy with fallback to SwiftSyntax on LSP failure
+      - Security model for file access control and data privacy with local-only storage
+      - Deployment via Homebrew tap with multi-client support for Claude Code and Desktop
     applicable_tasks:
-      - MCP server architecture review
-      - Core component design verification
-      - Tool integration implementation
-      - LSP enhancement planning
-      - Performance optimization design
-      - Error handling pattern implementation
+      - System architecture review and validation
+      - MCP server implementation and modification
+      - Tool addition and integration planning
+      - LSP integration enhancement
+      - Performance optimization and caching strategy
+      - Deployment configuration and installation procedures
+      - Error handling and graceful degradation design
+      - Security policy implementation and audit
+      - Component responsibility assignment and refactoring
+      - Future extension planning
     keywords:
       - Swift-Selena
-      - MCP Server
-      - SwiftSyntax
-      - SourceKit-LSP
-      - ProjectMemory
-      - AST analysis
+      - MCP architecture
+      - LSPState Actor
+      - SwiftSyntaxAnalyzer
+      - ProjectMemory cache
+      - MCPTool protocol
       - Graceful degradation
-      - Cache management
-      - Tool registry
+      - Build-independent analysis
+      - Homebrew deployment
+      - Component responsibility
   project/main/design/DES-102_LSP_Integration_Design.md:
-    title: LSP Integration Design (v0.5.x Implementation Roadmap)
-    purpose: Specifies the architecture, protocol implementation details, and development roadmap for integrating SourceKit-LSP into the Swift-Selena MCP server, including hybrid analysis strategy and error handling patterns
+    title: LSP Integration Design
+    purpose: Defines the hybrid architecture, protocol implementation, and error handling for SourceKit-LSP integration in the MCP server, covering v0.5.x development roadmap and graceful degradation patterns
     content_details:
-      - Hybrid architecture with graceful degradation (SwiftSyntax baseline + LSP optional enhancement)
-      - v0.5.x implementation roadmap with version-specific features and milestones
-      - LSP protocol flow including initialize, initialized, didOpen, references, documentSymbol, and typeHierarchy methods
-      - LSPClient and LSPState actor design with class structure and API method specifications
-      - Error handling patterns including SIGPIPE mitigation and process validation
-      - Debug environment with FileLogHandler and DebugRunner for automatic test sequences
-      - Dynamic tool list design addressing ListTools timing constraints
-      - v0.5.4 implementation guide for documentSymbol and typeHierarchy enhancements
-      - LSP asynchronous notification problem (v0.5.4) and ResponseBuffer solution for v0.5.5
-      - Test strategy with DebugRunner flow and validation results across Swift-Selena and Xcode projects
+      - Hybrid architecture combining SwiftSyntax and LSP with graceful degradation
+      - LSP protocol implementation details including initialize, initialized, didOpen, and textDocument requests
+      - LSPClient and LSPState design with messageId management and openedFiles caching
+      - SIGPIPE handling and error recovery strategies
+      - FileLogHandler for debugging and DebugRunner for automated testing
+      - v0.5.4 implementation plan for documentSymbol and typeHierarchy LSP APIs
+      - Async notification mixing problem in v0.5.4 and v0.5.5 resolution strategy
+      - Dynamic tool list design approach for runtime LSP availability checking
+      - Complete test results for find_symbol_references, documentSymbol, and typeHierarchy
+      - Lessons learned from v0.5.2/v0.5.3 development phases
     applicable_tasks:
-      - LSP integration implementation for MCP server
-      - Swift symbol analysis enhancement planning
-      - Hybrid analysis strategy design review
-      - Error handling and graceful degradation design
-      - Debug environment setup for LSP development
+      - LSP integration implementation for MCP tools
+      - SourceKit-LSP protocol handling and error management
+      - Graceful degradation design for build-independent analysis
+      - Debug environment setup with logging and testing
+      - Type hierarchy and symbol reference analysis tool enhancement
+      - Error recovery and resilience pattern implementation
+      - Process communication and pipe-based protocol handling
+      - ResponseBuffer implementation for async notification handling
     keywords:
       - LSP
       - SourceKit-LSP
-      - hybrid analysis
+      - MCP server
+      - hybrid architecture
       - graceful degradation
-      - responseBuffer
+      - LSPClient
+      - textDocument
       - documentSymbol
       - typeHierarchy
-      - LSPState actor
-      - protocol flow
-      - asynchronous notifications
+      - async notification
   project/main/design/DES-103_Tool_Implementation_Design.md:
     title: "DES-103: Tool Implementation Design"
-    purpose: Defines MCP tool implementation patterns, architecture, and design for 18 tools with LSP integration, SwiftSyntax visitors, caching strategy, and error handling
+    purpose: Specifies implementation patterns, design architecture, and development workflow for 18 MCP tools including Visitor patterns, LSP integration, caching strategy, and tool helpers
     content_details:
-      - Tool implementation flow and validation pattern
-      - LSP fallback pattern ensuring SwiftSyntax fallback on failure
-      - 18-tool categorization and tool relationships (Project, FileSystem, Symbols, SwiftUI, Analysis, LSP, Notes, Prompts)
-      - SwiftSyntax Visitor patterns for AST analysis (SymbolVisitor, PropertyWrapperVisitor, TypeConformanceVisitor, ImportVisitor, ExtensionVisitor, XCTestVisitor)
-      - Tool-specific implementation details for initialize_project, list_symbols, property_wrappers analysis, imports analysis, type hierarchy
-      - ToolHelpers enum for parameter processing and constants definition structure (ToolNames, ParameterKeys, ErrorMessages)
-      - New tool and visitor addition workflow with implementation steps and estimated time
-      - Caching strategy with FileInfo, SymbolInfo, ImportInfo, TypeConformanceInfo cache invalidation flow
-      - Error handling with three-level error classification (invalidParams, invalidRequest, internal errors) and message design principles
-      - Performance optimization strategies including file-level exclusion, analysis-level caching, async processing, performance targets for 340 and 1000 file analysis
+      - Basic tool implementation flow with parameter parsing and validation
+      - LSP enhancement pattern with fallback to SwiftSyntax
+      - 18 tools classification across 8 categories (Project, FileSystem, Symbols, SwiftUI, Analysis, LSP, Notes, Prompts)
+      - 7 implemented SwiftSyntax Visitors (SymbolVisitor, PropertyWrapperVisitor, ExtensionVisitor, TypeConformanceVisitor, ImportVisitor, TypeUsageVisitor, XCTestVisitor)
+      - Tool-specific implementation details for initialize_project, list_symbols, list_property_wrappers, analyze_imports, get_type_hierarchy
+      - ToolHelpers enum for parameter processing and constants definition structure
+      - New tool and Visitor addition flowcharts with time estimates (15-30min per tool, 30-60min per Visitor)
+      - Cache structure and invalidation strategy based on FileInfo.lastModified
+      - Error handling levels (invalid parameters, invalid request, internal error) with messaging principles
     applicable_tasks:
-      - MCP tool implementation for Swift code analysis
-      - Tool registration and parameter handling implementation
-      - SwiftSyntax Visitor implementation and integration
-      - LSP integration and fallback pattern implementation
-      - Tool caching and performance optimization
-      - Error handling and diagnostic message design
-      - New tool addition workflow execution
+      - MCP tool implementation
+      - Swift code analysis tool development
+      - LSP integration implementation
+      - SwiftSyntax Visitor creation
+      - Tool parameter validation and error handling
+      - Cache management and invalidation strategy
+      - Performance optimization planning
+      - Testing strategy with DebugRunner and Xcode debugging
     keywords:
       - MCP tool
       - SwiftSyntax
-      - LSP integration
       - Visitor pattern
-      - ProjectMemory cache
-      - ToolHelpers
-      - error handling
-      - async processing
-      - tool registration
-      - implementation pattern
+      - LSP client
+      - ProjectMemory
+      - tool helpers
+      - ToolDefinition
+      - execute method
+      - cache invalidation
+      - error messages
   project/main/design/DES-104_search_symbol_tools_enhancement_design.md:
     title: Search and Symbol Tools Enhancement Design
     purpose: Design specification for enhancing search_code and find_symbol_definition tools with output modes, file pattern matching, symbol filtering, scope information, and capability registry.
@@ -385,120 +393,117 @@ docs:
       - search accuracy
       - tool implementation
   project/main/spec/README.md:
-    title: Swift-Selena Requirements Specification Index
-    purpose: Central index for all Swift-Selena requirements specifications, organizing REQ-001/002/003 across overall architecture, LSP integration phases, and core tool features with usage guidance for developers, users, and reviewers.
+    title: Swift-Selena Requirements Definition Index
+    purpose: Master index for all Swift-Selena feature requirements, defining project goals, scope, and success criteria across release phases
     content_details:
-      - "REQ-001: Overall requirements covering project rationale, problem statements, target users, competitive analysis, six main use cases, and release plan"
-      - "REQ-002: LSP integration requirements for v0.5.1-v0.5.5 covering hybrid architecture necessity and graceful degradation"
-      - "REQ-003: Core features requirements for 18 tools with tool classification, individual tool specifications, and typical workflow patterns"
-      - Requirement mapping hierarchy showing functional and non-functional requirements across versions
-      - Maintenance guidance for updating requirements on feature addition, version release, and design changes
-      - Lessons learned from v0.5.2/v0.5.3 development including protocol specification importance and debug environment priority
-      - Version-specific success criteria and scope boundaries
+      - REQ-001 overall project requirements with use cases and competitive analysis
+      - REQ-002 LSP integration requirements for v0.5.1 through v0.5.5
+      - REQ-003 core features and tool requirements with implementation guidelines
+      - Requirement hierarchy and dependency mapping
+      - Version-specific success criteria and feature coverage
+      - Maintenance guidelines for requirement updates
     applicable_tasks:
-      - Requirements understanding and project scope confirmation
-      - Tool implementation planning and feature necessity validation
-      - LSP integration phase planning and version requirements verification
-      - Competitive analysis and design principle review
-      - Post-release requirement documentation and lessons learned recording
+      - Understanding project scope and design principles
+      - Planning feature implementation across versions
+      - Validating new feature requirements
+      - Architecture design review
+      - Tool integration planning
+      - Requirement verification during development
     keywords:
-      - Swift-Selena
-      - requirements specification
+      - requirements
+      - feature scope
       - LSP integration
+      - Swift analysis
       - MCP server
-      - tool classification
-      - graceful degradation
+      - tool design
       - use cases
-      - version planning
+      - success criteria
   project/main/spec/REQ-001_Swift_Selena_Overall_Requirements.md:
     title: Swift-Selena Overall Requirements
-    purpose: Comprehensive requirements specification for Swift-Selena MCP Server, defining functional/non-functional requirements, use cases, success criteria, and release planning for Swift code analysis tool.
+    purpose: Comprehensive requirements specification for Swift-Selena MCP server, covering business drivers, feature requirements, use cases, and success criteria for building a build-independent Swift code analysis tool for AI assistants
     content_details:
-      - "Problem statement: build-independent analysis, privacy/security requirements, performance requirements"
-      - Competitive analysis comparing Swift-Selena with Serena, SourceKit-LSP, and Xcode
-      - "Functional requirements: build-independent analysis, Swift-specific analysis, local execution, MCP integration, caching, LSP integration"
-      - "Non-functional requirements: performance targets (1000 files in 10 seconds), reliability (zero crash rate), maintainability"
-      - "Six detailed use cases: AI code understanding, refactoring impact analysis, SwiftUI property tracking, protocol conformance verification, test coverage confirmation, import dependency analysis"
-      - "Quantitative success criteria: 18 tools, 100 percent property wrapper detection, zero crash rate"
+      - "Problem context: build-independent analysis, privacy/security, large project support"
+      - "Functional requirements: FR-001 to FR-006 (build independence, Swift-specific analysis, local execution, MCP integration, caching, LSP integration)"
+      - "Non-functional requirements: performance <10s, zero crash rate, maintainability"
+      - "Six use cases: AI code understanding, refactoring impact, SwiftUI property wrappers, protocol conformance, test coverage, import dependencies"
+      - "Success criteria: 18 tools with 100% property wrapper/protocol detection, zero crashes, <5s performance"
+      - "Release roadmap: v0.5.x (LSP integration), v0.6.x (code header database), v1.0.0 (stable)"
       - "Technical constraints: macOS 13.0+, Swift 5.9+, SwiftSyntax 602.0.0"
-      - "Release planning: v0.5.x (LSP integration), v0.6.x (Code Header DB), v1.0.0 (stable release)"
+      - "Risk assessment: LSP integration complexity, version dependencies, user education"
     applicable_tasks:
-      - MCP server architecture design and implementation
-      - Swift syntax analysis feature development
-      - SwiftUI-specific tooling implementation
-      - LSP integration and hybrid architecture design
-      - Performance optimization and caching strategy
-      - Project scope definition and requirement validation
+      - MCP server architecture design
+      - Swift code analysis tool implementation planning
+      - Feature scope and acceptance criteria definition
+      - Release roadmap planning
+      - Risk mitigation strategy development
     keywords:
+      - Swift-Selena
       - MCP server
-      - Swift syntax analysis
-      - SwiftUI property wrappers
+      - SwiftSyntax analysis
+      - build-independent
+      - property wrapper
+      - protocol conformance
       - LSP integration
-      - Code analysis
-      - Build-independent analysis
-      - Property Wrapper detection
-      - SourceKit-LSP
+      - code analysis
   project/main/spec/REQ-002_LSP_Integration_v0.5.x.md:
-    title: "REQ-002: v0.5.x LSP Integration Requirements"
-    purpose: Defines LSP integration requirements, hybrid architecture design, and phased implementation (v0.5.1-v0.5.5) for semantic analysis capabilities with graceful fallback to SwiftSyntax
+    title: LSP Integration Requirements v0.5.x
+    purpose: Defines LSP integration requirements, hybrid architecture with SwiftSyntax, functional and non-functional requirements, use cases, and implementation phases for v0.5.1-v0.5.5
     content_details:
-      - LSP hybrid architecture (SwiftSyntax + LSP for buildable projects)
-      - find_symbol_references tool for type-based reference search
-      - list_symbols and get_type_hierarchy LSP enhancements
-      - Graceful fallback to SwiftSyntax when LSP unavailable
-      - LSP protocol compliance and error handling (NFR-LSP-001 through NFR-LSP-004)
-      - Implementation strategy by version (v0.5.1 base, v0.5.2 first tool, v0.5.3 stabilization, v0.5.4 existing tool enhancement, v0.5.5 future)
-      - Use cases for method reference search, type-aware code understanding, inheritance hierarchy inspection
-      - Risk analysis and mitigation strategies for SourceKit-LSP API support and performance
+      - Hybrid architecture combining SwiftSyntax and LSP
+      - find_symbol_references for type-based reference search
+      - LSP integration phases v0.5.1 through v0.5.5
+      - Graceful degradation when LSP unavailable
+      - Type information enhancement for list_symbols and get_type_hierarchy
+      - "Non-functional requirements: protocol compliance, stability, debugging capability"
+      - Risk analysis and technical constraints
+      - Implementation strategy with confirmed API support
+      - Success criteria and acceptance criteria per version
     applicable_tasks:
-      - LSP integration implementation planning
+      - LSP feature implementation
+      - Type-based code analysis
+      - Reference search implementation
       - Hybrid architecture design review
-      - Tool implementation for semantic analysis
-      - LSP stability and error handling verification
-      - Symbol reference search implementation
-      - Type hierarchy enhancement
-      - Graceful fallback mechanism testing
+      - LSP stability and protocol compliance verification
     keywords:
       - LSP
       - SourceKit-LSP
-      - hybrid architecture
-      - find_symbol_references
       - type information
-      - semantic analysis
-      - graceful fallback
+      - SwiftSyntax
+      - find_symbol_references
       - textDocument/references
+      - hybrid architecture
+      - graceful degradation
+      - protocol compliance
   project/main/spec/REQ-003_Core_Features_Requirements.md:
-    title: Swift-Selena Core Features Requirements
-    purpose: Defines core functionality, tool specifications, and requirements for 18 Swift-Selena tools covering project management, file search, symbol analysis, SwiftUI analysis, dependency analysis, and testing capabilities
+    title: "REQ-003: Swift-Selena Core Features Requirements"
+    purpose: "Defines complete specification for Swift-Selena MCP server's 18 tools across 9 categories, including tool functionality, input/output formats, acceptance criteria, and typical workflows."
     content_details:
-      - 18 tools organized into 9 categories with specifications
-      - Tool-by-tool requirements with input/output formats and acceptance criteria
-      - Workflows for project understanding, refactoring, and SwiftUI development
-      - Tool selection guide based on build availability and task types
-      - Success criteria and performance benchmarks for each tool
-      - Constraints and limitations of SwiftSyntax versus LSP-based analysis
-      - Error handling patterns and message requirements
-      - Future extension paths for v0.6.0 and beyond
-      - Traceability notes for REQ-005 integration into main spec
+      - Project initialization and cache setup
+      - File search with wildcard patterns and code search with regex and output modes
+      - Symbol analysis including list_symbols, find_symbol_definition with scope filtering, and type hierarchy detection
+      - SwiftUI-specific analysis for property wrappers, protocol conformances, and extensions
+      - Import dependency analysis and test case detection with file metrics
+      - Tool selection guide and typical workflows for project understanding and refactoring
+      - Error handling with clear messages and fallback tool recommendations
+      - Acceptance criteria with detection rates and performance benchmarks
+      - Future extensions for code header database and comment search
     applicable_tasks:
-      - Swift-Selena MCP server core feature implementation
-      - Tool specification validation and refinement
-      - Tool acceptance criteria testing and benchmarking
-      - LSP integration planning and enhancement
-      - Performance optimization and caching strategy design
-      - Documentation generation from tool requirements
-      - Developer onboarding and tool usage guidance
+      - Implement new MCP tools following this specification
+      - Understand Swift-Selena architecture and tool ecosystem
+      - Determine appropriate tool for specific analysis task
+      - Plan tool enhancement or new feature integration
+      - Review tool acceptance criteria and performance requirements
+      - Design workflow for multi-tool analysis patterns
     keywords:
-      - Swift-Selena
-      - MCP tools
-      - symbol analysis
-      - code search
-      - SwiftUI analysis
-      - type hierarchy
+      - MCP server
+      - Swift analysis
+      - symbol detection
+      - SwiftUI
       - LSP integration
-      - ProjectMemory
-      - acceptance criteria
-      - performance benchmarks
+      - refactoring
+      - code analysis
+      - type hierarchy
+      - test cases
   project/main/spec/REQ-004_Code_Header_DB_v0.6.x.md:
     title: Code Header DB Requirements (v0.6.x)
     purpose: Specifies requirements for a semantic search database system that indexes Code Header Format metadata from Swift files using NLEmbedding for fast, high-precision search
