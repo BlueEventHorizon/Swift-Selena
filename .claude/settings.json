@@ -19,7 +19,6 @@
       "Bash(git config *)",
       "Bash(git rebase *)",
 
-      "Bash(chmod *)",
       "Bash(chown *)",
       "Bash(sudo *)",
       "Bash(kill *)",
@@ -67,10 +66,10 @@
       "Read(**/access_token*)",
       "Read(**/refresh_token*)",
 
-      "Write(.env*)",
-      "Write(.env.*)",
-      "Write(**/secrets/**)",
-      "Write(**/.ssh/**)"
+      "Edit(.env*)",
+      "Edit(.env.*)",
+      "Edit(**/secrets/**)",
+      "Edit(**/.ssh/**)"
     ],
     "allow": [
       "Read",
@@ -160,6 +159,7 @@
       "Bash(gh issue create *)",
       "Bash(gh issue edit *)",
 
+      "Bash(chmod *)",
       "Bash(rm *)",
       "Bash(cp *)",
       "Bash(mv *)",
