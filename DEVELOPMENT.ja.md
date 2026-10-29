@@ -71,6 +71,7 @@ swift test            # テスト実行
 | `SearchCodeToolTests` | `search_code` ツール |
 | `FindSymbolDefinitionToolTests` | `find_symbol_definition` ツール |
 | `BackwardCompatibilityTests` | 後方互換（廃止パラメータの扱いなど） |
+| `TypeConformanceCacheTests` | 型準拠 / Import キャッシュの無効化（ファイルの変更・追加・削除への追従） |
 
 解析対象のサンプルコードは `Tests/Fixtures/` にあります。新しいテストターゲットを追加する場合は、`Package.swift` への登録も必要です（`Package.swift` の変更は、依存の追加と同様に慎重に扱ってください）。
 

@@ -40,15 +40,30 @@ actor ProjectMemory {
     /// - 同一 cacheVersion 内でスキーマを拡張したため、3 フィールド時代に書かれた v4 キャッシュが温存され
     ///   新フィールドが nil で読み出される潜在不具合が発生していた
     /// - v5 に bump することで既存環境の旧フィールド欠落キャッシュを全破棄し再構築させる
-    private static let cacheVersion = 5
+    ///
+    /// v6 への bump 理由（2026/10/29）:
+    /// - Import / 型準拠キャッシュの無効化判定が、シンボルキャッシュ用の fileIndex に相乗りしていた。
+    ///   そのため list_symbols 等でシンボルを再キャッシュして fileIndex が更新されると、
+    ///   古い Import / 型準拠キャッシュが「最新」と誤判定されていた
+    /// - 型準拠キャッシュは空のときしか構築されず、ファイル変更後に再構築されなかった
+    /// - キャッシュ種別ごとの更新時刻インデックス（importFileIndex / typeFileIndex）を追加したためスキーマが変わる
+    private static let cacheVersion = 6
+
+    /// 全体をデコードする前に cacheVersion だけを読むための型
+    /// （旧スキーマの全体デコード失敗を「破損」と誤認しないため）
+    private struct VersionProbe: Codable {
+        let cacheVersion: Int
+    }
 
     struct Memory: Codable {
         var cacheVersion: Int
         var lastAnalyzed: Date
-        var fileIndex: [String: FileInfo]
+        var fileIndex: [String: FileInfo]            // シンボルキャッシュ用: ファイルパス -> 更新時刻
+        var importFileIndex: [String: FileInfo]      // Import キャッシュ用: ファイルパス -> 更新時刻
+        var typeFileIndex: [String: FileInfo]        // 型準拠キャッシュ用: ファイルパス -> 更新時刻
         var fileSymbolCache: [String: [SymbolInfo]]  // ファイルパス -> シンボル一覧
         var importCache: [String: [ImportInfo]]
-        var typeConformanceCache: [String: TypeConformanceInfo]
+        var typeConformanceCache: [String: TypeConformanceInfo]  // 型名 -> 型準拠情報（filePath を持つ）
         var classDefinitions: Set<String>  // プロジェクト内で定義されたClass名
         var notes: [Note]
 
@@ -143,14 +158,15 @@ actor ProjectMemory {
         if FileManager.default.fileExists(atPath: memoryFile.path) {
             do {
                 let data = try Data(contentsOf: memoryFile)
-                let loaded = try JSONDecoder().decode(Memory.self, from: data)
 
                 // バージョンチェック: 古いバージョンなら全破棄・空再構築（§4.6、notes も含め部分復旧しない）
-                if loaded.cacheVersion != Self.cacheVersion {
+                // 旧スキーマはフィールド構成が異なり全体デコードに失敗しうるため、先に cacheVersion だけを読む
+                let probe = try JSONDecoder().decode(VersionProbe.self, from: data)
+                if probe.cacheVersion != Self.cacheVersion {
                     self.memory = Self.createEmptyMemory()
                     try save()
                 } else {
-                    self.memory = loaded
+                    self.memory = try JSONDecoder().decode(Memory.self, from: data)
                 }
             } catch {
                 // §8.2: デコード失敗時は空メモリへ復旧し警告フラグを立てる（部分デコードによる notes 保持はしない）
@@ -175,6 +191,8 @@ actor ProjectMemory {
             cacheVersion: cacheVersion,
             lastAnalyzed: Date(),
             fileIndex: [:],
+            importFileIndex: [:],
+            typeFileIndex: [:],
             fileSymbolCache: [:],
             importCache: [:],
             typeConformanceCache: [:],
@@ -183,16 +201,37 @@ actor ProjectMemory {
         )
     }
 
+    // MARK: - 更新時刻による無効化（キャッシュ種別ごとに独立したインデックスを持つ）
+
+    /// ファイルの現在の更新時刻（取得できなければ nil）
+    private static func modificationDate(of path: String) -> Date? {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: path) else {
+            return nil
+        }
+        return attributes[.modificationDate] as? Date
+    }
+
+    /// 指定インデックスの記録と比べてファイルが変更されたか（未記録・更新時刻の取得不可は変更扱い）
+    private static func isModified(path: String, in index: [String: Memory.FileInfo]) -> Bool {
+        guard let cached = index[path],
+              let current = modificationDate(of: path) else {
+            return true
+        }
+        return current > cached.lastModified
+    }
+
+    /// ファイルの現在の更新時刻を指定インデックスに記録する
+    private static func record(path: String, in index: inout [String: Memory.FileInfo]) {
+        if let date = modificationDate(of: path) {
+            index[path] = Memory.FileInfo(path: path, lastModified: date)
+        }
+    }
+
+    // MARK: - シンボルキャッシュ
+
     /// ファイルのシンボル一覧をキャッシュ（v4: 6 フィールド SymbolInfo）
     func cacheFileSymbols(filePath: String, symbols: [Memory.SymbolInfo]) {
-        // ファイルインデックスも更新
-        if let attributes = try? FileManager.default.attributesOfItem(atPath: filePath),
-           let modificationDate = attributes[.modificationDate] as? Date {
-            memory.fileIndex[filePath] = Memory.FileInfo(
-                path: filePath,
-                lastModified: modificationDate
-            )
-        }
+        Self.record(path: filePath, in: &memory.fileIndex)
         memory.fileSymbolCache[filePath] = symbols
     }
 
@@ -215,38 +254,22 @@ actor ProjectMemory {
         return validCache
     }
 
-    /// ファイルをインデックス（内部用）
-    private func indexFile(path: String) {
-        guard let attributes = try? FileManager.default.attributesOfItem(atPath: path),
-              let modificationDate = attributes[.modificationDate] as? Date else {
-            return
-        }
-
-        memory.fileIndex[path] = Memory.FileInfo(
-            path: path,
-            lastModified: modificationDate
-        )
-    }
-    
-    /// ファイルが変更されたかチェック
+    /// シンボルキャッシュ時点からファイルが変更されたかチェック
     func isFileModified(path: String) -> Bool {
-        guard let cachedInfo = memory.fileIndex[path],
-              let attributes = try? FileManager.default.attributesOfItem(atPath: path),
-              let modificationDate = attributes[.modificationDate] as? Date else {
-            return true
-        }
-
-        return modificationDate > cachedInfo.lastModified
+        Self.isModified(path: path, in: memory.fileIndex)
     }
+
+    // MARK: - Import キャッシュ
 
     /// Import情報をキャッシュ
     func cacheImports(filePath: String, imports: [Memory.ImportInfo]) {
+        Self.record(path: filePath, in: &memory.importFileIndex)
         memory.importCache[filePath] = imports
     }
 
-    /// キャッシュからImport情報を取得
+    /// キャッシュからImport情報を取得（Import キャッシュ時点からファイルが変更されていれば nil）
     func getCachedImports(filePath: String) -> [Memory.ImportInfo]? {
-        guard !isFileModified(path: filePath) else {
+        guard !Self.isModified(path: filePath, in: memory.importFileIndex) else {
             return nil
         }
         return memory.importCache[filePath]
@@ -257,18 +280,39 @@ actor ProjectMemory {
         return memory.importCache
     }
 
-    /// 型情報をキャッシュ
-    func cacheTypeConformance(typeName: String, typeInfo: Memory.TypeConformanceInfo) {
-        memory.typeConformanceCache[typeName] = typeInfo
+    // MARK: - 型準拠キャッシュ
+
+    /// ファイル単位で型準拠情報をキャッシュ（同じファイル由来の旧エントリは置き換える）
+    func cacheTypeConformances(filePath: String, types: [Memory.TypeConformanceInfo]) {
+        memory.typeConformanceCache = memory.typeConformanceCache.filter { $0.value.filePath != filePath }
+        for typeInfo in types {
+            memory.typeConformanceCache[typeInfo.typeName] = typeInfo
+        }
+        Self.record(path: filePath, in: &memory.typeFileIndex)
     }
 
-    /// キャッシュから型情報を取得
+    /// 型準拠キャッシュを更新する必要があるか（未キャッシュ、またはキャッシュ時点からファイルが変更された）
+    func isTypeConformanceCacheStale(filePath: String) -> Bool {
+        Self.isModified(path: filePath, in: memory.typeFileIndex)
+    }
+
+    /// 指定ファイル群に含まれないファイル由来の型準拠情報を削除する（削除したファイルの後始末）
+    /// - Returns: 何かを削除したら true
+    func pruneTypeConformances(keepingFiles files: Set<String>) -> Bool {
+        let typeCountBefore = memory.typeConformanceCache.count
+        let indexCountBefore = memory.typeFileIndex.count
+        memory.typeConformanceCache = memory.typeConformanceCache.filter { files.contains($0.value.filePath) }
+        memory.typeFileIndex = memory.typeFileIndex.filter { files.contains($0.key) }
+        return memory.typeConformanceCache.count != typeCountBefore
+            || memory.typeFileIndex.count != indexCountBefore
+    }
+
+    /// キャッシュから型情報を取得（型準拠キャッシュ時点からファイルが変更されていれば nil）
     func getCachedTypeConformance(typeName: String) -> Memory.TypeConformanceInfo? {
         guard let cached = memory.typeConformanceCache[typeName] else {
             return nil
         }
-        // ファイルが変更されていたらキャッシュ無効
-        guard !isFileModified(path: cached.filePath) else {
+        guard !Self.isModified(path: cached.filePath, in: memory.typeFileIndex) else {
             return nil
         }
         return cached
@@ -279,26 +323,18 @@ actor ProjectMemory {
         return memory.typeConformanceCache
     }
 
-    /// Class定義を追加
-    func addClassDefinition(_ className: String) {
-        memory.classDefinitions.insert(className)
-    }
-
-    /// Class定義を一括追加
-    func addClassDefinitions(_ classNames: [String]) {
-        for name in classNames {
-            memory.classDefinitions.insert(name)
-        }
+    /// 型準拠キャッシュから Class 定義一覧を作り直す
+    func rebuildClassDefinitions() {
+        memory.classDefinitions = Set(
+            memory.typeConformanceCache.values
+                .filter { $0.typeKind == "Class" }
+                .map(\.typeName)
+        )
     }
 
     /// Class定義を取得
     func getClassDefinitions() -> Set<String> {
         return memory.classDefinitions
-    }
-
-    /// Class定義をクリア
-    func clearClassDefinitions() {
-        memory.classDefinitions.removeAll()
     }
 
     /// メモを追加
@@ -365,7 +401,10 @@ actor ProjectMemory {
         memory.fileSymbolCache.removeAll()
         memory.importCache.removeAll()
         memory.typeConformanceCache.removeAll()
+        memory.classDefinitions.removeAll()
         memory.fileIndex.removeAll()
+        memory.importFileIndex.removeAll()
+        memory.typeFileIndex.removeAll()
         try save()
     }
 }

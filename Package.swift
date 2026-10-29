@@ -50,6 +50,12 @@ let package = Package(
             name: "BackwardCompatibilityTests",
             dependencies: ["Swift-Selena"],
             path: "Tests/BackwardCompatibilityTests"
+        ),
+        // 型準拠 / Import キャッシュの無効化テスト（ファイル変更・追加・削除の追従）
+        .testTarget(
+            name: "TypeConformanceCacheTests",
+            dependencies: ["Swift-Selena"],
+            path: "Tests/TypeConformanceCacheTests"
         )
     ],
     swiftLanguageModes: [.v5]

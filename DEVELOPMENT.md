@@ -71,6 +71,7 @@ Test targets registered in `Package.swift`:
 | `SearchCodeToolTests` | The `search_code` tool |
 | `FindSymbolDefinitionToolTests` | The `find_symbol_definition` tool |
 | `BackwardCompatibilityTests` | Backward compatibility (e.g. handling of removed parameters) |
+| `TypeConformanceCacheTests` | Type conformance / import cache invalidation (file changes, additions, deletions) |
 
 Sample code to analyze lives in `Tests/Fixtures/`. A new test target also needs to be registered in `Package.swift` (treat `Package.swift` changes carefully, as with adding dependencies).
 
