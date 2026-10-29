@@ -49,8 +49,11 @@ class UserRepository {
 
 **SwiftSyntaxでの検索:**
 ```
-find_type_usages("UserRepository")
-→ UserRepository型の使用箇所は分かる
+find_symbol_definition("UserRepository")
+→ UserRepository型の定義箇所とスコープは分かる
+
+search_code("UserRepository", output_mode: "file_list")
+→ UserRepositoryの参照候補ファイルは分かる
 
 search_code("\.save")
 → .saveという文字列を検索（不正確、ノイズ多い）
@@ -96,9 +99,11 @@ find_symbol_references("UserRepository.swift", line: 15, column: 10)
   → 17個のSwiftSyntaxツール使用
   → 構造解析は可能
 
-ビルド可能:
+ビルド可能（v0.5.2当時）:
   → 18個のツール使用（+find_symbol_references）
   → 型情報ベースの正確な解析
+
+> 現行実装では `find_symbol_references` は削除済み。公開ツール一覧は `ToolNames` / `MetaToolRegistry` を正とする。
 ```
 
 ---
@@ -180,8 +185,8 @@ list_protocol_conformances("ViewController.swift")
 
 **現状（v0.5.0）:**
 ```
-1. find_type_usages("UserManager")
-   → クラスの使用箇所は分かる
+1. find_symbol_definition("UserManager")
+   → クラスの定義箇所は分かる
 2. search_code("createUser")
    → 全ファイルのcreateUserを検索（ノイズ多い）
 3. 手動で絞り込み 😞
@@ -228,6 +233,8 @@ list_symbols("UserManager.swift")  # LSP強化版
 ### 3.1 機能要件
 
 #### FR-LSP-001: find_symbol_references（v0.5.2）
+
+> 注: 本要件は v0.5.2 当時の LSP 専用参照検索要件であり、実装後に 2025-10-27 `commit f0a547f` で削除済み。現行の参照候補確認は `search_code` と `find_symbol_definition` を組み合わせる。
 
 **要件:**
 型情報ベースの正確なシンボル参照検索
@@ -368,7 +375,7 @@ LSP利用可能性に応じてツールリストを変更
 ビルド不可:
   → 17個のSwiftSyntaxツール
 
-ビルド可能（LSP接続成功）:
+ビルド可能（v0.5.2当時、LSP接続成功）:
   → 18個のツール（+find_symbol_references）
   → list_symbols, get_type_hierarchy は LSP強化版で動作
 ```
@@ -455,13 +462,16 @@ LSP通信をログで確認でき、問題を特定できること
 5. 開発者: 「全部で8箇所か。影響範囲が分かった。リファクタリング開始」
 ```
 
-**代替フロー（LSP利用不可）:**
+**代替フロー（現行）:**
 ```
-3. Claude: find_type_usages("UserManager")
-   → SwiftSyntax版で検索（型レベル）
+3. Claude: find_symbol_definition("UserManager")
+   → 定義箇所と所属スコープを確認
 
-4. Claude: 「UserManager型は12箇所で使われています」
-   （メソッドレベルではないが、ある程度把握可能）
+4. Claude: search_code("UserManager", output_mode: "file_list")
+   → テキストベースで参照候補ファイルを検索
+
+5. Claude: 「UserManagerの参照候補は12ファイルにあります」
+   （型情報ベースではないが、影響範囲の候補を把握可能）
 ```
 
 **期待される効果:**
@@ -863,7 +873,7 @@ Initialize response の capabilities:
 This tool requires a buildable project with SourceKit-LSP.
 
 💡 Alternatives:
-- Use 'find_type_usages' for type-level reference search (SwiftSyntax)
+- Use 'find_symbol_definition' to locate the definition and scope
 - Use 'search_code' for text-based search
 ```
 

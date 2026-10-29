@@ -19,7 +19,6 @@
       "Bash(git config *)",
       "Bash(git rebase *)",
 
-      "Bash(chmod *)",
       "Bash(chown *)",
       "Bash(sudo *)",
       "Bash(kill *)",
@@ -67,10 +66,10 @@
       "Read(**/access_token*)",
       "Read(**/refresh_token*)",
 
-      "Write(.env*)",
-      "Write(.env.*)",
-      "Write(**/secrets/**)",
-      "Write(**/.ssh/**)"
+      "Edit(.env*)",
+      "Edit(.env.*)",
+      "Edit(**/secrets/**)",
+      "Edit(**/.ssh/**)"
     ],
     "allow": [
       "Read",
@@ -140,22 +139,12 @@
       "mcp__gemini-cli__ask-gemini",
       "mcp__codex__codex",
 
-      "Skill(forge *)",
-      "Skill(anvil *)",
-      "Skill(xcode *)",
+      "Skill(index-docs)",
+      "Skill(query-docs)",
 
-      "Skill(create-rules-toc)",
-      "Skill(create-specs-toc)",
-      "Skill(query-rules)",
-      "Skill(query-specs)",
-
-      "Bash(python3 .claude/doc-advisor/scripts/*)",
-      "Bash(bash .claude/doc-advisor/scripts/check_config.sh *)",
-      "Bash(mkdir -p .claude/.temp/*)",
-      "Bash(rm -rf .claude/doc-advisor/toc/specs/.toc_work/)",
-      "Bash(rm -rf .claude/doc-advisor/toc/rules/.toc_work/)",
-      "Bash(cp .claude/doc-advisor/toc/specs/.toc_work/.toc_checksums_pending.yaml .claude/doc-advisor/toc/specs/.toc_checksums.yaml)",
-      "Bash(cp .claude/doc-advisor/toc/rules/.toc_work/.toc_checksums_pending.yaml .claude/doc-advisor/toc/rules/.toc_checksums.yaml)"
+      "Bash(python3 plugins/doc-advisor/scripts/*)",
+      "Bash(python3 -m unittest *)",
+      "Bash(mkdir -p .claude/.temp/*)"
     ],
     "ask": [
       "Bash(git mv *)",
@@ -170,6 +159,7 @@
       "Bash(gh issue create *)",
       "Bash(gh issue edit *)",
 
+      "Bash(chmod *)",
       "Bash(rm *)",
       "Bash(cp *)",
       "Bash(mv *)",

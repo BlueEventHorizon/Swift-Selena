@@ -103,7 +103,7 @@ mindmap
     Symbols
       list_symbols
       find_symbol_definition
-      read_symbol
+      read_symbol 未実装
     SwiftUI
       list_property_wrappers
       list_protocol_conformances
@@ -112,9 +112,9 @@ mindmap
       analyze_imports
       get_type_hierarchy
       find_test_cases
-      find_type_usages
+      find_type_usages 削除済み
     LSP
-      find_symbol_references
+      find_symbol_references 削除済み
     Notes
       add_note
       search_notes
@@ -122,6 +122,8 @@ mindmap
       set_analysis_mode
       think_about_analysis
 ```
+
+> ⚠️ 上記は v0.5.x 時点の分類。`find_symbol_references`（LSP）は 2025-10-27 `commit f0a547f` で、`find_type_usages`（Analysis）は 2025-12-06 `commit 580b1f7` で削除済み（§4.4 / REQ-005 §6.3）。`read_symbol`（Symbols）は計画のみで未実装。現行の公開ツールは `Sources/Constants.swift` の `ToolNames` / `MetaToolRegistry` を正とする。
 
 ---
 
@@ -149,8 +151,8 @@ graph TB
         LE[list_extensions]
     end
 
-    subgraph LSPTools["LSP Tools"]
-        FSR[find_symbol_references<br/>参照検索]
+    subgraph HistoricalLSPTools["Historical LSP Tools"]
+        FSR[find_symbol_references<br/>削除済み]
     end
 
     Init --> FF
@@ -343,6 +345,8 @@ flowchart TD
 ---
 
 ### 4.4 find_symbol_references（LSP専用）
+
+> ⚠️ **削除済み**（2025-10-27 `commit f0a547f`「find_symbol_referencesを削除」、REQ-005 §6.3）。以下は削除前の実装設計を歴史的記録として保持する。LSP 系参照検索ツールの再導入可否は別途独立 Feature として検討する。
 
 ```mermaid
 flowchart TD
@@ -736,8 +740,8 @@ mindmap
 This tool requires a buildable project with SourceKit-LSP.
 
 💡 Alternatives:
-- Use 'find_type_usages' for type-level reference search
-- Use 'search_code' for text-based search
+- Use 'search_code' for text-based reference search
+- Use 'find_symbol_definition' to locate the definition and its scope
 ```
 
 ---
@@ -856,7 +860,7 @@ flowchart TD
 
 ```mermaid
 graph LR
-    V53[v0.5.3<br/>find_symbol_references]
+    V53[v0.5.3<br/>find_symbol_references<br/>削除済み]
     V54[v0.5.4<br/>+ documentSymbol<br/>+ typeHierarchy]
     Enhanced[2ツール強化<br/>list_symbols<br/>get_type_hierarchy]
 

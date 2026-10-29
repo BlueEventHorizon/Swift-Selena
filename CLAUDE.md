@@ -53,6 +53,9 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
     7. `main` に checkout し `git branch --show-current` で確認 → `git tag {version} <①のSHA>` → `git push <remote> {version}`
     8. `scripts/verify_release_tag.sh {version}` で「tag が指す commit == Formula の `revision`（① の SHA）」かつ「Formula `tag:` == {version}」を検証（不一致なら `exit 1`）。CI `release_tag_check.yml` でも tag push 時に main の Formula に対し自動検証される
     9. tap 反映後、`brew install --build-from-source` で実 install 検証（`serverInfo.version == {version}`）
+  - **Phase 3 — bottle 反映（任意・tag push 後）**: tag push で `bottle.yml` が bottle をビルドし Release へ添付する（CI は repo へ push しない）
+    10. Release に bottle が添付されたことを確認後、`develop` から作業ブランチを作成し `scripts/merge_bottles.sh {version}` を実行 → 変更された Formula を commit
+    11. 通常どおり develop → main へマージ（Formula の `tag:` / `revision:` は変更されないため step 8 の検証は引き続き成立）
 - **既存 release artifact の drift について（documented limitation）**: 本規約は HEAD 以降で commit される変更にのみ適用される。既存 release tag（例: `0.6.10`）のソース内 `AppConstants.version` 等が drift していても、本規約では遡及修正しない（git 履歴の整合性保持）。Homebrew で install される既存 release バイナリの `serverInfo.version` が canonical と一致しない場合、それは「既知の historical drift」として受容し、次回 release で初めて完全整合する
 
 ## 開発言語・フレームワーク
