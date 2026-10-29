@@ -84,7 +84,11 @@ brew install blueeventhorizon/swift-selena/swift-selena
 
 `brew install` 後、`swift-selena` バイナリが `PATH` 上（通常 `$(brew --prefix)/bin/swift-selena`）に配置されます。
 
-> **Swift toolchain 要件:** ビルドには macOS 13.0+ 上で Swift 5.9+ が必要です。フル Xcode 15+ で Swift 5.9+ を提供する環境で動作確認済み。Command Line Tools のみによるビルドは技術的に成立する見込みですが、**本リリース時点では未検証**です。CLT のみインストールしている環境で `brew install` が失敗する場合は、回避策として Xcode 15+ をインストールしてください。
+> **ビルド済みバイナリ（bottle）:** リリースに対応する bottle（Apple Silicon の macOS 15 / macOS 26）が公開されている場合、`brew install` はビルドせず数秒で完了します。bottle が無い環境（Intel Mac、未対応 OS、bottle 未公開のバージョン）ではソースからビルドされ、swift-syntax 等の依存をコンパイルするため **数分〜十数分** かかります（Apple Silicon・Xcode 27.1 で約 3 分）。
+>
+> **Swift toolchain 要件（ソースビルド時のみ）:** macOS 13.0+ 上で Swift 5.9+ が必要です。動作確認済み環境は macOS 26 / Xcode 27.1（Swift 6.4）です。Command Line Tools のみによるビルドは**未検証**です。CLT のみの環境で `brew install` が失敗する場合は、フル Xcode をインストールしてください。
+>
+> **`brew doctor` の「Command Line Tools for Xcode xx をダウンロードしてください」という警告:** Homebrew が Xcode と CLT のバージョン差を検出して出す警告です。`swift build` は `xcode-select` が指す Xcode のツールチェーンを使うため、Swift-Selena のビルドには影響しません。
 
 #### Claude Code への登録
 

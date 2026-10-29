@@ -25,6 +25,9 @@ class SwiftSelena < Formula
   # If a CLT-only build is shown to fail, re-add `depends_on xcode: ["15.0", :build]`.
   depends_on macos: :ventura
 
+  # The `bottle do` block is added automatically on main by
+  # .github/workflows/bottle.yml after a release tag is pushed. Do not edit by hand.
+
   def install
     # `--disable-sandbox` lets SwiftPM fetch the remote dependencies declared
     # in Package.swift / pinned in Package.resolved during the install step.

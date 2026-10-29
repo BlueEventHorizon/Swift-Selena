@@ -1,0 +1,70 @@
+name: Build Bottles
+
+# tag push 時に Homebrew bottle（ビルド済みバイナリ）をビルドし、
+# bottle 本体と merge 用 JSON を GitHub Release に添付する。
+# Formula への反映（bottle ブロック）は CI では行わない。
+# ブランチを作成して scripts/merge_bottles.sh を実行し、通常の develop → main の流れで反映する。
+# 対象は Apple Silicon（macOS 15 / macOS 26）。それ以外はソースビルドにフォールバックする。
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'bottle を作成する tag（例: 0.6.11）'
+        required: true
+
+permissions:
+  contents: write   # Release への添付のみ。リポジトリへの push は行わない
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+  ROOT_URL: https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-26]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main   # Formula は tag commit ではなく main 上にある
+
+      - name: Tap this repository
+        run: brew tap blueeventhorizon/swift-selena "$GITHUB_WORKSPACE"
+
+      - name: Build bottle
+        run: |
+          brew install --build-bottle --verbose blueeventhorizon/swift-selena/swift-selena
+          brew bottle --json --root-url="$ROOT_URL" blueeventhorizon/swift-selena/swift-selena
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bottle-${{ matrix.os }}
+          path: |
+            *.bottle*.tar.gz
+            *.bottle.json
+
+  publish:
+    needs: build
+    runs-on: macos-15
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: bottles
+          merge-multiple: true
+
+      - name: Upload bottles to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # bottle 名の "--" は GitHub が "." に変換するため、アップロード名を揃える
+          cd bottles
+          for f in *.tar.gz; do mv "$f" "${f/--/-}"; done
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "$TAG" --notes "Homebrew bottles for $TAG"
+          gh release upload "$TAG" *.tar.gz *.bottle.json --clobber
