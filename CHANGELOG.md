@@ -4,6 +4,15 @@ Swift-Selenaのリリース履歴
 
 ---
 
+## 0.6.12 - 2026-10-29
+
+### Homebrew bottle 配布の追加
+
+- **feat**: tag push 時に Apple Silicon（macOS 15 / macOS 26）向け bottle をビルドして GitHub Release に添付する CI（`.github/workflows/bottle.yml`）を追加。CI は repo へ push しない
+- **feat**: Release の bottle JSON を Formula に反映する `scripts/merge_bottles.sh` を追加（作業ブランチで実行し、develop → main の通常フローで反映）
+- **docs**: README.md / README_en.md にソースビルドの所要時間・bottle の説明・動作確認環境（macOS 26 / Xcode 27.1）・`brew doctor` の CLT 警告がビルドに無関係である旨を追記
+- **docs**: CLAUDE.md の release 運用順序に Phase 3（bottle 反映）を追加
+
 ## 0.6.11 - 2026-05-31
 
 ### Issue #37: Homebrew install 対応

@@ -84,7 +84,11 @@ brew install blueeventhorizon/swift-selena/swift-selena
 
 After `brew install`, the `swift-selena` binary is on your `PATH` (typically `$(brew --prefix)/bin/swift-selena`).
 
-> **Swift toolchain requirement:** Building requires Swift 5.9+ on macOS 13.0+. Verified with full Xcode 15+ providing Swift 5.9+. The Command Line Tools-only path is plausible but **was not verified at the time of this release**; if you have only CLT installed and `brew install` fails, install Xcode 15+ as a workaround.
+> **Prebuilt binaries (bottles):** When a bottle for the release is published (Apple Silicon, macOS 15 / macOS 26), `brew install` finishes in seconds without compiling. Where no bottle applies (Intel Macs, unsupported OS versions, releases without a bottle), it builds from source and compiles dependencies such as swift-syntax, which takes **several to ten-plus minutes** (about 3 minutes on Apple Silicon with Xcode 27.1).
+>
+> **Swift toolchain requirement (source builds only):** Swift 5.9+ on macOS 13.0+. Verified on macOS 26 / Xcode 27.1 (Swift 6.4). A Command Line Tools-only build is **unverified**; if `brew install` fails with only CLT installed, install full Xcode.
+>
+> **`brew doctor` warning "You should download the Command Line Tools for Xcode xx":** Homebrew prints this when CLT is older than the installed Xcode. `swift build` uses the toolchain that `xcode-select` points to, so this does not affect building Swift-Selena.
 
 #### Register to Claude Code
 
