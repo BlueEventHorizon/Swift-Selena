@@ -1,4 +1,6 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.1
+// 依存パッケージ（swift-nio 2.98.0 / swift-log 1.12.0）が tools-version 6.1 を要求するため、宣言を実態に合わせる。
+// 言語モードは Swift 5 のまま（Swift 6 モードでは actor isolation の警告がエラーになるため）。
 import PackageDescription
 
 let package = Package(
@@ -49,5 +51,6 @@ let package = Package(
             dependencies: ["Swift-Selena"],
             path: "Tests/BackwardCompatibilityTests"
         )
-    ]
+    ],
+    swiftLanguageModes: [.v5]
 )

@@ -4,7 +4,7 @@
 
 **Swift Selena** は、Swift プロジェクトのコード解析を AI エージェントに提供する MCP (Model Context Protocol) サーバーです。ビルドエラーがあるコードでも動作し、SwiftUI アプリ開発を強力にサポートします。Claude Code / Claude Desktop / Cursor / Codex など、MCP 対応のクライアントから利用できます。
 
-[![Swift 5.9+](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
+[![Swift 6.1+](https://img.shields.io/badge/Swift-6.1+-orange.svg)](https://swift.org)
 [![Platform macOS](https://img.shields.io/badge/platform-macOS%2013+-lightgrey.svg)](https://www.apple.com/macos/)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -56,7 +56,7 @@ Claude Desktop・Cursor・Codex の登録方法は [MCP クライアントへの
 
 - macOS 13.0 以上
 - MCP に対応したクライアント（[Claude Code](https://docs.claude.com/claude-code) / [Claude Desktop](https://claude.ai/download) / [Cursor](https://cursor.com) / [Codex](https://developers.openai.com/codex) など）
-- ソースからビルドする場合のみ: Swift 5.9 以上
+- ソースからビルドする場合のみ: Swift 6.1（Xcode 16.3）以上
 
 ### Homebrew（推奨）
 
@@ -80,7 +80,7 @@ brew install blueeventhorizon/swift-selena/swift-selena
 
 ソースビルドになる場合の要件:
 
-- macOS 13.0+ 上で Swift 5.9+ が必要です。動作確認済みの環境は macOS 26 / Xcode 27.1（Swift 6.4）です
+- macOS 13.0+ 上で Swift 6.1+（Xcode 16.3+）が必要です。動作確認済みの環境は macOS 26 / Xcode 27.1（Swift 6.4）です
 - Command Line Tools のみでのビルドは**未検証**です。CLT のみの環境で失敗する場合は、フル Xcode をインストールしてください
 
 > **`brew doctor` の「Command Line Tools for Xcode xx をダウンロードしてください」という警告について**

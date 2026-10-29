@@ -4,7 +4,7 @@
 
 **Swift Selena** is an MCP (Model Context Protocol) server that gives AI agents Swift code analysis capabilities. It works even when the code has build errors, and strongly supports SwiftUI app development. It runs with any MCP-capable client, including Claude Code, Claude Desktop, Cursor, and Codex.
 
-[![Swift 5.9+](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
+[![Swift 6.1+](https://img.shields.io/badge/Swift-6.1+-orange.svg)](https://swift.org)
 [![Platform macOS](https://img.shields.io/badge/platform-macOS%2013+-lightgrey.svg)](https://www.apple.com/macos/)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -56,7 +56,7 @@ For Claude Desktop, Cursor, and Codex, see [Connecting MCP Clients](#connecting-
 
 - macOS 13.0 or later
 - An MCP-capable client ([Claude Code](https://docs.claude.com/claude-code) / [Claude Desktop](https://claude.ai/download) / [Cursor](https://cursor.com) / [Codex](https://developers.openai.com/codex), etc.)
-- Only when building from source: Swift 5.9 or later
+- Only when building from source: Swift 6.1 (Xcode 16.3) or later
 
 ### Homebrew (Recommended)
 
@@ -80,7 +80,7 @@ After installation, `swift-selena` is on your `PATH` (typically `$(brew --prefix
 
 Requirements when building from source:
 
-- Swift 5.9+ on macOS 13.0+. Verified on macOS 26 / Xcode 27.1 (Swift 6.4)
+- Swift 6.1+ (Xcode 16.3+) on macOS 13.0+. Verified on macOS 26 / Xcode 27.1 (Swift 6.4)
 - A Command Line Tools-only build is **unverified**. If it fails with only CLT installed, install full Xcode
 
 > **About the `brew doctor` warning "You should download the Command Line Tools for Xcode xx"**

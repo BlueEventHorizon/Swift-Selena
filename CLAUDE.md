@@ -7,20 +7,20 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
 **すべての対話は日本語で実施すること**
 - 技術用語・英単語はそのまま使用可能
 - ソースコードのコメントも日本語で記述
-- ファイル記述も日本語。ただし修正前のファイルがすでに英語記述の場合は、そのまま英語記述
+- ファイル記述も日本語。ただし修正前のファイルがすでに英語記述の場合、またはユーザーからの指定がある場合は、英語記述とする
 
 ## Important Constraints [MANDATORY]
 
 - **NEVER modify Xcode project files** (`*.xcodeproj/`) without explicit permission
   - 注: フォルダーベース登録済みのため、ファイル追加時は変更不要
 - **NEVER modify Info.plist or XCConfig files** without explicit permission
-- **要件定義書（specs/{feature}/requirements/）が最優先**（すべてのドキュメントに優先）
+- **要件定義書（project/{feature}/spec/）が最優先**（すべてのドキュメントに優先）
 - **文書不整合の即時報告**: `rules/`、`specs/`、`.claude/` 内の文書で不整合・矛盾を発見した場合、作業を中断して最優先でユーザーに報告すること
-- **Use existing code** before creating new ones (Tools/, Library/)
+- **Use existing code** before creating new ones (Sources/Tools/, Sources/Selena/)
 - **既存コード参考必須**: 新規コード作成前に、既存の類似実装を検索して参考にすること
 - **ファイルヘッダーのCreated by**: git config user.nameの値を使用
 - **作業開始時の文書検索**: 文書読解が必要な作業は、`/forge:query-db-rules` `/forge:query-db-specs` で関連文書を特定し、該当する文書を読んでから作業に入ること
-- **DB インデックス自動更新**: rules/ 配下の文書を追加・変更・削除したら `/forge:update-db-rules`、specs/{feature}/requirements/ または specs/{feature}/design/ 配下の文書を追加・変更・削除したら `/forge:update-db-specs` を実行すること
+- **DB インデックス自動更新**: docs/ 配下の文書を追加・変更・削除したら `/forge:update-db-rules`、project/{feature}/spec/ または project/{feature}/design/ 配下の文書を追加・変更・削除・移動したら `/forge:update-db-specs` を実行すること（索引の対象範囲は `.doc_structure.yaml` が定義）
 - **DB インデックス直接編集禁止**: `.claude/doc-advisor/` および `.claude/doc-db/` 配下のインデックスファイルは直接編集せず、`/forge:update-db-rules` / `/forge:update-db-specs` で更新すること
 - **Swift-Selena MCP の利用検討**: Swift-Selena MCP が接続されている場合、コードの分析・解析作業で MCP の説明から効率的・効果的か判定し、利用を検討すること（実験は不要、MCP の説明で判断）
 - **Xcode MCP の利用検討**: Xcode MCP が接続されている場合、Skill（`/xcode:build` / `/xcode:test`）が対応していない場面でのみ、MCP の説明から効果的か判定し、利用を検討すること
@@ -69,17 +69,19 @@ Package.swift に定義されたプラットフォーム・バージョンで利
 
 ```text
 project/
-├── project_toc.yaml     # 要件定義書・設計書検索インデックス（YAML形式）
-└── {feature}/           # Feature単位のディレクトリ（main, 0.6.5等）
-    ├── spec/            # 要件定義書（ID体系: REQ-/APP-/SCR-/CMP-/FNC-/BL-/NF-/DM-/EXT-/NAV-）
-    ├── design/          # 設計書（ID体系: DES-XXX）
-    └── plan/            # 開発計画（{feature}_plan.md）
+└── {feature}/           # Feature単位のディレクトリ（現在は main のみ）
+    ├── spec/            # 要件定義書（文書ID: REQ-XXX、本文内の項目ID: FR-/NFR-/UC-）
+    ├── design/          # 設計書（文書ID: DES-XXX）
+    ├── plan/            # 開発計画（{feature}_plan.md）
+    └── mcp-guide/       # MCP サーバー開発・MCP Swift SDK の一般メモ
 
 docs/
-├── docs_toc.md          # ルール文書インデックス（docs-advisor Subagent経由で参照）
 ├── rules/base/          # 基本ルール（project_rule, coding_rule, review_criteria等）
 ├── workflow/plan/       # 計画フェーズワークフロー（design_workflow, planning_workflow）
-└── format/              # 文書フォーマット仕様（spec_format.md, plan_format.md, design_format.md）
+└── format/              # 文書フォーマット仕様（spec_format, plan_format, design_format, code_header_format）
+
+.doc_structure.yaml      # docs/ をルール、project/*/{spec,design,plan,mcp-guide}/ を仕様書として宣言
+.claude/.doc-advisor/    # /forge:query-db-rules / /forge:query-db-specs が使う検索インデックス（直接編集禁止）
 ```
 
 ## Architecture Deep Dive
@@ -95,16 +97,13 @@ Sources/
 │   ├── Core/                # コア機能
 │   │   ├── FileSearcher.swift       # ファイルシステムベースの高速検索
 │   │   ├── SwiftSyntaxAnalyzer.swift# AST解析（シンボル・型・Import等）
-│   │   └── ProjectMemory.swift      # 解析結果のキャッシュ管理（永続化）
-│   ├── Cache/               # キャッシュ管理
-│   │   ├── CacheManager.swift
-│   │   ├── CacheGarbageCollector.swift
-│   │   └── FileCacheEntry.swift
-│   ├── LSP/                 # SourceKit-LSP統合（ビルド可能時）
+│   │   └── ProjectMemory.swift      # 解析結果のキャッシュ管理（永続化・更新時刻による無効化）
+│   ├── LSP/                 # SourceKit-LSP統合（.xcodeproj がある場合は無効）
 │   │   ├── LSPClient.swift
 │   │   └── LSPState.swift
-│   ├── Visitors/            # SwiftSyntax訪問者（7種）
+│   ├── Visitors/            # SwiftSyntax Visitor（8種）
 │   │   ├── SymbolVisitor.swift
+│   │   ├── SymbolVisitorV2.swift
 │   │   ├── ImportVisitor.swift
 │   │   ├── PropertyWrapperVisitor.swift
 │   │   ├── TypeConformanceVisitor.swift
@@ -119,7 +118,8 @@ Sources/
     ├── Project/             # プロジェクト管理ツール（1ツール）
     ├── SwiftUI/             # SwiftUI解析ツール（3ツール）
     ├── Symbols/             # シンボル解析ツール（2ツール）
-    └── ToolProtocol.swift   # ツール共通プロトコル
+    ├── ToolProtocol.swift   # ツール共通プロトコル
+    └── ResultEncoder.swift  # ツール結果のエンコード
 ```
 
 ### MCPサーバーの動作フロー
@@ -139,7 +139,7 @@ Claude/Client
 ```
 
 **重要原則**:
-- 全ツールは MCPTool プロトコルに準拠
+- 新規ツールは MCPTool プロトコルに準拠（既存の例外: `InitializeProjectTool` は SwiftMCPServer が直接呼び出し、`ExecuteToolTool` は `LSPState` を受け取る独自シグネチャ）
 - SwiftSyntaxによる静的解析（ビルド不要）
 - LSP統合によるセマンティック解析（ビルド可能時）
 
@@ -163,10 +163,10 @@ swift build -c release
 - **NEVER modify Package.swift** without explicit permission
 - **Japanese comments required** in source code（全コードコメントは日本語）
 - **要件定義書（project/{feature}/spec/**/*.md）が最優先**（すべてのドキュメントに優先）
-- **Use existing utilities** before creating new ones (Tools/, Library/)
+- **Use existing utilities** before creating new ones (Sources/Tools/, Sources/Selena/)
 - **Always update documentation** when making specification changes
 - **ファイルヘッダーのCreated by**: git config user.nameの値を使用（生成AIではない）
-- **project_toc.yaml 自動更新**: project/{feature}/spec/、project/{feature}/design/ 配下のファイルを追加・変更・削除・移動したら、`project-toc-updater` Subagent を起動して project_toc.yaml を更新すること
+- **仕様索引の更新**: project/{feature}/spec/、project/{feature}/design/ 配下のファイルを追加・変更・削除・移動したら `/forge:update-db-specs` を実行すること（上記「DB インデックス自動更新」と同じ）
 
 ### MCP Server実装原則
 - **MCPTool 準拠**: 新規ツールは `MCPTool` プロトコル（`Sources/Tools/ToolProtocol.swift` で定義）を実装
@@ -195,7 +195,7 @@ swift build -c release
 ## Critical Implementation Constraints
 
 ### Sources/Tools/ - ツール実装制約
-- **MCPTool 準拠**: 全ツールは `Sources/Tools/ToolProtocol.swift` で定義された `MCPTool` プロトコルに準拠
+- **MCPTool 準拠**: 新規ツールは `Sources/Tools/ToolProtocol.swift` で定義された `MCPTool` プロトコルに準拠（`InitializeProjectTool` と `ExecuteToolTool` は既存の例外）
 - **カテゴリ配置**:
   - `Analysis/` - コード解析（imports, type hierarchy等）
   - `FileSystem/` - ファイル操作（find_files, search_code等）
@@ -208,9 +208,8 @@ swift build -c release
 ### Sources/Selena/ - コア解析エンジン制約
 - **Core/FileSearcher**: ファイルシステムベースの高速検索
 - **Core/SwiftSyntaxAnalyzer**: SwiftSyntaxによる静的解析（ビルド不要）、Visitors/配下のVisitorを使用
-- **Core/ProjectMemory**: 解析結果のキャッシュ管理（永続化対応）
-- **Cache/**: CacheManager・CacheGarbageCollector によるキャッシュライフサイクル管理
-- **LSP/**: LSPClient・LSPState による SourceKit-LSP 統合（ビルド可能時のみ利用）
+- **Core/ProjectMemory**: 解析結果のキャッシュ管理（`memory.json` に永続化、ファイル更新時刻で無効化）。キャッシュ層はこのファイルのみ
+- **LSP/**: LSPClient・LSPState による SourceKit-LSP 統合（プロジェクトルート直下に `.xcodeproj` がある場合は無効。ビルド可否は判定しない）
 - **Visitors/**: SwiftSyntax の SyntaxVisitor サブクラス群（シンボル・Import・型解析等）
 
 ### Code Header Format [MANDATORY]
