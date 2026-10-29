@@ -12,6 +12,7 @@ Swift-Selenaのリリース履歴
 - **feat**: Release の bottle JSON を Formula に反映する `scripts/merge_bottles.sh` を追加（作業ブランチで実行し、develop → main の通常フローで反映）
 - **docs**: README.md / README_en.md にソースビルドの所要時間・bottle の説明・動作確認環境（macOS 26 / Xcode 27.1）・`brew doctor` の CLT 警告がビルドに無関係である旨を追記
 - **docs**: CLAUDE.md の release 運用順序に Phase 3（bottle 反映）を追加
+- **change**: release タグを main の本流（第1親ライン）に打つ運用へ変更。Formula の `revision:` を廃止し `tag:` のみで解決する（tag commit が Formula 自身を含むため SHA を書けない循環を解消）。`scripts/verify_release_tag.sh` / `release_tag_check.yml` / CLAUDE.md / CONTRIBUTING を新運用へ更新
 
 ## 0.6.11 - 2026-05-31
 
