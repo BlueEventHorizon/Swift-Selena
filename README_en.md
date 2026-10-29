@@ -97,7 +97,7 @@ swift build -c release -Xswiftc -Osize
 # Artifact: .build/release/Swift-Selena
 ```
 
-In the registration steps below, replace `swift-selena` with `$(pwd)/.build/release/Swift-Selena`. For `make` commands, local development registration, and the release procedure, see [CONTRIBUTING.md](CONTRIBUTING.md).
+In the registration steps below, replace `swift-selena` with `$(pwd)/.build/release/Swift-Selena`. For `make` commands, local development registration, and the release procedure, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Connecting MCP Clients
 
@@ -438,7 +438,7 @@ The 12 tools exposed directly in legacy mode:
 
 ## Contributing and License
 
-Issues and pull requests are welcome. For the maintainer release procedure (version bump + Homebrew Formula, with diagrams), see [CONTRIBUTING.md](CONTRIBUTING.md).
+Issues and pull requests are welcome. For building, testing, adding tools, CI, and the release procedure (version bump + Homebrew Formula, with diagrams), see the [Development Guide (DEVELOPMENT.md)](DEVELOPMENT.md).
 
 MIT License - see [LICENSE](LICENSE) for details.
 

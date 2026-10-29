@@ -97,7 +97,7 @@ swift build -c release -Xswiftc -Osize
 # 成果物: .build/release/Swift-Selena
 ```
 
-以降の登録手順では、`swift-selena` を `$(pwd)/.build/release/Swift-Selena` に読み替えてください。`make` コマンド、ローカル開発時の登録、リリース手順は [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を参照してください。
+以降の登録手順では、`swift-selena` を `$(pwd)/.build/release/Swift-Selena` に読み替えてください。`make` コマンド、ローカル開発時の登録、リリース手順は [DEVELOPMENT.ja.md](DEVELOPMENT.ja.md) を参照してください。
 
 ## MCP クライアントへの登録
 
@@ -438,7 +438,7 @@ Claude Desktop の例:
 
 ## コントリビューション・ライセンス
 
-Issue・Pull Request を歓迎します。メンテナ向けのリリース手順（バージョン更新 + Homebrew Formula、図解付き）は [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を参照してください。
+Issue・Pull Request を歓迎します。ビルド・テスト・ツールの追加・CI・リリース手順（バージョン更新 + Homebrew Formula、図解付き）は [開発ガイド（DEVELOPMENT.ja.md）](DEVELOPMENT.ja.md) を参照してください。
 
 MIT License - 詳細は [LICENSE](LICENSE) を参照してください。
 
