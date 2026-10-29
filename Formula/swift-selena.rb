@@ -15,8 +15,7 @@ class SwiftSelena < Formula
   desc "MCP Server for Swift code analysis"
   homepage "https://github.com/BlueEventHorizon/Swift-Selena"
   url "https://github.com/BlueEventHorizon/Swift-Selena.git",
-      tag:      "0.6.12",
-      revision: "944ac380060298e652408e3daf408b142329b6f7"
+      tag: "0.6.12"
   license "MIT"
 
   # macOS 13.0+ requirement matches Package.swift's .macOS(.v13).
@@ -24,6 +23,10 @@ class SwiftSelena < Formula
   # CLI build and Command Line Tools providing Swift 5.9+ should suffice.
   # If a CLT-only build is shown to fail, re-add `depends_on xcode: ["15.0", :build]`.
   depends_on macos: :ventura
+
+  # `revision:` is intentionally omitted. The release tag is placed on the merge
+  # commit on main, which itself contains this Formula, so its SHA cannot be
+  # written here. `tag:` alone is enough for Homebrew to resolve the source.
 
   # The `bottle do` block is added automatically on main by
   # .github/workflows/bottle.yml after a release tag is pushed. Do not edit by hand.
