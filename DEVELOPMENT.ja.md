@@ -24,7 +24,7 @@ English version: [DEVELOPMENT.md](DEVELOPMENT.md)
 ## 開発環境
 
 - macOS 13.0 以上
-- Swift 6.1（Xcode 16.3）以上（動作確認済み: macOS 26 / Xcode 27.1・Swift 6.4）。固定された依存パッケージ（swift-nio 2.98.0、swift-log 1.12.0）が要求するため、`Package.swift` は `swift-tools-version: 6.1` を宣言しています。言語モードは Swift 5 のままです（`swiftLanguageModes: [.v5]`）
+- Swift 6.1（Xcode 16.3）以上（動作確認済み: macOS 26 / Xcode 27.1・Swift 6.4）。固定された依存パッケージを解決できる最小のバージョンとして、`Package.swift` は `swift-tools-version: 6.1` を宣言しています（swift-nio 2.98.0 が 6.1 を要求。swift-log 1.12.0 は 6.2 を宣言するものの 6.1 向けの `Package@swift-6.1.swift` を同梱）。言語モードは Swift 5 のままです（`swiftLanguageModes: [.v5]`）
 - 依存パッケージ（`Package.swift` で固定。`exact` 指定のため、更新は意図的に行います）:
   - [MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk) 0.12.0
   - [SwiftSyntax](https://github.com/apple/swift-syntax) 602.0.0

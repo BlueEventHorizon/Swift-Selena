@@ -62,7 +62,7 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
 
 Package.swift に定義されたプラットフォーム・バージョンで利用可能な技術を使用。
 - **macOS**: 13.0+
-- **Swift**: 5.9
+- **Swift**: 6.1（`swift-tools-version`。言語モードは `swiftLanguageModes: [.v5]` で Swift 5）
 - **Type**: Swift Package (MCP Server)
 
 ## Critical Documentation Structure

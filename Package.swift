@@ -1,5 +1,6 @@
 // swift-tools-version: 6.1
-// 依存パッケージ（swift-nio 2.98.0 / swift-log 1.12.0）が tools-version 6.1 を要求するため、宣言を実態に合わせる。
+// 固定した依存パッケージを解決できる最小の tools-version。swift-nio 2.98.0 が 6.1 を要求する
+// （swift-log 1.12.0 は 6.2 宣言だが、6.1 向けの Package@swift-6.1.swift を同梱している）。
 // 言語モードは Swift 5 のまま（Swift 6 モードでは actor isolation の警告がエラーになるため）。
 import PackageDescription
 

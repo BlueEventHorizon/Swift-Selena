@@ -1,10 +1,10 @@
 # Swift-Selena: プロジェクト概要
 
-この文書は、Swift-Selena の開発に参加する人と、文書を書く・直す AI のためのものです。インストールと使い方は `README.md`（日本語）と `README_en.md`（英語）、開発 AI が守るべきルールは `CLAUDE.md` を参照してください。調査時点のバージョンは 0.6.12 です（`Sources/Constants.swift` の `AppConstants.version`）。
+この文書は、Swift-Selena の開発に参加する人と、文書を書く・直す AI のためのものです。インストールと使い方は `README.md`（日本語）と `README_en.md`（英語）、開発 AI が守るべきルールは `CLAUDE.md` を参照してください。この文書が記述するのは、リリース 0.6.12 より後の開発ブランチの状態です。`Sources/Constants.swift` の `AppConstants.version` は 0.6.12 のままですが、タグ以後に入った変更（キャッシュ形式 v6、Swift 6.1 要件など）はソースの実態どおりに記述しており、まだリリースされていません。
 
 ## 1. 位置づけ
 
-Swift-Selena は、Swift プロジェクトのコード解析を AI エージェントに提供する MCP（Model Context Protocol）サーバーで、Swift Package として書かれています。クライアントが起動するローカルプロセスとして動き、stdio（JSON-RPC）で通信します。README が挙げるクライアントは Claude Code、Claude Desktop、Cursor、Codex です。必要環境は macOS 13.0 以降で、ビルドには Swift 6.1（Xcode 16.3）以降のツールチェーンが必要です（`Package.swift` の `swift-tools-version: 6.1`。固定された swift-nio 2.98.0 と swift-log 1.12.0 が要求）。言語モードは Swift 5 のままです（`swiftLanguageModes: [.v5]`）。動作確認は Swift 6.4 で行っています。配布は Homebrew tap で、このリポジトリ自体が tap です（`Formula/swift-selena.rb`）。
+Swift-Selena は、Swift プロジェクトのコード解析を AI エージェントに提供する MCP（Model Context Protocol）サーバーで、Swift Package として書かれています。クライアントが起動するローカルプロセスとして動き、stdio（JSON-RPC）で通信します。README が挙げるクライアントは Claude Code、Claude Desktop、Cursor、Codex です。必要環境は macOS 13.0 以降で、ビルドには Swift 6.1（Xcode 16.3）以降のツールチェーンが必要です（`Package.swift` の `swift-tools-version: 6.1`。固定された依存を解決できる最小のバージョンで、swift-nio 2.98.0 が 6.1 を要求し、swift-log 1.12.0 は 6.2 を宣言するものの 6.1 向けの `Package@swift-6.1.swift` を同梱している）。言語モードは Swift 5 のままです（`swiftLanguageModes: [.v5]`）。動作確認は Swift 6.4 で行っています。配布は Homebrew tap で、このリポジトリ自体が tap です（`Formula/swift-selena.rb`）。
 
 全体要件（`project/main/spec/REQ-001_Swift_Selena_Overall_Requirements.md`）が挙げる解決対象の課題は次の三つです。
 
@@ -37,7 +37,7 @@ Client -> JSON-RPC over stdio -> SwiftMCPServer (MCP SDK)
 - **ツール。** ツール定義は 15 個です。`initialize_project`、解析ツール 11 個、メタツール 3 個です。ツール名は `Sources/Constants.swift` の `ToolNames`（12 個: `initialize_project` と解析ツール 11 個）と `MetaToolNames` に定義され、メタツールが参照するレジストリは `Sources/Tools/Meta/MetaToolRegistry.swift` です。15 個のうち 13 個が `MCPTool` プロトコル（`Sources/Tools/ToolProtocol.swift`）に準拠します。例外は 2 つで、`InitializeProjectTool` は `SwiftMCPServer` が直接呼び出し、`ExecuteToolTool` は `LSPState` を受け取る独自の `execute` を持ち、`switch` で解析ツールに振り分けます。
 - **メタツールモード（既定、v0.6.3 以降）。** クライアントに見えるのは `initialize_project`、`list_available_tools`、`get_tool_schema`、`execute_tool` の 4 つだけです。解析ツール 11 個もほかと同じくバイナリにコンパイル済みで、MCP のツール一覧から隠され、`execute_tool` 経由で呼ばれるだけです。これでコンテキストウィンドウの使用量を抑えます。**レガシーモード**（`SWIFT_SELENA_LEGACY=1`）では `ToolNames` の 12 個を直接公開します。
 - **解析エンジン。** `SwiftSyntaxAnalyzer` が SwiftSyntax の visitor（シンボル、import、property wrapper、型準拠、extension、XCTest、Swift Testing）で構文木をたどります。`FileSearcher` はファイルシステムを検索します。`LSPClient` と `LSPState` が SourceKit-LSP を扱い、接続は `initialize_project` の後にバックグラウンドで行われます。`LSPState` はプロジェクトがビルドできるかを調べません。プロジェクトルート直下に `.xcodeproj` があるときだけ LSP を無効にします（`Sources/Selena/LSP/LSPState.swift`）。
-- **キャッシュ。** キャッシュ層は `ProjectMemory`（`Sources/Selena/Core/ProjectMemory.swift`）だけです。`memory.json` を `~/.swift-selena/clients/` の下に、クライアント（`MCP_CLIENT_ID`）ごと、プロジェクト（パスのハッシュ）ごとに永続化します。無効化はファイルの更新時刻で行います。キャッシュごとにファイル単位のインデックス（シンボルは `fileIndex`、import は `importFileIndex`、型準拠は `typeFileIndex`）を持ち、そのキャッシュを書き込んだときに記録し、読み出すたびに確認します。そのため、あるキャッシュを更新しても、別のキャッシュの古いエントリが最新に見えることはありません。`getTypeHierarchy` は呼び出しのたびに型準拠キャッシュを最新化します。削除されたファイル由来のエントリを捨て、新規または変更されたファイルだけをパースし直します。
+- **キャッシュ。** キャッシュ層は `ProjectMemory`（`Sources/Selena/Core/ProjectMemory.swift`）だけです。`memory.json` を `~/.swift-selena/clients/` の下に、クライアント（`MCP_CLIENT_ID`）ごと、プロジェクト（パスのハッシュ）ごとに永続化します。無効化はファイルの更新時刻で行います。キャッシュごとにファイル単位のインデックス（シンボルは `fileIndex`、import は `importFileIndex`、型準拠は `typeFileIndex`）を持ち、そのキャッシュを書き込んだときに記録し、エントリを個別に読み出すときに確認します。そのため、あるキャッシュを更新しても、別のキャッシュの古いエントリが最新に見えることはありません。一括取得の `getAllImports` と `getAllTypeConformances` はこの確認をせず、キャッシュをそのまま返します。両者の唯一の呼び出し元である `getTypeHierarchy` は、呼び出しのたびに先に型準拠キャッシュを最新化します。削除されたファイル由来のエントリを捨て、新規または変更されたファイルだけをパースし直します。
 
 詳細な設計は `project/main/design/` の `DES-101`（アーキテクチャ）、`DES-102`（LSP 統合）、`DES-103`（ツール実装）、`DES-104`（`search_code` と `find_symbol_definition` の強化）を参照してください。DES-101 と DES-103 は v0.5.3 時点、DES-102 は LSP 統合フェーズの v0.5.1〜v0.5.5 の状態を記述しています（下の「古さの違う文書」を参照）。
 
@@ -47,7 +47,7 @@ Client -> JSON-RPC over stdio -> SwiftMCPServer (MCP SDK)
 
 ### 古さの違う文書
 
-spec と design の文書は v0.5.x から v0.6.x にかけて段階的に書かれました。いくつかは、すでに存在しない状態（たとえば 18 ツール、`find_symbol_references`、`find_type_usages`、`read_symbol`）を今も記述しています。文書自身が、現行のツール一覧は `Sources/Constants.swift` の `ToolNames` と `MetaToolRegistry.swift` が正だと述べています。ツール一覧はこの二つのファイルを正としてください。ほかにも古さの印があります。REQ-001、DES-101、DES-102、DES-103 のステータスは、以後のバージョンがリリースされた今も「承認待ち」のままです。索引 `project/main/spec/README.md` は REQ-004 を載せておらず、存在しない文書（`DES-007`〜`DES-009` など）を参照しています。REQ-005 は v0.6.8 で REQ-003 に統合されて削除されましたが、複数の文書がいまも REQ-005 を参照しています（経緯は DES-104 にあります）。Code Header DB（REQ-004、DES-006、ツール `search_code_headers` と `get_code_header_stats`）は仕様化されていますが、どちらのツールも `Sources/` にありません。
+spec と design の文書は v0.5.x から v0.6.x にかけて段階的に書かれました。いくつかは、すでに存在しない状態（たとえば 18 ツール、`find_symbol_references`、`find_type_usages`、`read_symbol`）を今も記述しています。文書自身が、現行のツール一覧は `Sources/Constants.swift` の `ToolNames` と `MetaToolRegistry.swift` が正だと述べています。ツール一覧はこの二つのファイルを正としてください。ほかにも古さの印があります。REQ-001〜REQ-004 と DES-101〜DES-103 のステータスは、以後のバージョンがリリースされた今も「承認待ち」のままです。索引 `project/main/spec/README.md` は REQ-004 を載せておらず、存在しない文書（`DES-007`〜`DES-009` など）を参照しています。REQ-005 は v0.6.8 で REQ-003 に統合されて削除されましたが、複数の文書がいまも REQ-005 を参照しています（経緯は DES-104 にあります）。Code Header DB（REQ-004、DES-006、ツール `search_code_headers` と `get_code_header_stats`）は仕様化されていますが、どちらのツールも `Sources/` にありません。
 
 ### リリースとバージョン
 
@@ -62,7 +62,7 @@ spec と design の文書は v0.5.x から v0.6.x にかけて段階的に書か
 | `CLAUDE.md` | 開発 AI が守る必須事項。`AGENTS.md` はこれへのシンボリックリンク、`GEMINI.md` は読み込むだけ |
 | `CHANGELOG.md` | リリース履歴（日本語で記述） |
 | `Sources/` | サーバー本体。`SwiftMCPServer.swift`（エントリーポイント）、`Constants.swift`、`Logging/`、`Selena/`（解析エンジン: `Core/`、`LSP/`、`Visitors/`（visitor 8 個）、`DebugRunner.swift`）、`Tools/`（`Project/`、`FileSystem/`、`Symbols/`、`SwiftUI/`、`Analysis/`、`Meta/`、`ToolProtocol.swift`、`ResultEncoder.swift`） |
-| `Tests/` | テストターゲットと `Tests/Fixtures/`（解析対象のサンプルコード）。`Package.swift` に登録されているのは 4 ターゲット |
+| `Tests/` | テストターゲットと `Tests/Fixtures/`（解析対象のサンプルコード）。`Package.swift` に登録されているのは 5 ターゲット |
 | `scripts/`, `makefile`, `Formula/`, `.github/workflows/` | クライアント登録、version と tag の検証、bottle の反映、Homebrew Formula、CI |
 | `project/main/spec/` | 要件定義書 `REQ-001`〜`REQ-004` と索引（`README.md`） |
 | `project/main/design/` | 設計書 `DES-004`、`DES-005`、`DES-006`、`DES-101`〜`DES-104` |
@@ -73,6 +73,7 @@ spec と design の文書は v0.5.x から v0.6.x にかけて段階的に書か
 | `docs/workflow/plan/` | 設計書と計画書を作るワークフロー |
 | `.claude/` | このリポジトリ自身の AI 用設定。`agents/code-header-generator.md`、`commands/`、`skills/`（`mcp-test`、`merge-specs`、`mermaid-diagram`、`xcode-build`、`xcode-test`） |
 | `.doc_structure.yaml` | `docs/` をルール、`project/*/{spec,design,plan,mcp-guide}/` を仕様書として宣言 |
+| `.claude/.doc-advisor/toc/` | 上記文書の検索インデックス（生成物）。`/forge:query-db-rules` と `/forge:query-db-specs` が使う。commit 対象。更新は `/forge:update-db-rules` / `/forge:update-db-specs` で行い、手で編集しない |
 
 このプロジェクトはプラグインを同梱していません（`.claude-plugin/plugin.json` がありません）。`.claude/` はこのリポジトリ自身の AI 用設定です。
 
