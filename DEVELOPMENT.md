@@ -90,6 +90,10 @@ Sample code to analyze lives in `Tests/Fixtures/`. A new test target also needs 
 | `make unregister-release` | Claude Code | Unregister the RELEASE version (prompts for the target project path) |
 | `make register-desktop` | Claude Desktop | Register with Claude Desktop |
 | `make unregister-desktop` | Claude Desktop | Unregister from Claude Desktop |
+| `make register-cursor` | Cursor | Register the RELEASE version with Cursor (prompts for the target project path; empty = all projects, `~/.cursor/mcp.json`) |
+| `make unregister-cursor` | Cursor | Unregister from Cursor (same prompt) |
+| `make register-codex` | Codex | Register the RELEASE version with Codex (`codex mcp add`, `~/.codex/config.toml`) |
+| `make unregister-codex` | Codex | Unregister from Codex (`codex mcp remove`) |
 | `make connect_gemini` / `make disconnect_gemini` | Claude Code | Connect / disconnect the gemini-cli MCP server |
 
 ## Registering a Local Build with a Client
@@ -102,9 +106,13 @@ Register a binary you built yourself (instead of the Homebrew release). **The MC
 make register-desktop     # Claude Desktop
 make register-release    # Claude Code — prompts for the target project path
 make register-debug       # Claude Code — registers the DEBUG build with the Swift-Selena project itself
+make register-cursor      # Cursor — prompts for the target project path (empty = ~/.cursor/mcp.json)
+make register-codex       # Codex — codex mcp add (~/.codex/config.toml)
 ```
 
-To unregister: `make unregister-desktop` / `make unregister-release` / `make unregister-debug`.
+All of these register the RELEASE build (`.build/release/Swift-Selena`, built with `make build-release`) except `register-debug`. The Cursor and Codex registrations set `MCP_CLIENT_ID` to `cursor` / `codex`, so their caches are separate from Claude's.
+
+To unregister: `make unregister-desktop` / `make unregister-release` / `make unregister-debug` / `make unregister-cursor` / `make unregister-codex`.
 
 ### Manually
 

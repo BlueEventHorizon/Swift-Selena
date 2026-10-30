@@ -1,4 +1,4 @@
-.PHONY: help build build-release connect_gemini disconnect_gemini register-release unregister-release register-debug unregister-debug register-desktop unregister-desktop clean
+.PHONY: help build build-release connect_gemini disconnect_gemini register-release unregister-release register-debug unregister-debug register-desktop unregister-desktop register-cursor unregister-cursor register-codex unregister-codex clean
 
 default: help
 
@@ -17,11 +17,15 @@ help:
 	@echo "  make register-release   - Register RELEASE version to Claude Code (prompts for path)"
 	@echo "  make register-debug     - Build & register DEBUG version to this project's Claude Code"
 	@echo "  make register-desktop   - Register to Claude Desktop"
+	@echo "  make register-cursor    - Register RELEASE version to Cursor (prompts for path; empty = all projects)"
+	@echo "  make register-codex     - Register RELEASE version to Codex"
 	@echo ""
 	@echo "Unregister commands:"
 	@echo "  make unregister-release - Unregister RELEASE version from Claude Code (prompts for path)"
 	@echo "  make unregister-debug   - Unregister DEBUG version from this project"
 	@echo "  make unregister-desktop - Unregister from Claude Desktop"
+	@echo "  make unregister-cursor  - Unregister from Cursor (prompts for path; empty = all projects)"
+	@echo "  make unregister-codex   - Unregister from Codex"
 	@echo ""
 
 # ビルド
@@ -62,6 +66,13 @@ register-debug:
 register-desktop:
 	@./scripts/register-desktop.sh
 
+register-cursor:
+	@read -p "登録先プロジェクトのパスを入力してください（空白で全プロジェクト共通 ~/.cursor/mcp.json）: " target_path; \
+	./scripts/register-cursor.sh "$$target_path"
+
+register-codex:
+	@./scripts/register-codex.sh
+
 # 登録解除コマンド
 unregister-debug:
 	@echo "Unregistering swift-selena-debug from Claude Code..."
@@ -70,3 +81,10 @@ unregister-debug:
 
 unregister-desktop:
 	@./scripts/unregister-desktop.sh
+
+unregister-cursor:
+	@read -p "登録解除するプロジェクトのパスを入力してください（空白で全プロジェクト共通 ~/.cursor/mcp.json）: " target_path; \
+	./scripts/unregister-cursor.sh "$$target_path"
+
+unregister-codex:
+	@./scripts/unregister-codex.sh

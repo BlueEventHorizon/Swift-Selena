@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=DEVELOPMENT.md sha256=88d2a12db55d -->
+<!-- bilingual-docs: source=DEVELOPMENT.md sha256=412afd3eeff8 -->
 
 # 開発ガイド
 
@@ -92,6 +92,10 @@ swift test            # テスト実行
 | `make unregister-release` | Claude Code | RELEASE 版の登録を解除（対象プロジェクトのパスを入力） |
 | `make register-desktop` | Claude Desktop | Claude Desktop に登録 |
 | `make unregister-desktop` | Claude Desktop | Claude Desktop から解除 |
+| `make register-cursor` | Cursor | RELEASE 版を Cursor に登録（対象プロジェクトのパスを入力。空白なら全プロジェクト共通の `~/.cursor/mcp.json`） |
+| `make unregister-cursor` | Cursor | Cursor から解除（同じ入力） |
+| `make register-codex` | Codex | RELEASE 版を Codex に登録（`codex mcp add`、`~/.codex/config.toml`） |
+| `make unregister-codex` | Codex | Codex から解除（`codex mcp remove`） |
 | `make connect_gemini` / `make disconnect_gemini` | Claude Code | gemini-cli MCP サーバーの接続 / 切断 |
 
 ## ローカルビルドをクライアントに登録する
@@ -104,9 +108,13 @@ Homebrew のリリース版ではなく、手元でビルドしたバイナリ�
 make register-desktop     # Claude Desktop
 make register-release    # Claude Code — 対象プロジェクトのパスを入力
 make register-debug       # Claude Code — DEBUG ビルドを Swift-Selena プロジェクト自体に登録
+make register-cursor      # Cursor — 対象プロジェクトのパスを入力（空白なら ~/.cursor/mcp.json）
+make register-codex       # Codex — codex mcp add（~/.codex/config.toml）
 ```
 
-解除は `make unregister-desktop` / `make unregister-release` / `make unregister-debug` です。
+`register-debug` 以外はすべて RELEASE ビルド（`make build-release` で作る `.build/release/Swift-Selena`）を登録します。Cursor と Codex への登録では `MCP_CLIENT_ID` を `cursor` / `codex` に設定するので、キャッシュは Claude 側と分離されます。
+
+解除は `make unregister-desktop` / `make unregister-release` / `make unregister-debug` / `make unregister-cursor` / `make unregister-codex` です。
 
 ### 手動で登録する
 
