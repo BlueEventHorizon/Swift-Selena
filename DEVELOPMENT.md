@@ -36,10 +36,10 @@ cd Swift-Selena
 
 ## Branching
 
-| Branch | Role |
-| --- | --- |
-| `main` | Release history. Release tags go on `main`'s first-parent line |
-| `develop` | Integration branch and the target of pull requests |
+| Branch           | Role                                                             |
+| ---------------- | ---------------------------------------------------------------- |
+| `main`           | Release history. Release tags go on `main`'s first-parent line   |
+| `develop`        | Integration branch and the target of pull requests               |
 | Working branches | Branch off `develop` (e.g. `feature/xxx`, `fix/xxx`, `docs/xxx`) |
 
 1. Create a working branch from `develop` and commit
@@ -65,13 +65,13 @@ Artifacts are produced at `.build/debug/Swift-Selena` and `.build/release/Swift-
 
 Test targets registered in `Package.swift`:
 
-| Target | Covers |
-| --- | --- |
-| `SymbolVisitorV2Tests` | Unit tests for `SymbolVisitorV2` |
-| `SearchCodeToolTests` | The `search_code` tool |
-| `FindSymbolDefinitionToolTests` | The `find_symbol_definition` tool |
-| `BackwardCompatibilityTests` | Backward compatibility (e.g. handling of removed parameters) |
-| `TypeConformanceCacheTests` | Type conformance / import cache invalidation (file changes, additions, deletions) |
+| Target                          | Covers                                                                            |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| `SymbolVisitorV2Tests`          | Unit tests for `SymbolVisitorV2`                                                  |
+| `SearchCodeToolTests`           | The `search_code` tool                                                            |
+| `FindSymbolDefinitionToolTests` | The `find_symbol_definition` tool                                                 |
+| `BackwardCompatibilityTests`    | Backward compatibility (e.g. handling of removed parameters)                      |
+| `TypeConformanceCacheTests`     | Type conformance / import cache invalidation (file changes, additions, deletions) |
 
 Sample code to analyze lives in `Tests/Fixtures/`. A new test target also needs to be registered in `Package.swift` (treat `Package.swift` changes carefully, as with adding dependencies).
 
@@ -79,22 +79,22 @@ Sample code to analyze lives in `Tests/Fixtures/`. A new test target also needs 
 
 `make help` lists everything.
 
-| Command | Target | Description |
-| --- | --- | --- |
-| `make build` | — | DEBUG build |
-| `make build-release` | — | RELEASE build |
-| `make clean` | — | Clean build artifacts |
-| `make register-claude` | Claude Code | Register the RELEASE version (asks for a project path; leave empty to register for all projects, `-s user`) |
-| `make unregister-claude` | Claude Code | Unregister the RELEASE version (same prompt; empty = user scope) |
-| `make register-claude-app` | Claude Desktop | Register with the Claude Desktop app |
-| `make unregister-claude-app` | Claude Desktop | Unregister from the Claude Desktop app |
-| `make register-cursor` | Cursor | Register the RELEASE version with Cursor (asks for a project path; leave empty for `~/.cursor/mcp.json`, all projects) |
-| `make unregister-cursor` | Cursor | Unregister from Cursor (same prompt) |
-| `make register-codex` | Codex | Register the RELEASE version with Codex (`codex mcp add`, `~/.codex/config.toml`; the Codex CLI has no per-project option, so this always applies to all projects) |
-| `make unregister-codex` | Codex | Unregister from Codex (`codex mcp remove`) |
-| `make register-claude-debug` | Claude Code | Build the DEBUG version and register it with the Swift-Selena project |
-| `make unregister-claude-debug` | Claude Code | Unregister the DEBUG version from the Swift-Selena project |
-| `make connect_gemini` / `make disconnect_gemini` | Claude Code | Connect / disconnect the gemini-cli MCP server |
+| Command                                          | Target         | Description                                                                                                                                                        |
+| ------------------------------------------------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `make build`                                     | —              | DEBUG build                                                                                                                                                        |
+| `make build-release`                             | —              | RELEASE build                                                                                                                                                      |
+| `make clean`                                     | —              | Clean build artifacts                                                                                                                                              |
+| `make register-claude`                           | Claude Code    | Register the RELEASE version (asks for a project path; leave empty to register for all projects, `-s user`)                                                        |
+| `make unregister-claude`                         | Claude Code    | Unregister the RELEASE version (same prompt; empty = user scope)                                                                                                   |
+| `make register-claude-app`                       | Claude Desktop | Register with the Claude Desktop app                                                                                                                               |
+| `make unregister-claude-app`                     | Claude Desktop | Unregister from the Claude Desktop app                                                                                                                             |
+| `make register-cursor`                           | Cursor         | Register the RELEASE version with Cursor (asks for a project path; leave empty for `~/.cursor/mcp.json`, all projects)                                             |
+| `make unregister-cursor`                         | Cursor         | Unregister from Cursor (same prompt)                                                                                                                               |
+| `make register-codex`                            | Codex          | Register the RELEASE version with Codex (`codex mcp add`, `~/.codex/config.toml`; the Codex CLI has no per-project option, so this always applies to all projects) |
+| `make unregister-codex`                          | Codex          | Unregister from Codex (`codex mcp remove`)                                                                                                                         |
+| `make register-claude-debug`                     | Claude Code    | Build the DEBUG version and register it with the Swift-Selena project                                                                                              |
+| `make unregister-claude-debug`                   | Claude Code    | Unregister the DEBUG version from the Swift-Selena project                                                                                                         |
+| `make connect_gemini` / `make disconnect_gemini` | Claude Code    | Connect / disconnect the gemini-cli MCP server                                                                                                                     |
 
 ## Registering a Local Build with a Client
 
@@ -246,26 +246,26 @@ rm -rf ~/.swift-selena/
 
 ## Documentation
 
-| Location | Contents |
-| --- | --- |
-| `project/main/spec/` | Requirements (`REQ-*`). **The highest priority of all documents** |
-| `project/main/design/` | Design documents (`DES-*`) |
-| `project/main/plan/` | Development plans |
-| `project/main/mcp-guide/` | Notes on the MCP SDK |
-| `docs/` | Development rules, document formats, and workflows |
-| `CHANGELOG.md` | Release history |
+| Location                  | Contents                                                          |
+| ------------------------- | ----------------------------------------------------------------- |
+| `project/main/spec/`      | Requirements (`REQ-*`). **The highest priority of all documents** |
+| `project/main/design/`    | Design documents (`DES-*`)                                        |
+| `project/main/plan/`      | Development plans                                                 |
+| `project/main/mcp-guide/` | Notes on the MCP SDK                                              |
+| `docs/`                   | Development rules, document formats, and workflows                |
+| `CHANGELOG.md`            | Release history                                                   |
 
 When you change a specification, update the corresponding documents too.
 
 ## CI
 
-| Workflow | Trigger | What it does |
-| --- | --- | --- |
-| `version_check.yml` (Version Consistency Check) | PRs; pushes to `main` / `develop` | Treats `Sources/Constants.swift` as canonical and verifies that the CHANGELOG and `.version-config.yaml` agree (`scripts/verify_version_consistency.sh`) |
-| `release_tag_check.yml` (Release Tag Consistency Check) | Tag push | Verifies the tag is on `main`'s first-parent line and matches the version in Constants and the Formula (`scripts/verify_release_tag.sh`) |
-| `bottle.yml` (Build Bottles) | Tag push, manual run | Builds Homebrew bottles for Apple Silicon (macOS 15 / macOS 26) and attaches them to the GitHub Release |
-| `close-issues-on-develop.yaml` | A PR merged into `develop` | Closes the issues named by `Closes #N` in the PR body |
-| `claude.yml` (Claude Code) | Issue / PR comments, etc. | Claude Code assistance |
+| Workflow                                                | Trigger                           | What it does                                                                                                                                             |
+| ------------------------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version_check.yml` (Version Consistency Check)         | PRs; pushes to `main` / `develop` | Treats `Sources/Constants.swift` as canonical and verifies that the CHANGELOG and `.version-config.yaml` agree (`scripts/verify_version_consistency.sh`) |
+| `release_tag_check.yml` (Release Tag Consistency Check) | Tag push                          | Verifies the tag is on `main`'s first-parent line and matches the version in Constants and the Formula (`scripts/verify_release_tag.sh`)                 |
+| `bottle.yml` (Build Bottles)                            | Tag push, manual run              | Builds Homebrew bottles for Apple Silicon (macOS 15 / macOS 26) and attaches them to the GitHub Release                                                  |
+| `close-issues-on-develop.yaml`                          | A PR merged into `develop`        | Closes the issues named by `Closes #N` in the PR body                                                                                                    |
+| `claude.yml` (Claude Code)                              | Issue / PR comments, etc.         | Claude Code assistance                                                                                                                                   |
 
 Local checks:
 
@@ -289,6 +289,7 @@ Update the version with the `/forge:update-version` skill.
 Steps for bumping the version and the Homebrew Formula. **The authoritative, executable procedure lives in [CLAUDE.md](CLAUDE.md)** (the release-flow section); the diagrams below are a visual aid.
 
 > **Key points**
+>
 > 1. Put the release tag on **`main`'s first-parent line** (the merge commit / HEAD right after merging to `main`), so tags line up along `main`.
 > 2. **Do not write `revision:` in the Formula** — only `tag:`. The tagged commit contains the Formula itself, so its SHA cannot be written into it (circular). Without `revision`, a tag/revision mismatch (Issue #38) cannot happen.
 > 3. Tag **right after** merging to `main` (the Formula's `tag:` points at a tag that does not exist until then).

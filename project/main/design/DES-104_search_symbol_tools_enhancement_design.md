@@ -8,18 +8,18 @@
 
 ## メタデータ
 
-| 項目 | 値 |
-|------|-----|
-| 設計ID | DES-104 |
-| 関連要件 | REQ-003（旧 REQ-005、v0.6.8 で統合） |
-| 実装層 | Tools 層 / Selena Core 層 |
-| 主要モジュール | |
-| - Tool | SearchCodeTool, FindSymbolDefinitionTool |
-| - Helper | ToolHelpers, SymbolKindMapper, ResultEncoder |
-| - Core | FileSearcher, SwiftSyntaxAnalyzer, ProjectMemory |
-| - Visitor | SymbolVisitorV2 |
-| - Capability | CapabilityRegistry（最小実装） |
-| 作成日 | 2026-05-04 |
+| 項目           | 値                                               |
+| -------------- | ------------------------------------------------ |
+| 設計ID         | DES-104                                          |
+| 関連要件       | REQ-003（旧 REQ-005、v0.6.8 で統合）             |
+| 実装層         | Tools 層 / Selena Core 層                        |
+| 主要モジュール |                                                  |
+| - Tool         | SearchCodeTool, FindSymbolDefinitionTool         |
+| - Helper       | ToolHelpers, SymbolKindMapper, ResultEncoder     |
+| - Core         | FileSearcher, SwiftSyntaxAnalyzer, ProjectMemory |
+| - Visitor      | SymbolVisitorV2                                  |
+| - Capability   | CapabilityRegistry（最小実装）                   |
+| 作成日         | 2026-05-04                                       |
 
 ※ MCP Server 設計のため、`design_format.md` テンプレートのカテゴリ（Service/Repository/Entity/DataStore 等）の代わりにプロジェクト固有カテゴリを使用する。対応関係: `Tool` = Service 相当、`Core` = DataStore/Repository 相当、`Helper` / `Visitor` / `Capability` = 補助コンポーネント相当。
 
@@ -54,6 +54,7 @@
 - 実装は `SymbolVisitorV2` 内のヘルパーメソッドとして配置し、独立モジュール化はしない
 
 **path: 対応により改善されるケース**:
+
 - ターゲット名とディレクトリ名が一致しない構成（例: `path: "Sources"` でルート直下を割り当てる Swift-Selena 自身）
 - 複数 target が同じ親ディレクトリ配下に存在する構成（最長プレフィックスで一意化）
 - 非標準パス（例: `path: "Custom/Foo"`）にターゲットを配置する構成
@@ -76,16 +77,16 @@
 `SymbolKindMapper` として実装する：
 
 | 利用者指定値（小文字スネーク） | 表示用 kind 値（SymbolVisitor 出力） |
-|-------------------------------|--------------------------------------|
-| `struct`                      | `Struct`                             |
-| `class`                       | `Class`                              |
-| `enum`                        | `Enum`                               |
-| `protocol`                    | `Protocol`                           |
-| `actor`                       | `Actor`                              |
-| `function`                    | `Function`                           |
-| `variable`                    | `Variable`                           |
-| `typealias`                   | `TypeAlias`                          |
-| `extension`                   | `Extension`                          |
+| ------------------------------ | ------------------------------------ |
+| `struct`                       | `Struct`                             |
+| `class`                        | `Class`                              |
+| `enum`                         | `Enum`                               |
+| `protocol`                     | `Protocol`                           |
+| `actor`                        | `Actor`                              |
+| `function`                     | `Function`                           |
+| `variable`                     | `Variable`                           |
+| `typealias`                    | `TypeAlias`                          |
+| `extension`                    | `Extension`                          |
 
 `Macro` 種別（`SymbolVisitor` が返す）は利用者指定可能な 9 区分に含まれないため、種別フィルタ未指定時は返却し、種別フィルタ指定時は除外する。
 
@@ -99,11 +100,11 @@ REQ-005 §4.3 で `file_pattern` を本 Feature 廃止対象（破壊的変更�
 
 ### TBD-009: 配列要素数上限方針
 
-| 項目 | 上限 | 超過時の挙動 |
-|------|------|-------------|
-| `include_patterns` 要素数 | 20 件 | 入力エラー（`InvalidParams`） |
-| `exclude_patterns` 要素数 | 20 件 | 入力エラー（`InvalidParams`） |
-| `symbol_kinds` 要素数 | 9 件（全種別数） | 入力エラー（`InvalidParams`） |
+| 項目                      | 上限             | 超過時の挙動                  |
+| ------------------------- | ---------------- | ----------------------------- |
+| `include_patterns` 要素数 | 20 件            | 入力エラー（`InvalidParams`） |
+| `exclude_patterns` 要素数 | 20 件            | 入力エラー（`InvalidParams`） |
+| `symbol_kinds` 要素数     | 9 件（全種別数） | 入力エラー（`InvalidParams`） |
 
 ### TBD-010: 件数上限の最大値超過時の挙動
 
@@ -168,19 +169,19 @@ flowchart TB
 
 ### 4.1 モジュール一覧
 
-| モジュール | ファイルパス | 変更種別 | 責務 |
-|-----------|------------|---------|------|
-| `SearchCodeTool` | `Sources/Tools/FileSystem/SearchCodeTool.swift` | 変更 | 出力モード・件数上限・複数パターン対応 |
-| `FindSymbolDefinitionTool` | `Sources/Tools/Symbols/FindSymbolDefinitionTool.swift` | 変更 | 種別フィルタ・所属スコープ情報付与 |
-| `ToolHelpers` | `Sources/Tools/ToolProtocol.swift` | 変更 | 配列・Optional 整数パラメータ取得ヘルパー追加 |
-| `SymbolKindMapper` | `Sources/Tools/Symbols/SymbolKindMapper.swift` | **新規** | 利用者指定値↔表示用 kind 値の変換・検証 |
-| `ResultEncoder` | `Sources/Tools/ResultEncoder.swift` | **新規** | 構造化結果の JSON エンコード・テキスト整形 |
-| `CapabilityRegistry` | `Sources/Tools/Meta/CapabilityRegistry.swift` | **新規** | 利用可能ツール一覧の提供（最小実装） |
-| `FileSearcher` | `Sources/Selena/Core/FileSearcher.swift` | 変更 | include/exclude パターン配列対応 |
-| `SwiftSyntaxAnalyzer` | `Sources/Selena/Core/SwiftSyntaxAnalyzer.swift` | 変更 | `SymbolInfoV2`（スコープ情報付き）追加 |
-| `SymbolVisitorV2` | `Sources/Selena/Visitors/SymbolVisitorV2.swift` | **新規** | スコープ情報取得 + モジュール名解決ヘルパー内包 |
-| `ProjectMemory` | `Sources/Selena/Core/ProjectMemory.swift` | 変更 | `cacheVersion=4`、`Memory.SymbolInfo` をスコープ付きに拡張 |
-| `ParameterKeys` / `ErrorMessages` | `Sources/Constants.swift` | 変更 | 新規パラメータキー・エラーメッセージ追加 |
+| モジュール                        | ファイルパス                                           | 変更種別 | 責務                                                       |
+| --------------------------------- | ------------------------------------------------------ | -------- | ---------------------------------------------------------- |
+| `SearchCodeTool`                  | `Sources/Tools/FileSystem/SearchCodeTool.swift`        | 変更     | 出力モード・件数上限・複数パターン対応                     |
+| `FindSymbolDefinitionTool`        | `Sources/Tools/Symbols/FindSymbolDefinitionTool.swift` | 変更     | 種別フィルタ・所属スコープ情報付与                         |
+| `ToolHelpers`                     | `Sources/Tools/ToolProtocol.swift`                     | 変更     | 配列・Optional 整数パラメータ取得ヘルパー追加              |
+| `SymbolKindMapper`                | `Sources/Tools/Symbols/SymbolKindMapper.swift`         | **新規** | 利用者指定値↔表示用 kind 値の変換・検証                    |
+| `ResultEncoder`                   | `Sources/Tools/ResultEncoder.swift`                    | **新規** | 構造化結果の JSON エンコード・テキスト整形                 |
+| `CapabilityRegistry`              | `Sources/Tools/Meta/CapabilityRegistry.swift`          | **新規** | 利用可能ツール一覧の提供（最小実装）                       |
+| `FileSearcher`                    | `Sources/Selena/Core/FileSearcher.swift`               | 変更     | include/exclude パターン配列対応                           |
+| `SwiftSyntaxAnalyzer`             | `Sources/Selena/Core/SwiftSyntaxAnalyzer.swift`        | 変更     | `SymbolInfoV2`（スコープ情報付き）追加                     |
+| `SymbolVisitorV2`                 | `Sources/Selena/Visitors/SymbolVisitorV2.swift`        | **新規** | スコープ情報取得 + モジュール名解決ヘルパー内包            |
+| `ProjectMemory`                   | `Sources/Selena/Core/ProjectMemory.swift`              | 変更     | `cacheVersion=4`、`Memory.SymbolInfo` をスコープ付きに拡張 |
+| `ParameterKeys` / `ErrorMessages` | `Sources/Constants.swift`                              | 変更     | 新規パラメータキー・エラーメッセージ追加                   |
 
 ### 4.2 SymbolKindMapper の設計
 
@@ -237,30 +238,30 @@ static func searchCode(
 
 `SearchOutputMode`（`enum`）:
 
-| ケース | 説明 |
-|--------|------|
+| ケース        | 説明                                     |
+| ------------- | ---------------------------------------- |
 | `matchDetail` | 既定。ファイル・行番号・マッチ内容を返す |
-| `fileList` | ファイル一覧（重複排除）を返す |
-| `countOnly` | 件数のみを返す |
+| `fileList`    | ファイル一覧（重複排除）を返す           |
+| `countOnly`   | 件数のみを返す                           |
 
 `SearchCodeResult`（`struct`）:
 
-| フィールド | 型 | 説明 |
-|-----------|-----|------|
-| `matches` | `[Match]` | `matchDetail` モードのマッチ結果 |
-| `files` | `[String]` | `fileList` モード（重複排除済み） |
-| `totalMatchCount` | `Int` | 上限適用前の総マッチ数 |
-| `totalFileCount` | `Int` | 上限適用前のファイル数 |
-| `truncated` | `Bool` | 件数上限超過フラグ |
-| `truncatedToMaxLimit` | `Bool` | 最大値切り詰めフラグ |
+| フィールド            | 型         | 説明                              |
+| --------------------- | ---------- | --------------------------------- |
+| `matches`             | `[Match]`  | `matchDetail` モードのマッチ結果  |
+| `files`               | `[String]` | `fileList` モード（重複排除済み） |
+| `totalMatchCount`     | `Int`      | 上限適用前の総マッチ数            |
+| `totalFileCount`      | `Int`      | 上限適用前のファイル数            |
+| `truncated`           | `Bool`     | 件数上限超過フラグ                |
+| `truncatedToMaxLimit` | `Bool`     | 最大値切り詰めフラグ              |
 
 `Match`（内部 struct）:
 
-| フィールド | 型 | 説明 |
-|-----------|-----|------|
-| `file` | `String` | マッチしたファイルの絶対パス |
-| `line` | `Int` | マッチした行番号 |
-| `content` | `String` | マッチ行のテキスト内容 |
+| フィールド | 型       | 説明                         |
+| ---------- | -------- | ---------------------------- |
+| `file`     | `String` | マッチしたファイルの絶対パス |
+| `line`     | `Int`    | マッチした行番号             |
+| `content`  | `String` | マッチ行のテキスト内容       |
 
 **ファイルパターン評価アルゴリズム**:
 
@@ -280,14 +281,14 @@ static func searchCode(
 
 **SymbolInfoV2**（`SwiftSyntaxAnalyzer` に追加する `struct`）:
 
-| フィールド | 型 | 説明 |
-|-----------|-----|------|
-| `name` | `String` | シンボル名 |
-| `kind` | `String` | 表示用 kind 値（`Class` / `Struct` 等） |
-| `line` | `Int` | 宣言開始行 |
-| `parentScope` | `String?` | ネスト親の型名（例: `Foo.Button` の `Foo`）。なければ `nil` |
-| `extensionTarget` | `String?` | extension 内定義時の対象型名。なければ `nil` |
-| `moduleName` | `String?` | SwiftPM ターゲット名（ベストエフォート）。なければ `nil` |
+| フィールド        | 型        | 説明                                                        |
+| ----------------- | --------- | ----------------------------------------------------------- |
+| `name`            | `String`  | シンボル名                                                  |
+| `kind`            | `String`  | 表示用 kind 値（`Class` / `Struct` 等）                     |
+| `line`            | `Int`     | 宣言開始行                                                  |
+| `parentScope`     | `String?` | ネスト親の型名（例: `Foo.Button` の `Foo`）。なければ `nil` |
+| `extensionTarget` | `String?` | extension 内定義時の対象型名。なければ `nil`                |
+| `moduleName`      | `String?` | SwiftPM ターゲット名（ベストエフォート）。なければ `nil`    |
 
 **SymbolVisitorV2**（`Sources/Selena/Visitors/SymbolVisitorV2.swift` 新規）:
 
@@ -298,25 +299,27 @@ static func searchCode(
 
 **訪問ハンドラ**:
 
-| メソッド | 引数 | 動作 |
-|---------|------|------|
-| `visit` | `ClassDeclSyntax` 等の型宣言 | `push("TypeName", false)` → `SymbolInfoV2` を追加 → `.visitChildren` |
-| `visit` | `ExtensionDeclSyntax` | `push(extendedType, true)` → `SymbolInfoV2(kind="Extension")` を追加 → `.visitChildren` |
-| `visitPost` | 型宣言 / `ExtensionDeclSyntax` | スコープスタックを `pop` |
+| メソッド    | 引数                           | 動作                                                                                    |
+| ----------- | ------------------------------ | --------------------------------------------------------------------------------------- |
+| `visit`     | `ClassDeclSyntax` 等の型宣言   | `push("TypeName", false)` → `SymbolInfoV2` を追加 → `.visitChildren`                    |
+| `visit`     | `ExtensionDeclSyntax`          | `push(extendedType, true)` → `SymbolInfoV2(kind="Extension")` を追加 → `.visitChildren` |
+| `visitPost` | 型宣言 / `ExtensionDeclSyntax` | スコープスタックを `pop`                                                                |
 
 **parentScope / extensionTarget 決定規則**:
 
-| フィールド | 決定規則 |
-|-----------|---------|
-| `parentScope` | スタックの直近の非 extension エントリ名（なければ `nil`） |
+| フィールド        | 決定規則                                                      |
+| ----------------- | ------------------------------------------------------------- |
+| `parentScope`     | スタックの直近の非 extension エントリ名（なければ `nil`）     |
 | `extensionTarget` | スタック内の直近の extension エントリ対象型（なければ `nil`） |
 
 補足:
+
 - `ClassDeclSyntax` 以外の型宣言（`Struct` / `Enum` / `Protocol` / `Actor`）も同様に `visit` で push、`visitPost` で pop
 - extension 自体を `kind="Extension"` のシンボルとして登録する
 - `ExtensionDeclSyntax` の下にある型定義は `extensionTarget = extendedType` として記録
 
 **実装上の制約**:
+
 - `visit` メソッドは必ず `.visitChildren` を返すこと（`.skipChildren` を返すと `visitPost` が呼ばれずスタック崩壊）
 - スコープスタックの push/pop は **`visit` で push、`visitPost` で pop の一本化方針**を採用する。`defer { scopeStack.removeLast() }` 等の併用は二重 pop によるスタック崩壊を招くため行わない
 
@@ -333,14 +336,14 @@ static func searchCode(
 
 `SymbolInfoV2` フィールド追加に伴い、`ProjectMemory.Memory.SymbolInfo`（`Codable` 準拠 `struct`）のキャッシュスキーマを更新する。
 
-| フィールド | 型 | 区分 | 説明 |
-|-----------|-----|------|------|
-| `name` | `String` | 既存 | シンボル名 |
-| `kind` | `String` | 既存 | 表示用 kind 値 |
-| `line` | `Int` | 既存 | 宣言開始行 |
-| `parentScope` | `String?` | 追加 | ネスト親の型名 |
-| `extensionTarget` | `String?` | 追加 | extension 対象型名 |
-| `moduleName` | `String?` | 追加 | SwiftPM ターゲット名 |
+| フィールド        | 型        | 区分 | 説明                 |
+| ----------------- | --------- | ---- | -------------------- |
+| `name`            | `String`  | 既存 | シンボル名           |
+| `kind`            | `String`  | 既存 | 表示用 kind 値       |
+| `line`            | `Int`     | 既存 | 宣言開始行           |
+| `parentScope`     | `String?` | 追加 | ネスト親の型名       |
+| `extensionTarget` | `String?` | 追加 | extension 対象型名   |
+| `moduleName`      | `String?` | 追加 | SwiftPM ターゲット名 |
 
 - `cacheVersion` を **3 → 4** にインクリメント
 - 旧バージョン（3 以前）キャッシュは起動時に **自動破棄・空再構築**（既存の再初期化ロジックを利用）
@@ -362,28 +365,31 @@ v4 リリース直後に発覚した「**同一 cacheVersion 内で SymbolInfo �
 
 ### 5.1 パラメータ設計
 
-| パラメータ名 | 型 | 既存/新規 | 説明 |
-|-------------|-----|---------|------|
-| `pattern` | `string` | 既存 | 正規表現パターン（必須） |
-| `output_mode` | `string` | **新規** | `"match_detail"` / `"file_list"` / `"count_only"` |
-| `limit` | `integer` | **新規** | 件数上限（1〜10,000）。`output_mode="count_only"` 時は非適用 |
-| `include_patterns` | `array<string>` | **新規** | 含めるファイル glob 配列 |
-| `exclude_patterns` | `array<string>` | **新規** | 除くファイル glob 配列 |
+| パラメータ名       | 型              | 既存/新規 | 説明                                                         |
+| ------------------ | --------------- | --------- | ------------------------------------------------------------ |
+| `pattern`          | `string`        | 既存      | 正規表現パターン（必須）                                     |
+| `output_mode`      | `string`        | **新規**  | `"match_detail"` / `"file_list"` / `"count_only"`            |
+| `limit`            | `integer`       | **新規**  | 件数上限（1〜10,000）。`output_mode="count_only"` 時は非適用 |
+| `include_patterns` | `array<string>` | **新規**  | 含めるファイル glob 配列                                     |
+| `exclude_patterns` | `array<string>` | **新規**  | 除くファイル glob 配列                                       |
 
 > **廃止パラメータ**: 既存 `file_pattern`（`string`）は本 Feature で廃止する破壊的変更（REQ-005 §4.3）。`file_pattern` キーが指定された場合の挙動は **未知パラメータとして無視する**（`InvalidParams` エラーは返さない）。理由: MCP クライアント側で旧スキーマがキャッシュされている可能性に対する寛容性を優先し、エラー連鎖を避けるため。代替手段は `include_patterns=["{glob}"]` を利用すること。
 
 追加する `ParameterKeys` 定数:
+
 - `outputMode = "output_mode"`
 - `limit = "limit"`
 - `includePatterns = "include_patterns"`
 - `excludePatterns = "exclude_patterns"`
 
 削除する `ParameterKeys` 定数:
+
 - `filePattern = "file_pattern"`（`Sources/Constants.swift` の定数自体を削除。issue #34 で `SearchFilesWithoutPatternTool` も `include_patterns` / `exclude_patterns` へ移行完了したため、共有定数を廃止する。両ツールでの `file_pattern` キー指定は §5.1 の方針に従い未知パラメータとして無視される）
 
 ### 5.2 出力モード別テキスト出力フォーマット
 
 **match_detail（既定、後方互換）**:
+
 ```
 Found N matches:
 
@@ -394,6 +400,7 @@ path/to/File.swift:34: func example2() {
 ```
 
 **file_list**:
+
 ```
 Found N files:
 
@@ -403,6 +410,7 @@ path/to/Other.swift
 ```
 
 **count_only**:
+
 ```
 Matches: 250
 Files: 12
@@ -461,21 +469,23 @@ sequenceDiagram
 
 ### 6.1 パラメータ設計
 
-| パラメータ名 | 型 | 既存/新規 | 説明 |
-|-------------|-----|---------|------|
-| `symbol_name` | `string` | 既存 | シンボル名（必須） |
-| `symbol_kinds` | `array<string>` | **新規** | 種別フィルタ配列（小文字スネーク 9 区分） |
+| パラメータ名   | 型              | 既存/新規 | 説明                                      |
+| -------------- | --------------- | --------- | ----------------------------------------- |
+| `symbol_name`  | `string`        | 既存      | シンボル名（必須）                        |
+| `symbol_kinds` | `array<string>` | **新規**  | 種別フィルタ配列（小文字スネーク 9 区分） |
 
 追加する `ParameterKeys` 定数: `symbolKinds = "symbol_kinds"`
 
 ### 6.2 種別フィルタと優先返却設計
 
 **種別フィルタ未指定時**:
+
 1. 全 9 区分を返す
 2. 優先返却順序: `Class`, `Struct`, `Enum`, `Protocol`, `Actor` → `Function`, `Variable`, `TypeAlias`, `Extension`
 3. `SymbolKindMapper.priorityGroup()` でグループ分けし、グループ 0 を先頭に配置
 
 **種別フィルタ指定時**:
+
 1. `SymbolKindMapper.validate()` で未定義値を検証（1 件でも不正 → `InvalidParams`）
 2. 指定された種別のみ（OR 結合）を返す
 3. 優先返却順序は適用しない
@@ -485,6 +495,7 @@ sequenceDiagram
 `SymbolVisitorV2` を使用して `SymbolInfoV2` を取得する。
 
 3 ケースの区別方法:
+
 - (i) ルート定義（`Foo.Button` の `Button`）: `parentScope = nil`, `extensionTarget = nil`
 - (ii) ネスト型（`enum Foo { struct Button }`）: `parentScope = "Foo"`, `extensionTarget = nil`
 - (iii) extension 内定義（`extension Foo { struct Button }`）: `parentScope = nil`, `extensionTarget = "Foo"`
@@ -493,11 +504,11 @@ sequenceDiagram
 
 本 Feature 完了後、`SwiftSyntaxAnalyzer` には `SymbolInfo`（3 フィールド、既存）と `SymbolInfoV2`（6 フィールド、新規）が並存する。`ProjectMemory.Memory.SymbolInfo` は `SymbolInfoV2` と **同フィールド構成だが別型** とする：
 
-| 型 | フィールド | 配置 | 用途 |
-|----|-----------|------|------|
-| `SwiftSyntaxAnalyzer.SymbolInfo` | 3 | 既存 | 既存ツール（`list_symbols` 等）の解析結果型 |
-| `SwiftSyntaxAnalyzer.SymbolInfoV2` | 6 | 新規 | 本 Feature の解析結果型（スコープ情報付き） |
-| `ProjectMemory.Memory.SymbolInfo` | 6（V2 と同構成） | 新規 | キャッシュ永続化型（v4 以降） |
+| 型                                 | フィールド       | 配置 | 用途                                        |
+| ---------------------------------- | ---------------- | ---- | ------------------------------------------- |
+| `SwiftSyntaxAnalyzer.SymbolInfo`   | 3                | 既存 | 既存ツール（`list_symbols` 等）の解析結果型 |
+| `SwiftSyntaxAnalyzer.SymbolInfoV2` | 6                | 新規 | 本 Feature の解析結果型（スコープ情報付き） |
+| `ProjectMemory.Memory.SymbolInfo`  | 6（V2 と同構成） | 新規 | キャッシュ永続化型（v4 以降）               |
 
 **変換責務の所在**: `Memory.SymbolInfo`（v4）↔ `SymbolInfoV2` は同フィールド構成のため、`FindSymbolDefinitionTool` 内のインライン変換（`map { SymbolInfoV2(...) }`）で行う。独立ヘルパー化はしない（変換ロジックが単純なため過剰抽象化を避ける）。
 
@@ -581,32 +592,32 @@ sequenceDiagram
 
 **メソッド一覧**:
 
-| メソッド | 引数 | 戻り値 | 責務 |
-|---------|------|--------|------|
-| `encodeSearchCode` | `result: SearchCodeResult, mode: SearchOutputMode, cacheWarning: Bool` | `(text: String, json: String)` | 検索結果をテキストと構造化 JSON に整形 |
-| `encodeSymbolDefinition` | `symbols: [SymbolDefinitionResult], cacheWarning: Bool` | `(text: String, json: String)` | シンボル定義結果をテキストと JSON に整形 |
-| `buildFinalResponse` | `_ text: String, _ json: String` | `String` | `text + "\n--- structured ---\n" + json` を結合 |
-| `buildErrorResponse` | `cause: String, suggestion: String` | `String` | 統一エラーフォーマット生成 |
+| メソッド                 | 引数                                                                   | 戻り値                         | 責務                                            |
+| ------------------------ | ---------------------------------------------------------------------- | ------------------------------ | ----------------------------------------------- |
+| `encodeSearchCode`       | `result: SearchCodeResult, mode: SearchOutputMode, cacheWarning: Bool` | `(text: String, json: String)` | 検索結果をテキストと構造化 JSON に整形          |
+| `encodeSymbolDefinition` | `symbols: [SymbolDefinitionResult], cacheWarning: Bool`                | `(text: String, json: String)` | シンボル定義結果をテキストと JSON に整形        |
+| `buildFinalResponse`     | `_ text: String, _ json: String`                                       | `String`                       | `text + "\n--- structured ---\n" + json` を結合 |
+| `buildErrorResponse`     | `cause: String, suggestion: String`                                    | `String`                       | 統一エラーフォーマット生成                      |
 
 **`encodeSearchCode` のモード別 JSON スキーマ**（共通フィールド: `total_match_count` / `total_file_count` / `truncated` / `truncated_to_max_limit` / `cache_warning`）:
 
-| モード | `matches` | `files` | 補足 |
-|--------|----------|--------|------|
-| `match_detail` | `[{"file":"...","line":1,"content":"..."}, ...]` | フィールドなし | 既定モード |
-| `file_list` | `[]` | `["...", ...]`（重複排除済み） | ファイル一覧モード |
-| `count_only` | `[]` | `[]` | 件数のみモード |
+| モード         | `matches`                                        | `files`                        | 補足               |
+| -------------- | ------------------------------------------------ | ------------------------------ | ------------------ |
+| `match_detail` | `[{"file":"...","line":1,"content":"..."}, ...]` | フィールドなし                 | 既定モード         |
+| `file_list`    | `[]`                                             | `["...", ...]`（重複排除済み） | ファイル一覧モード |
+| `count_only`   | `[]`                                             | `[]`                           | 件数のみモード     |
 
 **`encodeSymbolDefinition` の `SymbolDefinitionResult` フィールド**（`Sources/Tools/Symbols/FindSymbolDefinitionTool.swift` 内で定義）:
 
-| フィールド | 型 | 説明 |
-|-----------|-----|------|
-| `symbol_name` | `String` | シンボル名 |
-| `kind` | `String` | 表示用 kind 値（`Class` / `Struct` 等） |
-| `file` | `String` | 絶対パス |
-| `line` | `Int` | 宣言開始行 |
-| `parent_scope` | `String?` | ネスト親の型名 |
-| `extension_target` | `String?` | extension 内定義時の対象型名 |
-| `module_name` | `String?` | SwiftPM ターゲット名（ベストエフォート） |
+| フィールド         | 型        | 説明                                     |
+| ------------------ | --------- | ---------------------------------------- |
+| `symbol_name`      | `String`  | シンボル名                               |
+| `kind`             | `String`  | 表示用 kind 値（`Class` / `Struct` 等）  |
+| `file`             | `String`  | 絶対パス                                 |
+| `line`             | `Int`     | 宣言開始行                               |
+| `parent_scope`     | `String?` | ネスト親の型名                           |
+| `extension_target` | `String?` | extension 内定義時の対象型名             |
+| `module_name`      | `String?` | SwiftPM ターゲット名（ベストエフォート） |
 
 **JSON 出力例**:
 
@@ -689,10 +700,10 @@ suggestion: {修正案（機械的に区別可能）}
 
 `ProjectMemory`（Swift `actor`）が保持する破損フラグを Tool 層から `ResultEncoder` まで伝達する：
 
-| 要素 | 種別 | 内容 |
-|------|------|------|
-| `cacheWarning` | actor 内部プロパティ（`Bool`） | デコード失敗時に `init()` で `true` に設定 |
-| `isCacheWarning() async -> Bool` | actor メソッド | 外部からフラグを取得（`await` 必須） |
+| 要素                             | 種別                           | 内容                                       |
+| -------------------------------- | ------------------------------ | ------------------------------------------ |
+| `cacheWarning`                   | actor 内部プロパティ（`Bool`） | デコード失敗時に `init()` で `true` に設定 |
+| `isCacheWarning() async -> Bool` | actor メソッド                 | 外部からフラグを取得（`await` 必須）       |
 
 **フロー**:
 
@@ -711,26 +722,29 @@ Reason: {判定失敗の理由}
 ### 8.3 構造化結果の生成失敗時
 
 `ResultEncoder.encodeSearchCode/encodeSymbolDefinition` が例外をスローした場合:
+
 - テキスト出力のみを返す
 - テキスト出力末尾に改行を 1 つ挿入し、続けて `[structured output unavailable]` を付記
 
 ### 8.4 所属スコープ情報の取得失敗時
 
 `SymbolVisitorV2` がスコープ情報を取得できなかった場合:
+
 - `parentScope: nil`, `extensionTarget: nil`, `moduleName: nil` として結果を返す
 - テキスト出力の `Scope:` 行に `(scope resolution failed)` を付記
 
 **ファイルパース失敗時の挙動**:
 
 `SwiftSyntaxAnalyzer.listSymbolsWithScope()` がファイルパース自体に失敗した場合（不正 Swift ソース、I/O エラー等）:
+
 - 当該ファイルをスキップし、残りのファイル処理を継続する
 - 構造化結果の `skipped_files` フィールドに当該ファイルパスを列挙する（最大 100 件）
 
-| フィールド | 型 | 説明 |
-|-----------|-----|------|
-| `skipped_files` | `[String]` | スキップされたファイルパス（最大 100 件） |
-| `skipped_files_truncated` | `Bool` | 上限超過時に `true` |
-| `total_skipped_count` | `Int` | 上限適用前の総スキップ件数 |
+| フィールド                | 型         | 説明                                      |
+| ------------------------- | ---------- | ----------------------------------------- |
+| `skipped_files`           | `[String]` | スキップされたファイルパス（最大 100 件） |
+| `skipped_files_truncated` | `Bool`     | 上限超過時に `true`                       |
+| `total_skipped_count`     | `Int`      | 上限適用前の総スキップ件数                |
 
 上限値は `Constants.swift` の定数 `maxSkippedFilesInResponse` に委ねる。
 
@@ -755,6 +769,7 @@ Reason: {判定失敗の理由}
 - 構造化ブロック（`--- structured ---` 以降）は **追記** であり既存行に変更を加えない
 
 **破壊的変更**:
+
 - 既存パラメータ `file_pattern` は廃止。指定された場合は §5.1 の方針に従い未知パラメータとして無視される（旧クライアントは結果が「全 `.swift` ファイル対象」になるため、絞り込み再現には `include_patterns` への移行が必要）
 - 後方互換例外として REQ-005 §4.6「破壊的変更（許容する範囲）」で許容済み
 
@@ -768,17 +783,17 @@ Reason: {判定失敗の理由}
 
 ## 10. 使用する既存コンポーネント
 
-| コンポーネント | ファイルパス | 用途 |
-|-------------|------------|------|
-| `FileSearcher.searchCode()` | `Sources/Selena/Core/FileSearcher.swift:49` | 拡張の起点 |
-| `FileSearcher.wildcardToRegex()` | `Sources/Selena/Core/FileSearcher.swift:154` | glob 変換ロジック再利用 |
-| `SymbolVisitor` | `Sources/Selena/Visitors/SymbolVisitor.swift` | `SymbolVisitorV2` の実装参考 |
-| `ExtensionVisitor.visit(ExtensionDeclSyntax)` | `Sources/Selena/Visitors/ExtensionVisitor.swift:20` | extension 対象型取得ロジック参考 |
-| `ProjectMemory.cacheFileSymbols()` | `Sources/Selena/Core/ProjectMemory.swift:124` | キャッシュ保存インターフェイス |
-| `ProjectMemory.getCachedFileSymbols()` | `Sources/Selena/Core/ProjectMemory.swift:137` | キャッシュ取得インターフェイス |
-| `ToolHelpers.getString()` | `Sources/Tools/ToolProtocol.swift:45` | 拡張の起点 |
-| `MetaToolRegistry.allTools` | `Sources/Tools/Meta/MetaToolRegistry.swift` | `CapabilityRegistry.availableTools()` の戻り値 |
-| `ExcludedDirectories.shouldExclude()` | `Sources/Constants.swift:78` | ファイル検索時の除外ロジック継続使用 |
+| コンポーネント                                | ファイルパス                                        | 用途                                           |
+| --------------------------------------------- | --------------------------------------------------- | ---------------------------------------------- |
+| `FileSearcher.searchCode()`                   | `Sources/Selena/Core/FileSearcher.swift:49`         | 拡張の起点                                     |
+| `FileSearcher.wildcardToRegex()`              | `Sources/Selena/Core/FileSearcher.swift:154`        | glob 変換ロジック再利用                        |
+| `SymbolVisitor`                               | `Sources/Selena/Visitors/SymbolVisitor.swift`       | `SymbolVisitorV2` の実装参考                   |
+| `ExtensionVisitor.visit(ExtensionDeclSyntax)` | `Sources/Selena/Visitors/ExtensionVisitor.swift:20` | extension 対象型取得ロジック参考               |
+| `ProjectMemory.cacheFileSymbols()`            | `Sources/Selena/Core/ProjectMemory.swift:124`       | キャッシュ保存インターフェイス                 |
+| `ProjectMemory.getCachedFileSymbols()`        | `Sources/Selena/Core/ProjectMemory.swift:137`       | キャッシュ取得インターフェイス                 |
+| `ToolHelpers.getString()`                     | `Sources/Tools/ToolProtocol.swift:45`               | 拡張の起点                                     |
+| `MetaToolRegistry.allTools`                   | `Sources/Tools/Meta/MetaToolRegistry.swift`         | `CapabilityRegistry.availableTools()` の戻り値 |
+| `ExcludedDirectories.shouldExclude()`         | `Sources/Constants.swift:78`                        | ファイル検索時の除外ロジック継続使用           |
 
 ---
 
@@ -787,6 +802,7 @@ Reason: {判定失敗の理由}
 ### 11.1 SearchCodeTool テスト
 
 **正常系**:
+
 - `output_mode="match_detail"` 未指定時、従来と同等の出力が返る（後方互換）
 - `output_mode="file_list"` 指定時、マッチを含むファイル一覧が重複排除で返る
 - `output_mode="count_only"` 指定時、マッチ数とファイル数のみ返る
@@ -796,6 +812,7 @@ Reason: {判定失敗の理由}
 - 廃止済み `file_pattern="*.md"` を指定しても無視され、`include_patterns` 等が空なら既定挙動（`.swift` 全体）が適用（破壊的変更の検証）
 
 **異常系**:
+
 - `pattern` に不正な正規表現を指定 → エラー（`cause:` / `suggestion:` を含む）
 - `limit=0` / `limit=-1` → エラー
 - `limit=20000` → 10,000 に切り詰め、`truncated_to_max_limit=true`
@@ -806,6 +823,7 @@ Reason: {判定失敗の理由}
 ### 11.2 FindSymbolDefinitionTool テスト
 
 **正常系**:
+
 - `symbol_kinds` 未指定時、全 9 区分が返り `Class/Struct/Enum/Protocol/Actor` が先頭に来る
 - `symbol_kinds=["struct"]` 指定時、Struct のシンボルのみ返る
 - `symbol_kinds=["struct","class"]` 指定時、Struct と Class が OR 結合で返る
@@ -815,6 +833,7 @@ Reason: {判定失敗の理由}
 - Xcode Only 構造のファイルでは `module_name: nil` で返る
 
 **異常系**:
+
 - `symbol_kinds=["unknown_type"]` → エラー（無効な値を明示）
 - `symbol_kinds=["struct","invalid"]` → エラー（部分的無視なし）
 
@@ -829,26 +848,26 @@ Reason: {判定失敗の理由}
 
 ## 12. 要件トレーサビリティ
 
-| REQ-005 節 | 対応する DES-104 節 |
-| ---------- | ------------------- |
-| §4.1 検索結果の量制御 | §5.1 パラメータ設計、§5.2 出力モード別フォーマット |
-| §4.2 構造化された検索結果 | §7.1 ResultEncoder、§8.2 cache_warning |
-| §4.3 ファイルパターンの複数指定 | §4.4 FileSearcher 拡張 |
-| §4.4 シンボル定義検索の絞り込み強化 | §4.2 SymbolKindMapper、§4.5 SymbolVisitorV2、§6 FindSymbolDefinitionTool |
-| §4.6 後方互換性 | §9 後方互換設計 |
-| §4.7.1 ケーパビリティ通知 | §7.2 CapabilityRegistry |
-| §4.7.2 運用性 | §8.1 入力検証エラーの統一形式、§5.3 入力検証フロー |
-| §4.8 異常系要件 | §8.2 キャッシュ破損時、§8.3 構造化結果生成失敗時、§8.4 所属スコープ情報の取得失敗時、§8.5 ディレクトリ列挙失敗時 |
+| REQ-005 節                          | 対応する DES-104 節                                                                                              |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| §4.1 検索結果の量制御               | §5.1 パラメータ設計、§5.2 出力モード別フォーマット                                                               |
+| §4.2 構造化された検索結果           | §7.1 ResultEncoder、§8.2 cache_warning                                                                           |
+| §4.3 ファイルパターンの複数指定     | §4.4 FileSearcher 拡張                                                                                           |
+| §4.4 シンボル定義検索の絞り込み強化 | §4.2 SymbolKindMapper、§4.5 SymbolVisitorV2、§6 FindSymbolDefinitionTool                                         |
+| §4.6 後方互換性                     | §9 後方互換設計                                                                                                  |
+| §4.7.1 ケーパビリティ通知           | §7.2 CapabilityRegistry                                                                                          |
+| §4.7.2 運用性                       | §8.1 入力検証エラーの統一形式、§5.3 入力検証フロー                                                               |
+| §4.8 異常系要件                     | §8.2 キャッシュ破損時、§8.3 構造化結果生成失敗時、§8.4 所属スコープ情報の取得失敗時、§8.5 ディレクトリ列挙失敗時 |
 
 ---
 
 ## 改定履歴
 
-| 日付 | バージョン | 作成者 | 変更内容 |
-|------|----------|--------|---------|
-| 2026-05-04 | 1.0 | k2moons | 初版作成（REQ-005 §4.1〜§4.8 全 TBD 解決） |
-| 2026-05-04 | 1.1 | k2moons | レビュー指摘修正 |
-| 2026-05-04 | 1.2 | k2moons | テンプレート必須セクション補完 |
-| 2026-05-05 | 1.3 | k2moons | REQ-005 `file_pattern` 廃止反映 |
-| 2026-05-06 | 2.0 | k2moons | **大幅圧縮（拡大解釈の是正）**: ① CapabilityRegistry を最小実装に縮退（actor / 並列前提条件チェック / タイムアウト戦略 / キャンセル協調 / 状態機械を削除し、無条件で全ツール返す静的 enum 関数に変更）／② ProjectMemory v3→v4 移行時の notes 保持機構（LegacyNotesContainer による 2 段階デコード）を削除し全破棄方針に変更（REQ-005 要件外のため）／③ ModuleNameResolver を独立モジュールから SymbolVisitorV2 内のヘルパーメソッドに内包／④ §3.1 データフロー設計・§4.9 状態管理設計（§4.9.1 / §4.9.2）・§6.8 ユースケース設計・§12.1 テンプレートマッピングを削除（テンプレート準拠のための形式的セクションで実装に寄与しない）／⑤ §4.8 ListTools 切り替えシーケンス図を削除／⑥ §6.5 並存 3 型表を §6.4 に集約／⑦ 1193 行 → 833 行（約 30% 削減）に圧縮 |
-| 2026-05-17 | 2.1 | k2moons | issue #34 対応反映: `SearchFilesWithoutPatternTool` も `file_pattern` を廃止し `include_patterns` / `exclude_patterns` へ統一。`Sources/Constants.swift` の `ParameterKeys.filePattern` 共有定数を完全削除。§5.1 の `file_pattern` 未知パラメータ無視方針は両ツールに適用される |
+| 日付       | バージョン | 作成者  | 変更内容                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------- | ---------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-04 | 1.0        | k2moons | 初版作成（REQ-005 §4.1〜§4.8 全 TBD 解決）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 2026-05-04 | 1.1        | k2moons | レビュー指摘修正                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 2026-05-04 | 1.2        | k2moons | テンプレート必須セクション補完                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 2026-05-05 | 1.3        | k2moons | REQ-005 `file_pattern` 廃止反映                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 2026-05-06 | 2.0        | k2moons | **大幅圧縮（拡大解釈の是正）**: ① CapabilityRegistry を最小実装に縮退（actor / 並列前提条件チェック / タイムアウト戦略 / キャンセル協調 / 状態機械を削除し、無条件で全ツール返す静的 enum 関数に変更）／② ProjectMemory v3→v4 移行時の notes 保持機構（LegacyNotesContainer による 2 段階デコード）を削除し全破棄方針に変更（REQ-005 要件外のため）／③ ModuleNameResolver を独立モジュールから SymbolVisitorV2 内のヘルパーメソッドに内包／④ §3.1 データフロー設計・§4.9 状態管理設計（§4.9.1 / §4.9.2）・§6.8 ユースケース設計・§12.1 テンプレートマッピングを削除（テンプレート準拠のための形式的セクションで実装に寄与しない）／⑤ §4.8 ListTools 切り替えシーケンス図を削除／⑥ §6.5 並存 3 型表を §6.4 に集約／⑦ 1193 行 → 833 行（約 30% 削減）に圧縮 |
+| 2026-05-17 | 2.1        | k2moons | issue #34 対応反映: `SearchFilesWithoutPatternTool` も `file_pattern` を廃止し `include_patterns` / `exclude_patterns` へ統一。`Sources/Constants.swift` の `ParameterKeys.filePattern` 共有定数を完全削除。§5.1 の `file_pattern` 未知パラメータ無視方針は両ツールに適用される                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |

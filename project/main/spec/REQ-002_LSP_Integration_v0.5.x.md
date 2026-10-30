@@ -15,16 +15,19 @@
 #### 背景：SwiftSyntaxの限界
 
 **SwiftSyntax（v0.5.0で実装済み）の強み:**
+
 - ✅ ビルド不要
 - ✅ 高速
 - ✅ 実装中コードも解析可能
 
 **SwiftSyntaxの限界:**
+
 - ❌ 型情報がない（`var x`の型が分からない）
 - ❌ 参照検索が不正確（文字列ベース）
 - ❌ 型推論ができない
 
 **具体例:**
+
 ```swift
 // ファイル1
 class UserManager {
@@ -41,6 +44,7 @@ manager.createUser("Alice")  // ← LSP: UserManager.createUserと正確に分�
 #### 課題：正確な参照検索の必要性
 
 **シーン：リファクタリング**
+
 ```swift
 class UserRepository {
     func save(user: User) { ... }  // ← このメソッドの全使用箇所を知りたい
@@ -48,6 +52,7 @@ class UserRepository {
 ```
 
 **SwiftSyntaxでの検索:**
+
 ```
 find_symbol_definition("UserRepository")
 → UserRepository型の定義箇所とスコープは分かる
@@ -60,11 +65,13 @@ search_code("\.save")
 ```
 
 **問題点:**
+
 - save()メソッドの呼び出しを正確に検出できない
 - 他のクラスのsave()メソッドも検出してしまう（ノイズ）
 - 型推論された変数からの呼び出しを見逃す
 
 **LSPでの解決:**
+
 ```
 find_symbol_references("UserRepository.swift", line: 15, column: 10)
 → ✅ このsave()メソッドの呼び出しを型情報ベースで正確に検出
@@ -79,19 +86,23 @@ find_symbol_references("UserRepository.swift", line: 15, column: 10)
 #### 二者択一ではない
 
 **選択肢A: SwiftSyntaxのみ**
+
 - ✅ ビルド不要
 - ❌ 型情報なし、参照検索不正確
 
 **選択肢B: LSPのみ**
+
 - ✅ 型情報完全
 - ❌ ビルド必要、実装中コードで使えない
 
 **Swift-Selenaの選択: ハイブリッド**
+
 - ✅ ビルド不要の原則を維持（SwiftSyntax）
 - ✅ ビルド可能時は高度な機能（LSP）
 - ✅ グレースフルデグレード
 
 **具体的な動作:**
+
 ```
 プロジェクト状態に応じて動的に切り替え:
 
@@ -115,11 +126,13 @@ find_symbol_references("UserRepository.swift", line: 15, column: 10)
 #### 問題1: 参照検索の不正確性
 
 **ケース:**
+
 ```swift
 // MyApp全体で「save」メソッドを探したい
 ```
 
 **v0.5.0の方法:**
+
 ```
 search_code("func save")
 → 結果: 85箇所ヒット
@@ -127,6 +140,7 @@ search_code("func save")
 ```
 
 **求められる機能:**
+
 - 特定のクラスのsave()メソッドだけを検索
 - 型情報で正確にフィルタリング
 
@@ -135,6 +149,7 @@ search_code("func save")
 #### 問題2: 型情報の欠如
 
 **ケース:**
+
 ```swift
 struct User {
     var name: String
@@ -145,6 +160,7 @@ struct User {
 ```
 
 **v0.5.0:**
+
 ```
 list_symbols("User.swift")
 → [Variable] age (line 15)
@@ -152,6 +168,7 @@ list_symbols("User.swift")
 ```
 
 **求められる機能:**
+
 - フィールドの型を表示
 - メソッドのシグネチャを表示
 
@@ -160,6 +177,7 @@ list_symbols("User.swift")
 #### 問題3: Protocol実装の不完全性
 
 **ケース:**
+
 ```swift
 class ViewController: UIViewController, UITableViewDelegate {
     // どのメソッドをオーバーライドしている？
@@ -167,6 +185,7 @@ class ViewController: UIViewController, UITableViewDelegate {
 ```
 
 **v0.5.0:**
+
 ```
 list_protocol_conformances("ViewController.swift")
 → Conforms to: UITableViewDelegate
@@ -174,6 +193,7 @@ list_protocol_conformances("ViewController.swift")
 ```
 
 **求められる機能:**
+
 - オーバーライドメソッドの列挙
 - 未実装の必須メソッドの検出
 
@@ -184,6 +204,7 @@ list_protocol_conformances("ViewController.swift")
 #### ペイン1: 「このメソッド、どこで使ってる？」
 
 **現状（v0.5.0）:**
+
 ```
 1. find_symbol_definition("UserManager")
    → クラスの定義箇所は分かる
@@ -195,6 +216,7 @@ list_protocol_conformances("ViewController.swift")
 **所要時間**: 5-10分
 
 **理想（LSP版）:**
+
 ```
 1. find_symbol_references("UserManager.swift", line: 15, column: 10)
    → このcreateUser()メソッドの呼び出しを正確に検出
@@ -209,6 +231,7 @@ list_protocol_conformances("ViewController.swift")
 #### ペイン2: 「このクラスの全メソッドとシグネチャは？」
 
 **現状（v0.5.0）:**
+
 ```
 list_symbols("UserManager.swift")
 → [Function] createUser (line 15)
@@ -219,6 +242,7 @@ list_symbols("UserManager.swift")
 **手動でファイルを開いて確認が必要**
 
 **理想（LSP版）:**
+
 ```
 list_symbols("UserManager.swift")  # LSP強化版
 → [Method] createUser(name: String) -> User (line 15)
@@ -240,17 +264,20 @@ list_symbols("UserManager.swift")  # LSP強化版
 型情報ベースの正確なシンボル参照検索
 
 **仕様:**
+
 - 入力: ファイルパス、行番号、列番号
 - 出力: 参照箇所のリスト（ファイルパス:行番号）
 - LSP: textDocument/referencesリクエスト使用
 
 **受入基準:**
+
 - ✅ 特定メソッドの呼び出し箇所を100%検出
 - ✅ 型推論された変数からの呼び出しも検出
 - ✅ ノイズ（無関係なsave()等）ゼロ
 - ✅ LSP利用不可時はエラーメッセージで代替案提示
 
 **v0.5.3実績:**
+
 - ✅ LSPState: 3件検出
 - ✅ ProjectMemory: 34件検出
 - ✅ 5回連続実行でクラッシュなし
@@ -263,10 +290,12 @@ list_symbols("UserManager.swift")  # LSP強化版
 LSP利用可能時、シンボル一覧に型情報を含める
 
 **仕様:**
+
 - LSP版: textDocument/documentSymbol使用
 - SwiftSyntax版: 従来通り（フォールバック）
 
 **出力例:**
+
 ```
 # LSP版（ビルド可能時）
 [Class] ProjectMemory: class ProjectMemory (line 12)
@@ -280,6 +309,7 @@ LSP利用可能時、シンボル一覧に型情報を含める
 ```
 
 **受入基準:**
+
 - ✅ LSP版で型情報表示
 - ✅ メソッドシグネチャ表示
 - ✅ LSP失敗時にSwiftSyntax版で動作
@@ -293,10 +323,12 @@ LSP利用可能時、シンボル一覧に型情報を含める
 LSP利用可能時、型階層にLSP型詳細を追加
 
 **仕様:**
+
 - LSP版: textDocument/prepareTypeHierarchy使用
 - SwiftSyntax版: 従来のキャッシュベース（フォールバック）
 
 **出力例:**
+
 ```
 # LSP版
 Type Hierarchy for 'ProjectMemory' (LSP enhanced):
@@ -319,6 +351,7 @@ Conforms to: (キャッシュから取得)
 ```
 
 **受入基準:**
+
 - ✅ LSP版でType Detail表示
 - ✅ Protocol準拠情報の精度向上
 - ✅ LSP失敗時にSwiftSyntax版で動作
@@ -331,10 +364,12 @@ Conforms to: (キャッシュから取得)
 呼び出し階層の取得
 
 **ユースケース:**
+
 - 「このメソッドはどこから呼ばれている？」
 - 「このメソッドは何を呼んでいる？」
 
 **仕様:**
+
 - textDocument/prepareCallHierarchy
 - textDocument/callHierarchy/incomingCalls
 - textDocument/callHierarchy/outgoingCalls
@@ -349,17 +384,20 @@ Conforms to: (キャッシュから取得)
 LSP利用不可時も必ず動作すること
 
 **ケース:**
+
 1. ビルドエラーあり → SwiftSyntax版
 2. SourceKit-LSP未インストール → SwiftSyntax版
 3. LSP接続失敗 → SwiftSyntax版
 4. LSPクラッシュ → SwiftSyntax版
 
 **受入基準:**
+
 - ✅ どのケースでもツールが動作
 - ✅ エラーメッセージで代替案提示
 - ✅ クラッシュしない
 
 **v0.5.3達成状況:**
+
 - ✅ 全ケースでフォールバック実装済み
 - ✅ エラーハンドリング網羅
 
@@ -371,6 +409,7 @@ LSP利用不可時も必ず動作すること
 LSP利用可能性に応じてツールリストを変更
 
 **仕様:**
+
 ```
 ビルド不可:
   → 17個のSwiftSyntaxツール
@@ -381,6 +420,7 @@ LSP利用可能性に応じてツールリストを変更
 ```
 
 **受入基準:**
+
 - ✅ initialize_project後にLSP接続試行
 - ✅ 接続成功時はLSPツール追加
 - ✅ ツールリストが動的に変化
@@ -393,6 +433,7 @@ LSP利用可能性に応じてツールリストを変更
 LSPプロトコルを完全準拠し、安定動作すること
 
 **v0.5.3で解決した問題:**
+
 1. initialized通知の欠落 → 2リクエスト後に終了
 2. textDocument/didOpenの欠落 → "No language service" エラー
 3. initializeレスポンス読み捨て不足 → 誤ったレスポンス解析
@@ -400,11 +441,13 @@ LSPプロトコルを完全準拠し、安定動作すること
 5. Content-Length計算ミス → 通信失敗
 
 **受入基準:**
+
 - ✅ 5回以上連続実行でクラッシュなし
 - ✅ LSPプロトコル完全準拠
 - ✅ エラーハンドリング網羅
 
 **v0.5.3実績:**
+
 - ✅ 5回連続成功
 - ✅ 参照検索成功（3-34件検出）
 
@@ -416,11 +459,13 @@ LSPプロトコルを完全準拠し、安定動作すること
 LSP通信をログで確認でき、問題を特定できること
 
 **実装（v0.5.3）:**
+
 - FileLogHandler: `~/.swift-selena/logs/server.log`
 - DebugRunner: プロセス内自動テスト
 - 詳細ログ: LSPリクエスト・レスポンス全て記録
 
 **受入基準:**
+
 - ✅ tail -f でリアルタイム監視
 - ✅ LSPレスポンス全体をログ出力
 - ✅ Xcodeデバッガでブレークポイント設定可能
@@ -434,10 +479,12 @@ LSP通信をログで確認でき、問題を特定できること
 **アクター:** リファクタリング中の開発者
 
 **前提条件:**
+
 - プロジェクトがビルド可能
 - Swift-Selena v0.5.2+使用
 
 **メインフロー:**
+
 ```
 1. 開発者: 「UserManager.createUser()の呼び出し箇所を全て教えて」
 
@@ -463,6 +510,7 @@ LSP通信をログで確認でき、問題を特定できること
 ```
 
 **代替フロー（現行）:**
+
 ```
 3. Claude: find_symbol_definition("UserManager")
    → 定義箇所と所属スコープを確認
@@ -475,6 +523,7 @@ LSP通信をログで確認でき、問題を特定できること
 ```
 
 **期待される効果:**
+
 - リファクタリングの影響範囲を正確に把握
 - 変更漏れゼロ
 - 自信を持ってコード変更
@@ -489,6 +538,7 @@ LSP通信をログで確認でき、問題を特定できること
 既存プロジェクトのコードを理解したい
 
 **メインフロー:**
+
 ```
 1. 開発者: 「UserManagerクラスの全メソッドを教えて」
 
@@ -508,6 +558,7 @@ LSP通信をログで確認でき、問題を特定できること
 ```
 
 **代替フロー（LSP利用不可）:**
+
 ```
 3. 結果（SwiftSyntax版、ビルド不可時）:
    Symbols in UserManager.swift:
@@ -522,6 +573,7 @@ LSP通信をログで確認でき、問題を特定できること
 ```
 
 **期待される効果:**
+
 - コード理解時間: 30分 → 5分（6倍高速化）
 - 型情報により正確な理解
 - ファイルを開かずにシグネチャ確認
@@ -536,6 +588,7 @@ LSP通信をログで確認でき、問題を特定できること
 クラス設計をレビューしたい
 
 **メインフロー:**
+
 ```
 1. アーキテクト: 「UserViewControllerの階層を見せて」
 
@@ -564,6 +617,7 @@ LSP通信をログで確認でき、問題を特定できること
 ```
 
 **代替フロー（LSP利用不可）:**
+
 ```
 3. 結果（SwiftSyntax版）:
    [Class] UserViewController
@@ -580,6 +634,7 @@ LSP通信をログで確認でき、問題を特定できること
 ```
 
 **期待される効果:**
+
 - 設計レビューの精度向上
 - オーバーライドの確認
 - 継承関係の可視化
@@ -593,12 +648,14 @@ LSP通信をログで確認でき、問題を特定できること
 **目標:** LSP接続基盤の構築
 
 **成功基準:**
+
 - ✅ LSPState Actor実装
 - ✅ LSPClient実装（initialize, initialized対応）
 - ✅ 動的ツールリスト生成
 - ✅ バックグラウンドLSP接続
 
 **実績:**
+
 - ✅ 全て達成（2025-10-21）
 
 ---
@@ -608,11 +665,13 @@ LSP通信をログで確認でき、問題を特定できること
 **目標:** 型情報ベース参照検索の実現
 
 **成功基準:**
+
 - ✅ find_symbol_referencesツール実装
 - ✅ LSP textDocument/referencesリクエスト成功
 - ✅ 参照検索が動作
 
 **実績:**
+
 - ✅ ツール実装完了（2025-10-21）
 - ⚠️ クラッシュ問題発生（3回目で終了）
 
@@ -623,12 +682,14 @@ LSP通信をログで確認でき、問題を特定できること
 **目標:** find_symbol_referencesの完全動作
 
 **成功基準:**
+
 - ✅ LSPプロトコル完全準拠
 - ✅ 5回以上連続実行でクラッシュなし
 - ✅ 実際に参照を検出できる
 - ✅ デバッグ環境整備
 
 **実績:**
+
 - ✅ 全て達成（2025-10-24）
 - ✅ initialized通知、didOpen実装
 - ✅ 5回連続成功、34件検出
@@ -641,12 +702,14 @@ LSP通信をログで確認でき、問題を特定できること
 **目標:** 既存ツールの型情報強化
 
 **成功基準:**
+
 - ✅ list_symbols: LSP版で型情報表示
 - ✅ get_type_hierarchy: LSP版でType Detail表示
 - ✅ グレースフルデグレード動作
 - ✅ クラッシュなし
 
 **評価指標:**
+
 - 型情報表示率: 100%（LSP利用可能時）
 - フォールバック成功率: 100%（LSP利用不可時）
 
@@ -657,6 +720,7 @@ LSP通信をログで確認でき、問題を特定できること
 **目標:** 呼び出し階層など
 
 **成功基準:**
+
 - get_call_hierarchy実装
 - その他LSP機能（必要性を判断）
 
@@ -667,11 +731,13 @@ LSP通信をログで確認でき、問題を特定できること
 ### 6.1 技術的制約
 
 **必須:**
+
 - macOS 13.0+
 - Swift 5.9+
 - SwiftSyntax 602.0.0
 
 **オプション:**
+
 - SourceKit-LSP（LSP機能使用時）
 - ビルド可能なプロジェクト（LSP機能使用時）
 
@@ -680,6 +746,7 @@ LSP通信をログで確認でき、問題を特定できること
 ### 6.2 設計制約
 
 **不変の原則:**
+
 1. ビルド非依存性の維持
 2. ローカル完結性
 3. グレースフルデグレード
@@ -691,16 +758,19 @@ LSP通信をログで確認でき、問題を特定できること
 ### 6.3 LSP利用の前提条件
 
 **LSPツールが動作する条件:**
+
 1. プロジェクトがSwift Packageである
 2. ビルドが可能である（`swift build`が成功）
 3. SourceKit-LSPがインストールされている
 
 **動作しない条件:**
+
 - Xcodeプロジェクト（.xcodeproj）のみ
 - ビルドエラーあり
 - SourceKit-LSP未インストール
 
 **対策:**
+
 - ✅ 動作しない場合はSwiftSyntax版で動作
 - ✅ エラーメッセージで状況を説明
 
@@ -713,6 +783,7 @@ LSP通信をログで確認でき、問題を特定できること
 **A:** 型情報がないため、参照検索が不正確です。
 
 **例:**
+
 ```swift
 class UserRepository {
     func save(user: User) { ... }
@@ -749,6 +820,7 @@ Claude CodeからXcodeの解析結果を取得する手段がありません。
 **A:** 確かに複雑ですが、両方の利点を得られます。
 
 **トレードオフ:**
+
 - 実装複雑度: 増加
 - ユーザー体験: 大幅向上（ビルド不要 + 型情報）
 
@@ -763,11 +835,13 @@ Claude CodeからXcodeの解析結果を取得する手段がありません。
 #### Phase 1（v0.5.1-v0.5.3）: 最高優先 🔴
 
 **理由:**
+
 - LSP基盤がないと何も始まらない
 - find_symbol_referencesは最も需要が高い
 - 安定性は絶対条件
 
 **実績:**
+
 - ✅ 完了（2025-10-24）
 
 ---
@@ -775,6 +849,7 @@ Claude CodeからXcodeの解析結果を取得する手段がありません。
 #### Phase 2（v0.5.4）: 高優先 🟡
 
 **理由:**
+
 - list_symbols、get_type_hierarchyは使用頻度が高い
 - 型情報があると理解が格段に早い
 - 実装パターンが確立済み
@@ -786,6 +861,7 @@ Claude CodeからXcodeの解析結果を取得する手段がありません。
 #### Phase 3（v0.5.5）: 中優先 🟢
 
 **理由:**
+
 - get_call_hierarchyは便利だが必須ではない
 - 実用で必要性を判断
 
@@ -795,12 +871,12 @@ Claude CodeからXcodeの解析結果を取得する手段がありません。
 
 ### 8.2 機能別優先度
 
-| 機能 | 優先度 | 理由 |
-|------|--------|------|
-| find_symbol_references | 🔴 最高 | リファクタリングで必須 |
-| list_symbols強化 | 🟡 高 | コード理解で頻繁に使用 |
-| get_type_hierarchy強化 | 🟡 高 | アーキテクチャ理解で重要 |
-| get_call_hierarchy | 🟢 中 | あれば便利 |
+| 機能                   | 優先度  | 理由                     |
+| ---------------------- | ------- | ------------------------ |
+| find_symbol_references | 🔴 最高 | リファクタリングで必須   |
+| list_symbols強化       | 🟡 高   | コード理解で頻繁に使用   |
+| get_type_hierarchy強化 | 🟡 高   | アーキテクチャ理解で重要 |
+| get_call_hierarchy     | 🟢 中   | あれば便利               |
 
 ---
 
@@ -811,9 +887,11 @@ Claude CodeからXcodeの解析結果を取得する手段がありません。
 #### リスク1: SourceKit-LSP APIのサポート状況
 
 **懸念:**
+
 - documentSymbol, typeHierarchy が本当にサポートされているか？
 
 **確認方法（v0.5.3で実施済み）:**
+
 ```
 Initialize response の capabilities:
 {
@@ -830,9 +908,11 @@ Initialize response の capabilities:
 #### リスク2: レスポンス形式の不一致
 
 **懸念:**
+
 - 想定と異なるJSON形式が返る可能性
 
 **対策:**
+
 - 詳細ログでレスポンス全体を確認（v0.5.3実装済み）
 - try-catchで安全にフォールバック
 - DebugRunnerで事前テスト
@@ -844,10 +924,12 @@ Initialize response の capabilities:
 #### リスク3: パフォーマンス劣化
 
 **懸念:**
+
 - textDocument/didOpenでファイル全体を送信
 - 大きなファイルで遅延の可能性
 
 **対策:**
+
 - openedFilesキャッシュ（同じファイルは1回のみ）
 - 必要なファイルのみ開く
 
@@ -860,13 +942,16 @@ Initialize response の capabilities:
 #### リスク4: LSP利用可能性の誤解
 
 **懸念:**
+
 - ユーザーが「なぜLSPツールが使えないのか」理解できない
 
 **対策:**
+
 - エラーメッセージで明確に説明
 - 代替ツール（SwiftSyntax版）を案内
 
 **例:**
+
 ```
 ❌ LSP not available.
 
@@ -888,6 +973,7 @@ This tool requires a buildable project with SourceKit-LSP.
 **なぜ一度に全部実装しないのか？**
 
 **理由:**
+
 1. **リスク分散**
    - 1機能ずつテスト・検証
    - 問題があれば即座に修正
@@ -901,6 +987,7 @@ This tool requires a buildable project with SourceKit-LSP.
    - 各バージョンで完全動作を保証
 
 **v0.5.3での成功例:**
+
 - initialized通知の欠落を発見・修正
 - 段階的にプロトコル理解を深めた
 - 結果: 安定動作達成
@@ -933,17 +1020,20 @@ documentSymbol(), typeHierarchy()に適用
 ### 11.1 v0.5.4完了時の成果物
 
 **コード:**
+
 - LSPClient.swift（+150行）
 - ListSymbolsTool.swift（+50行）
 - GetTypeHierarchyTool.swift（+40行）
 - SwiftMCPServer.swift（+30行）
 
 **ドキュメント:**
+
 - DES-009: 詳細設計書
 - REQ-002: 要件定義書（本文書）
 - HISTORY.md更新
 
 **テスト:**
+
 - DebugRunnerテストケース追加
 - 自動テスト実行ログ
 
@@ -952,11 +1042,13 @@ documentSymbol(), typeHierarchy()に適用
 ### 11.2 提供価値
 
 **開発者への価値:**
+
 - ✅ 型情報付きシンボル一覧
 - ✅ 正確な参照検索
 - ✅ ビルド不可時も動作（グレースフルデグレード）
 
 **AIアシスタントへの価値:**
+
 - ✅ より正確なコード理解
 - ✅ 型情報に基づく推論
 - ✅ リファクタリング支援の精度向上
@@ -996,21 +1088,27 @@ v0.5.5: 追加機能（将来）
 ### 12.2 累積的な価値
 
 **v0.5.0:**
+
 - 22ツール、ビルド不要
 
 **v0.5.1:**
+
 - +LSP基盤
 
 **v0.5.2:**
+
 - +find_symbol_references（1ツール）
 
 **v0.5.3:**
+
 - +安定性、デバッグ環境
 
 **v0.5.4:**
+
 - +型情報強化（2ツール）
 
 **v0.5.5:**
+
 - +呼び出し階層（1-2ツール）
 
 **最終:** 19-20ツール、ハイブリッド、高品質
@@ -1022,6 +1120,7 @@ v0.5.5: 追加機能（将来）
 ### 13.1 要件の妥当性
 
 **確認事項:**
+
 1. ✅ ビルド非依存性を維持しているか
 2. ✅ グレースフルデグレードを保証しているか
 3. ✅ 段階的実装になっているか
@@ -1030,6 +1129,7 @@ v0.5.5: 追加機能（将来）
 ### 13.2 スコープの妥当性
 
 **確認事項:**
+
 1. ✅ v0.5.4のスコープは適切か（2ツール強化のみ）
 2. ✅ 工数見積もり（1.5時間）は妥当か
 3. ✅ リスクは管理されているか

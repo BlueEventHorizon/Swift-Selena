@@ -9,12 +9,14 @@
 ### StdioTransportの仕様
 
 **クライアント・サーバー関係**:
+
 - **1クライアント = 1サーバープロセス**（必須）
 - 複数クライアントで1プロセス共有は**不可能**
 - 公式仕様: "Single client connection only"
 - 複数クライアント対応にはSSE Transport必要
 
 **プロセスライフサイクル**:
+
 ```swift
 // 誤った実装
 try await server.start(transport: transport)
@@ -27,11 +29,13 @@ logger.info("Server stopped")
 ```
 
 **重要ポイント**:
+
 - `server.start()`: 非ブロッキング、即座にreturn
 - `server.waitUntilCompleted()`: EOF受信までブロッキング待機
 - 無限ループ（`while true`）は不要、むしろゾンビプロセスの原因
 
 **シャットダウンフロー**:
+
 1. クライアント → stdinを閉じる
 2. サーバー → EOF検知、`waitUntilCompleted()`がreturn
 3. プロセス正常終了
@@ -48,11 +52,13 @@ logger.info("Server stopped")
 **正解**: データ分離のため
 
 **仕組み**:
+
 - 各クライアントが独自プロセスを起動（StdioTransportの仕様）
 - データは共有ストレージ（例: `~/.your-app/clients/{clientId}/`）
 - MCP_CLIENT_IDでキャッシュ・メモリを分離
 
 **ユースケース**:
+
 - Claude DesktopとClaude Codeでキャッシュ分離
 - 同じプロジェクトでもクライアント別の設定を保持
 
@@ -65,6 +71,7 @@ logger.info("Server stopped")
 **問題**: debugビルドを本番名で登録 → 本番環境が影響を受ける
 
 **解決**: 別名登録
+
 ```bash
 # 本番
 claude mcp add your-server -- /path/to/release/YourServer
@@ -74,6 +81,7 @@ claude mcp add your-server-debug -- /path/to/debug/YourServer
 ```
 
 **効果**:
+
 - ツールプレフィックス: `mcp__your-server__*` vs `mcp__your-server-debug__*`
 - 完全分離、本番環境に影響なし
 - デバッグ機能が本番に影響しない
@@ -108,6 +116,7 @@ Tool(
 ```
 
 **ポイント**:
+
 - 必須パラメータは`required`に明記
 - 説明には具体例を含める
 - オプションパラメータはデフォルト値をコードで処理
@@ -145,6 +154,7 @@ LoggingSystem.bootstrap { label in
 ```
 
 **重要**:
+
 - stdoutはMCP通信専用、ログはstderrまたはファイルへ
 - ログファイルの場所を起動時に表示
 - `tail -f ~/.your-app/logs/server.log` で監視可能に
@@ -212,11 +222,13 @@ guard let args = params.arguments,
 ### 正しいテストの実施
 
 **ダメな例**:
+
 - Bashスクリプトで直接ロジック再実装
 - `strings`コマンドでバイナリ確認
 - 「〜件返されるはず」と推測
 
 **正しい例**:
+
 - 実際にMCPツールとして呼び出す
 - 実際の結果を確認
 - 期待値と比較検証

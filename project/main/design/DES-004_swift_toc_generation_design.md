@@ -16,12 +16,14 @@ Swiftコードベース（App/Domain/Infrastructure/DI/Tools/Library）の全フ
 ### 1.2 背景
 
 **現状の問題**:
+
 - Tools/: 67ファイル、Library/: 48ファイルの既存コードが存在
 - `search_code("phone")`で50箇所ヒット → **何ができるかわからない**
 - 1ファイルに多様な機能が搭載、検索だけでは理解困難
 - DocCコメント存在率約30%、コメントに依存できない
 
 **解決アプローチ**:
+
 - Swiftコード構造（型、メソッド、Protocol準拠）から**AI推論**で機能を特定
 - docs/docs_toc.md（ドキュメント索引）と同じパターンでswift_toc.md（コード索引）生成
 - Swift-Selena MCPとの共生（将来的に内部DB化）
@@ -37,13 +39,13 @@ Swiftコードベース（App/Domain/Infrastructure/DI/Tools/Library）の全フ
 
 ## 2. モジュールリスト
 
-| モジュール名 | 責務 | 入力インターフェース | 出力インターフェース | 依存モジュール |
-|------------|------|-------------------|-------------------|--------------|
-| **ファイルスキャナー** | 対象Swiftファイルの列挙 | ディレクトリパス（Tools/, Library/, Domain/, App/） | ファイルパスリスト | Glob（Swift-Selenaは補助） |
-| **構造解析器** | 各ファイルのシンボル構造抽出 | ファイルパス | シンボル情報（型、メソッド、Protocol） | Swift-Selena（推奨）/ Read（代替） |
-| **AI推論エンジン** | 構造から目的・機能を推論 | シンボル情報、ファイル名 | 目的、機能、使用パターン、キーワード | Claude自身 |
-| **索引生成器** | AI検索最適化されたMarkdown生成 | 推論結果リスト | swift_toc.md | なし |
-| **コマンドコントローラー** | 全体フロー制御、エラーハンドリング | コマンド引数 | 完了報告 | 上記全モジュール |
+| モジュール名               | 責務                               | 入力インターフェース                                | 出力インターフェース                   | 依存モジュール                     |
+| -------------------------- | ---------------------------------- | --------------------------------------------------- | -------------------------------------- | ---------------------------------- |
+| **ファイルスキャナー**     | 対象Swiftファイルの列挙            | ディレクトリパス（Tools/, Library/, Domain/, App/） | ファイルパスリスト                     | Glob（Swift-Selenaは補助）         |
+| **構造解析器**             | 各ファイルのシンボル構造抽出       | ファイルパス                                        | シンボル情報（型、メソッド、Protocol） | Swift-Selena（推奨）/ Read（代替） |
+| **AI推論エンジン**         | 構造から目的・機能を推論           | シンボル情報、ファイル名                            | 目的、機能、使用パターン、キーワード   | Claude自身                         |
+| **索引生成器**             | AI検索最適化されたMarkdown生成     | 推論結果リスト                                      | swift_toc.md                           | なし                               |
+| **コマンドコントローラー** | 全体フロー制御、エラーハンドリング | コマンド引数                                        | 完了報告                               | 上記全モジュール                   |
 
 ---
 
@@ -104,11 +106,11 @@ classDiagram
 
 ## 4. ユースケース一覧
 
-| UC-ID | ユースケース名 | アクター | 事前条件 | 事後条件 | 基本フロー概要 |
-|-------|--------------|---------|---------|---------|--------------|
-| UC001 | Swift索引生成 | Claude/開発者 | Swiftファイルが存在 | swift_toc.md生成完了 | コマンド実行 → ファイルスキャン → 構造解析 → AI推論 → 索引生成 |
-| UC002 | 既存コード検索 | Claude/Agent | swift_toc.md存在 | 目的のコード発見 | swift_toc.md内をsearch_code → ファイルパス特定 → Read |
-| UC003 | 索引更新 | Claude/開発者 | 新規ファイル追加 | 最新索引に更新 | /create-swift-toc再実行 |
+| UC-ID | ユースケース名 | アクター      | 事前条件            | 事後条件             | 基本フロー概要                                                 |
+| ----- | -------------- | ------------- | ------------------- | -------------------- | -------------------------------------------------------------- |
+| UC001 | Swift索引生成  | Claude/開発者 | Swiftファイルが存在 | swift_toc.md生成完了 | コマンド実行 → ファイルスキャン → 構造解析 → AI推論 → 索引生成 |
+| UC002 | 既存コード検索 | Claude/Agent  | swift_toc.md存在    | 目的のコード発見     | swift_toc.md内をsearch_code → ファイルパス特定 → Read          |
+| UC003 | 索引更新       | Claude/開発者 | 新規ファイル追加    | 最新索引に更新       | /create-swift-toc再実行                                        |
 
 ---
 
@@ -232,10 +234,10 @@ struct FileMetadata {
 
 ## Quick Reference（高頻度使用）
 
-| ファイル | 目的 | 主要API | 層 |
-|---------|------|---------|-----|
-| Tools/Core/StreamManager.swift | AsyncStream自動管理 | createStream(), broadcast() | Tools |
-| Tools/Core/MockAssertion.swift | Mock本番環境防止 | assertIfProductionOrStaging() | Tools |
+| ファイル                                              | 目的                     | 主要API                         | 層      |
+| ----------------------------------------------------- | ------------------------ | ------------------------------- | ------- |
+| Tools/Core/StreamManager.swift                        | AsyncStream自動管理      | createStream(), broadcast()     | Tools   |
+| Tools/Core/MockAssertion.swift                        | Mock本番環境防止         | assertIfProductionOrStaging()   | Tools   |
 | Library/Contact/PhoneNumber+InternationalFormat.swift | 国際電話番号フォーマット | formatInternationalForDisplay() | Library |
 
 ---
@@ -245,6 +247,7 @@ struct FileMetadata {
 ### Tools/Core/
 
 #### AppVersion.swift
+
 - **目的**: セマンティックバージョン管理
 - **主要機能**:
   - バージョン比較（Comparable準拠）
@@ -256,6 +259,7 @@ struct FileMetadata {
 - **キーワード**: version, semantic, compare, parse
 
 #### StreamManager.swift
+
 - **目的**: AsyncStream自動管理、リソース解放
 - **主要機能**:
   - Stream生成と購読者管理
@@ -269,6 +273,7 @@ struct FileMetadata {
 ### Library/Contact/
 
 #### PhoneNumber+InternationalFormat.swift
+
 - **目的**: 国際電話番号の表示用フォーマット
 - **主要機能**:
   - 7カ国の番号体系対応
@@ -282,14 +287,17 @@ struct FileMetadata {
 ## キーワードインデックス
 
 ### async
+
 - Tools/Core/StreamManager.swift
 - Domain/Service/*Service.swift
 
 ### phone
+
 - Library/Contact/PhoneNumber+InternationalFormat.swift
 - Library/Contact/PhoneNumber.swift
 
 ### validation
+
 - Tools/Core/Validation/EmailValidator.swift
 - Tools/Core/Validation/PhoneValidator.swift
 
@@ -298,12 +306,15 @@ struct FileMetadata {
 ## タグ別インデックス
 
 ### #Tools-Core
+
 - AppVersion.swift, StreamManager.swift, MockAssertion.swift...
 
 ### #Library-Contact
+
 - PhoneNumber+InternationalFormat.swift...
 
 ### #Library-Speech
+
 - SpeechFactory.swift, AppleSpeechRecognition.swift...
 ```
 
@@ -314,6 +325,7 @@ struct FileMetadata {
 ### 7.1 推論ルール
 
 #### ルール1: 型名からの推論
+
 ```
 型名パターン:
 - *Manager → 「〜の管理」（例: StreamManager → Stream管理）
@@ -324,6 +336,7 @@ struct FileMetadata {
 ```
 
 #### ルール2: Protocol準拠からの推論
+
 ```
 Protocol → 機能推論:
 - Comparable → 比較演算機能
@@ -333,6 +346,7 @@ Protocol → 機能推論:
 ```
 
 #### ルール3: メソッド名からの推論
+
 ```
 メソッドパターン:
 - format* → フォーマット機能
@@ -342,6 +356,7 @@ Protocol → 機能推論:
 ```
 
 #### ルール4: ファイル名からの推論
+
 ```
 ファイル名パターン:
 - *+InternationalFormat → 国際対応フォーマット
@@ -355,6 +370,7 @@ Protocol → 機能推論:
 
 ```markdown
 入力（list_symbolsから）:
+
 - ファイルパス: Tools/Core/AppVersion.swift
 - 層: Tools
 - 型: struct AppVersion
@@ -363,12 +379,14 @@ Protocol → 機能推論:
 - 公開プロパティ: major, minor, patch
 
 Claude内部推論:
+
 1. 型名 "AppVersion" → バージョン管理
 2. Protocol "Comparable" → 比較機能
 3. プロパティ "major, minor, patch" → セマンティックバージョン
 4. メソッド "init?(_: String)" → 文字列解析
 
 推論結果:
+
 - 目的: "セマンティックバージョン管理"
 - 主要機能: ["バージョン比較", "文字列解析", "文字列変換"]
 - 使用パターン: "AppVersion(\"1.2.3\")"
@@ -376,6 +394,7 @@ Claude内部推論:
 ```
 
 **利点**:
+
 - ✅ 外部API呼び出し不要
 - ✅ 処理時間ほぼゼロ
 - ✅ トークン消費少
@@ -383,13 +402,13 @@ Claude内部推論:
 
 ### 7.3 推論精度の期待値
 
-| ファイル種別 | 推論精度 | 根拠 |
-|------------|---------|------|
-| Utility/Tool系 | 90%+ | 型名・メソッド名が明示的 |
-| Extension系 | 95%+ | 拡張対象の型から自明 |
-| Factory系 | 95%+ | 生成パターンから明確 |
-| Service系 | 80%+ | Protocol名から推測可能 |
-| View系 | 70%+ | 構造から推測、UI詳細は不明 |
+| ファイル種別   | 推論精度 | 根拠                       |
+| -------------- | -------- | -------------------------- |
+| Utility/Tool系 | 90%+     | 型名・メソッド名が明示的   |
+| Extension系    | 95%+     | 拡張対象の型から自明       |
+| Factory系      | 95%+     | 生成パターンから明確       |
+| Service系      | 80%+     | Protocol名から推測可能     |
+| View系         | 70%+     | 構造から推測、UI詳細は不明 |
 
 **全体平均**: 85%以上の精度を期待
 
@@ -400,6 +419,7 @@ Claude内部推論:
 ### 8.1 swift_toc.md構造
 
 **セクション構成**（docs/docs_toc.mdと同パターン）:
+
 1. ヘッダー情報
 2. **Quick Reference**（高頻度使用、最上部）
 3. 層別インデックス（Tools/Library/Domain/App）
@@ -412,11 +432,12 @@ Claude内部推論:
 
 ```markdown
 #### {FileName}.swift
+
 - **目的**: {purpose}
 - **主要機能**:
   - {feature1}
   - {feature2}
-  ...
+    ...
 - **主要API**: {mainAPIs}
 - **使用パターン**: {usagePattern}
 - **Protocol**: {protocols}（あれば）
@@ -427,6 +448,7 @@ Claude内部推論:
 ### 8.3 検索最適化
 
 **AI検索パターン**:
+
 ```
 search_code("## 目的.*電話")        → 電話関連機能発見
 search_code("## キーワード.*async") → 非同期処理関連発見
@@ -498,13 +520,13 @@ AI推論エラー:
 
 ### 10.1 処理時間目標
 
-| フェーズ | ファイル数 | 目標時間 | 根拠 |
-|---------|-----------|---------|------|
-| ファイルスキャン | 200件 | 10秒 | Glob × 6 |
-| 構造解析 | 200件 | 100秒 | list_symbols × 200（0.5秒/件）※Swift-Selena使用時 |
-| AI推論 | 200件 | **即座** | Claude内部処理（外部API呼び出しなし） |
-| 索引生成 | - | 5秒 | Markdown整形 |
-| **合計** | **200件** | **約2分** | - |
+| フェーズ         | ファイル数 | 目標時間  | 根拠                                              |
+| ---------------- | ---------- | --------- | ------------------------------------------------- |
+| ファイルスキャン | 200件      | 10秒      | Glob × 6                                          |
+| 構造解析         | 200件      | 100秒     | list_symbols × 200（0.5秒/件）※Swift-Selena使用時 |
+| AI推論           | 200件      | **即座**  | Claude内部処理（外部API呼び出しなし）             |
+| 索引生成         | -          | 5秒       | Markdown整形                                      |
+| **合計**         | **200件**  | **約2分** | -                                                 |
 
 **現実的な期待**: 90ファイル（現状）で約1分
 
@@ -524,17 +546,19 @@ AI推論エラー:
 ### 11.1 Swift-Selena DB化対応（Phase 2）
 
 **現在の設計がサポート**:
+
 ```markdown
 swift_toc.md（Markdown形式）
-    ↓ Swift-Selenaが読み込み
+↓ Swift-Selenaが読み込み
 内部DB構築（Swift-Selena側実装）
-    ↓ 新規MCP tool
+↓ 新規MCP tool
 mcp__swift-selena__search_by_purpose(query)
 mcp__swift-selena__search_by_keyword(keyword)
 mcp__swift-selena__list_by_layer(layer)
 ```
 
 **Markdown形式を選ぶ理由**:
+
 - 人間が読んでも理解可能
 - search_codeで即座に検索可能（Phase 1）
 - 構造化データ抽出容易（Phase 2への移行）
@@ -542,6 +566,7 @@ mcp__swift-selena__list_by_layer(layer)
 ### 11.2 JSON併用オプション
 
 **`/create-swift-toc -format both`**:
+
 ```
 出力:
 - swift_toc.md（人間・AI可読）
@@ -552,12 +577,12 @@ mcp__swift-selena__list_by_layer(layer)
 
 ## 12. 代替案との比較
 
-| 方式 | 実装コスト | 運用コスト | 検索精度 | メンテナンス | 判定 |
-|------|-----------|-----------|---------|-------------|------|
-| **DocC充実化** | 高（全ファイル手動） | 高（更新忘れ） | 70%（コメント依存） | 困難 | ❌ 非推奨 |
-| **README.md方式** | 中（ディレクトリ単位） | 高（手動更新） | 60%（古くなる） | 困難 | ❌ 非推奨 |
-| **構造化メタデータ** | 高（全ファイル手動） | 高（二重管理） | 80%（更新忘れ） | 困難 | ❌ 非推奨 |
-| **swift_toc.md自動生成** | 低（コマンド1本） | 低（月1回×1分） | **85-90%**（AI推論） | **容易（自動）** | ✅ **推奨** |
+| 方式                     | 実装コスト             | 運用コスト      | 検索精度             | メンテナンス     | 判定        |
+| ------------------------ | ---------------------- | --------------- | -------------------- | ---------------- | ----------- |
+| **DocC充実化**           | 高（全ファイル手動）   | 高（更新忘れ）  | 70%（コメント依存）  | 困難             | ❌ 非推奨   |
+| **README.md方式**        | 中（ディレクトリ単位） | 高（手動更新）  | 60%（古くなる）      | 困難             | ❌ 非推奨   |
+| **構造化メタデータ**     | 高（全ファイル手動）   | 高（二重管理）  | 80%（更新忘れ）      | 困難             | ❌ 非推奨   |
+| **swift_toc.md自動生成** | 低（コマンド1本）      | 低（月1回×1分） | **85-90%**（AI推論） | **容易（自動）** | ✅ **推奨** |
 
 ---
 
@@ -568,6 +593,7 @@ mcp__swift-selena__list_by_layer(layer)
 **発生確率**: 低（15%程度が不正確）
 **影響度**: 中（誤った索引で検索ミス）
 **対策**:
+
 - 推論結果の人間レビュー（初回のみ）
 - 不正確なエントリーは手動修正
 - 修正内容を次回生成時に反映（学習機構）
@@ -577,6 +603,7 @@ mcp__swift-selena__list_by_layer(layer)
 **発生確率**: 低（10-15%程度）
 **影響度**: 低（一部エントリーの推論精度低下、構造情報は正確）
 **対策**:
+
 - 推論困難なファイルは構造情報のみ記録
 - 初回生成後、人間レビューで精度確認
 - Claude自身のSwift/iOS知識で85-90%は推論可能
@@ -586,6 +613,7 @@ mcp__swift-selena__list_by_layer(layer)
 **発生確率**: 低（ファイル数が1000超で顕在化）
 **影響度**: 中（生成時間10分超）
 **対策**:
+
 - 差分更新機能追加（変更ファイルのみ再解析）
 - バッチ処理の並列化
 
@@ -593,13 +621,13 @@ mcp__swift-selena__list_by_layer(layer)
 
 ## 14. 成功指標
 
-| 指標 | 目標値 | 測定方法 |
-|------|--------|---------|
-| 検索時間削減 | 90%以上（5分→30秒） | タスク実行時の計測 |
+| 指標         | 目標値               | 測定方法             |
+| ------------ | -------------------- | -------------------- |
+| 検索時間削減 | 90%以上（5分→30秒）  | タスク実行時の計測   |
 | 重複実装防止 | 月0-1件（現状2-3件） | コードレビューで確認 |
-| 索引精度 | 85%以上 | 人間による検証 |
-| 更新頻度 | 月1-2回 | git log確認 |
-| 生成時間 | 1分以内 | コマンド実行時計測 |
+| 索引精度     | 85%以上              | 人間による検証       |
+| 更新頻度     | 月1-2回              | git log確認          |
+| 生成時間     | 1分以内              | コマンド実行時計測   |
 
 ---
 
@@ -614,7 +642,9 @@ mcp__swift-selena__list_by_layer(layer)
 2. **CLAUDE.mdに追記**
    ```markdown
    ## Code Discovery
+
    **Swiftコード検索**: `swift_toc.md`（AI生成コード索引）
+
    - search_code("## 目的.*キーワード")で意図ベース検索
    - Quick Referenceで高頻度使用コード即座に発見
    ```
@@ -637,6 +667,7 @@ mcp__swift-selena__list_by_layer(layer)
 **swift_toc.md自動生成は、長期的に最適な解決策**
 
 **理由**:
+
 1. ✅ DocCコメント不要（70%がコメントなしでも機能）
 2. ✅ 自動生成（メンテナンスフリー）
 3. ✅ **Claude自身が推論**（外部API不要、高速、安定）

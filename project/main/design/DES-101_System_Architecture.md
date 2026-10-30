@@ -8,13 +8,13 @@
 
 ## メタデータ
 
-| 項目 | 値 |
-|-----|-----|
-| 設計ID | DES-101 |
-| 対象バージョン | v0.5.3（作成時点） |
-| 関連要件 | REQ-001（全体要件）, REQ-002（LSP統合） |
+| 項目               | 値                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| 設計ID             | DES-101                                                                               |
+| 対象バージョン     | v0.5.3（作成時点）                                                                    |
+| 関連要件           | REQ-001（全体要件）, REQ-002（LSP統合）                                               |
 | 主要コンポーネント | SwiftMCPServer, ProjectMemory, LSPState, LSPClient, SwiftSyntaxAnalyzer, FileSearcher |
-| ツール数 | 18個（SwiftSyntax: 17, LSP: 1） |
+| ツール数           | 18個（SwiftSyntax: 17, LSP: 1）                                                       |
 
 ---
 
@@ -291,6 +291,7 @@ erDiagram
 ```
 
 **保存場所:**
+
 ```
 ~/.swift-selena/
   └── clients/{clientId}/
@@ -506,16 +507,16 @@ graph TB
 
 ### 4.2 責務マトリクス
 
-| コンポーネント | 責務 | 依存先 | 並行性 |
-|--------------|------|--------|--------|
-| **SwiftMCPServer** | MCPサーバー制御 | 全コンポーネント | Main Actor |
-| **LSPState** | LSP接続状態管理 | LSPClient | Actor（スレッドセーフ） |
-| **LSPClient** | SourceKit-LSP通信 | なし | Class |
-| **ProjectMemory** | 永続化・キャッシュ | FileManager | Class |
-| **SwiftSyntaxAnalyzer** | AST解析 | SwiftSyntax | Enum（stateless） |
-| **FileSearcher** | ファイル検索 | FileManager | Enum（stateless） |
-| **FileLogHandler** | ログ出力 | FileHandle | Struct |
-| **DebugRunner** | 自動テスト | LSPState, Tools | Actor（#if DEBUG） |
+| コンポーネント          | 責務               | 依存先           | 並行性                  |
+| ----------------------- | ------------------ | ---------------- | ----------------------- |
+| **SwiftMCPServer**      | MCPサーバー制御    | 全コンポーネント | Main Actor              |
+| **LSPState**            | LSP接続状態管理    | LSPClient        | Actor（スレッドセーフ） |
+| **LSPClient**           | SourceKit-LSP通信  | なし             | Class                   |
+| **ProjectMemory**       | 永続化・キャッシュ | FileManager      | Class                   |
+| **SwiftSyntaxAnalyzer** | AST解析            | SwiftSyntax      | Enum（stateless）       |
+| **FileSearcher**        | ファイル検索       | FileManager      | Enum（stateless）       |
+| **FileLogHandler**      | ログ出力           | FileHandle       | Struct                  |
+| **DebugRunner**         | 自動テスト         | LSPState, Tools  | Actor（#if DEBUG）      |
 
 ---
 
@@ -616,6 +617,7 @@ graph LR
 ```
 
 **保証:**
+
 - 構文が正しければSwiftSyntaxで解析可能
 - ビルドエラー（型エラー等）は無視
 - LSPは**オプション強化**（必須ではない）
@@ -694,6 +696,7 @@ graph TB
 ```
 
 **保証:**
+
 - ネットワーク通信なし
 - 全データはローカル保存
 - プライバシー完全保護
@@ -730,6 +733,7 @@ graph TB
 ```
 
 **キャッシュ種類:**
+
 - fileIndex: ファイル変更検出
 - symbolCache: シンボル定義キャッシュ
 - importCache: Import情報
@@ -830,6 +834,7 @@ graph LR
 ```
 
 **例:**
+
 ```
 ❌ LSP not available.
 
@@ -873,10 +878,12 @@ graph TD
 ```
 
 **アクセス可能:**
+
 - ✅ プロジェクトディレクトリ配下
 - ✅ ~/.swift-selena/（メタデータ、ログ）
 
 **アクセス不可:**
+
 - ❌ プロジェクト外
 - ❌ システムファイル
 - ❌ 他ユーザーディレクトリ
@@ -1011,6 +1018,7 @@ graph TB
 ```
 
 **分離保証:**
+
 - クライアントIDでディレクトリ分離
 - 同じプロジェクトでも干渉しない
 
@@ -1051,14 +1059,17 @@ graph TB
 ### 11.2 拡張可能な設計
 
 **新ツール追加:**
+
 - MCPToolプロトコル準拠で簡単追加
 - 15-30分/ツール
 
 **新Visitor追加:**
+
 - SyntaxVisitorパターンで統一
 - 30-60分/Visitor
 
 **新LSP API追加:**
+
 - findReferencesv0.5.4+パターンを踏襲
 - 30分/API
 
@@ -1090,15 +1101,18 @@ mindmap
 ## 13. 参照
 
 **要件定義:**
+
 - REQ-001: Swift-Selena全体要件
 - REQ-002: LSP統合要件
 - REQ-003: コア機能要件
 
 **設計書:**
+
 - DES-102: LSP統合設計
 - DES-103: ツール実装設計
 
 **計画:**
+
 - PLAN.md: 開発計画（v0.5.x〜v1.0）
 - HISTORY.md: リリース履歴
 - CONVERSATION_HISTORY.md: 開発会話履歴

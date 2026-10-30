@@ -7,6 +7,7 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
 ## AI Interaction Language [MANDATORY]
 
 **すべての対話は日本語で実施すること**
+
 - 技術用語・英単語はそのまま使用可能
 - ソースコードのコメントも日本語で記述
 - ファイル記述も日本語。ただし修正前のファイルがすでに英語記述の場合、またはユーザーからの指定がある場合は、英語記述とする
@@ -63,6 +64,7 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
 ## 開発言語・フレームワーク
 
 Package.swift に定義されたプラットフォーム・バージョンで利用可能な技術を使用。
+
 - **macOS**: 13.0+
 - **Swift**: 6.1（`swift-tools-version`。言語モードは `swiftLanguageModes: [.v5]` で Swift 5）
 - **Type**: Swift Package (MCP Server)
@@ -142,6 +144,7 @@ Claude/Client
 ```
 
 **重要原則**:
+
 - 新規ツールは MCPTool プロトコルに準拠（既存の例外: `InitializeProjectTool` は SwiftMCPServer が直接呼び出し、`ExecuteToolTool` は `LSPState` を受け取る独自シグネチャ）
 - SwiftSyntaxによる静的解析（ビルド不要）
 - LSP統合によるセマンティック解析（補助的。プロジェクトルート直下に `.xcodeproj` がある場合は無効）
@@ -159,10 +162,10 @@ swift test
 swift build -c release
 ```
 
-
 ## Important Constraints [MANDATORY]
 
 ### 必須遵守事項
+
 - **NEVER modify Package.swift** without explicit permission
 - **Japanese comments required** in source code（全コードコメントは日本語）
 - **要件定義書（project/{feature}/spec/**/*.md）が最優先**（すべてのドキュメントに優先）
@@ -172,6 +175,7 @@ swift build -c release
 - **仕様索引の更新**: project/{feature}/spec/、project/{feature}/design/ 配下のファイルを追加・変更・削除・移動したら `/forge:update-db-specs` を実行すること（上記「DB インデックス自動更新」と同じ）
 
 ### MCP Server実装原則
+
 - **MCPTool 準拠**: 新規ツールは `MCPTool` プロトコル（`Sources/Tools/ToolProtocol.swift` で定義）を実装
 - **静的解析優先**: SwiftSyntaxベースの解析を基本とし、LSPは補助的に使用
 - **キャッシュ活用**: 解析結果はProjectMemoryでキャッシュ
@@ -180,7 +184,9 @@ swift build -c release
 ## MCP活用 [MANDATORY]
 
 ### Swift-Selena MCP（推奨・高速）
+
 **活用シーン**:
+
 - **実装前**: 既存の類似実装を検索、重複防止
 - **リファクタリング**: 型・シンボルの使用箇所を全検索、変更漏れ防止
 - **アーキテクチャ確認**: レイヤー違反検出、プロトコル準拠確認
@@ -190,14 +196,15 @@ swift build -c release
 **未接続時の代替**: Grep/Globツール（速度低下、精度低下）
 
 ### Gemini MCP
+
 - OSフレームワーク使い方確認
 - 外部API利用方法調査
 - Web検索（Google検索）
 
-
 ## Critical Implementation Constraints
 
 ### Sources/Tools/ - ツール実装制約
+
 - **MCPTool 準拠**: 新規ツールは `Sources/Tools/ToolProtocol.swift` で定義された `MCPTool` プロトコルに準拠（`InitializeProjectTool` と `ExecuteToolTool` は既存の例外）
 - **カテゴリ配置**:
   - `Analysis/` - コード解析（imports, type hierarchy等）
@@ -209,6 +216,7 @@ swift build -c release
 - **エラーハンドリング**: 解析エラーは適切なエラーメッセージとしてMCP応答に含める
 
 ### Sources/Selena/ - コア解析エンジン制約
+
 - **Core/FileSearcher**: ファイルシステムベースの高速検索
 - **Core/SwiftSyntaxAnalyzer**: SwiftSyntaxによる静的解析（ビルド不要）、Visitors/配下のVisitorを使用
 - **Core/ProjectMemory**: 解析結果のキャッシュ管理（`memory.json` に永続化、ファイル更新時刻で無効化）。キャッシュ層はこのファイルのみ
@@ -216,6 +224,7 @@ swift build -c release
 - **Visitors/**: SwiftSyntax の SyntaxVisitor サブクラス群（シンボル・Import・型解析等）
 
 ### Code Header Format [MANDATORY]
+
 - **ALWAYS add/update Code Header Format** when creating/modifying Swift files
 - **Required marker**: `[Code Header Format]` at the beginning of header comment
 - **Required sections**:
@@ -233,4 +242,3 @@ Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
-

@@ -11,7 +11,7 @@ name: Release Tag Consistency Check
 on:
   push:
     tags:
-      - '*'
+      - "*"
 
 jobs:
   verify:
@@ -19,8 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main          # main の最新 Formula を検証対象にする
-          fetch-depth: 0      # tag を rev-parse するため全履歴 + tag を取得
+          ref: main # main の最新 Formula を検証対象にする
+          fetch-depth: 0 # tag を rev-parse するため全履歴 + tag を取得
       - name: Verify the pushed tag is on main's first-parent line and consistent
         run: |
           chmod +x scripts/verify_release_tag.sh

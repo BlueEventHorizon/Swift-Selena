@@ -33,6 +33,7 @@ mcp__swift-selena-debug__initialize_project
 ```
 
 確認ポイント:
+
 - "Project initialized" メッセージが返ること
 - LSP 接続状態（available / unavailable）を記録
 
@@ -50,19 +51,19 @@ mcp__swift-selena-debug__list_available_tools
 
 #### テストケース定義
 
-| ツール | テストパラメータ | 成功判定 |
-|--------|-----------------|----------|
-| `find_files` | `pattern: "*.swift"` | 1件以上のファイルが返る |
-| `search_code` | `pattern: "import", include_patterns: ["**/*.swift"]` | マッチが返る（DES-104 §5.1 / REQ-005 の include_patterns 検証を兼ねる） |
+| ツール                         | テストパラメータ                                            | 成功判定                                                                 |
+| ------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `find_files`                   | `pattern: "*.swift"`                                        | 1件以上のファイルが返る                                                  |
+| `search_code`                  | `pattern: "import", include_patterns: ["**/*.swift"]`       | マッチが返る（DES-104 §5.1 / REQ-005 の include_patterns 検証を兼ねる）  |
 | `search_files_without_pattern` | `pattern: "ToolProtocol", include_patterns: ["**/*.swift"]` | パターン不含ファイルが返る（issue #34 の include_patterns 検証を兼ねる） |
-| `list_symbols` | `file_path:` Sources/ 配下の任意の .swift ファイル | シンボル一覧が返る |
-| `find_symbol_definition` | `symbol_name:` プロジェクト内の既知の型名 | 定義箇所が返る |
-| `list_property_wrappers` | `file_path:` Tests/Fixtures/TestSwiftUIView.swift | @State 等が検出される |
-| `list_protocol_conformances` | `file_path:` Tests/Fixtures/TestProtocolConformance.swift | 準拠一覧が返る |
-| `list_extensions` | `file_path:` Tests/Fixtures/TestExtension.swift | Extension 一覧が返る |
-| `analyze_imports` | `file_path:` Sources/ 配下の任意ファイル | import 依存関係が返る |
-| `get_type_hierarchy` | `type_name:` プロジェクト内の既知の型名 | 型階層が返る |
-| `find_test_cases` | 引数なし、またはテストファイルを指定 | テストケース一覧が返る |
+| `list_symbols`                 | `file_path:` Sources/ 配下の任意の .swift ファイル          | シンボル一覧が返る                                                       |
+| `find_symbol_definition`       | `symbol_name:` プロジェクト内の既知の型名                   | 定義箇所が返る                                                           |
+| `list_property_wrappers`       | `file_path:` Tests/Fixtures/TestSwiftUIView.swift           | @State 等が検出される                                                    |
+| `list_protocol_conformances`   | `file_path:` Tests/Fixtures/TestProtocolConformance.swift   | 準拠一覧が返る                                                           |
+| `list_extensions`              | `file_path:` Tests/Fixtures/TestExtension.swift             | Extension 一覧が返る                                                     |
+| `analyze_imports`              | `file_path:` Sources/ 配下の任意ファイル                    | import 依存関係が返る                                                    |
+| `get_type_hierarchy`           | `type_name:` プロジェクト内の既知の型名                     | 型階層が返る                                                             |
+| `find_test_cases`              | 引数なし、またはテストファイルを指定                        | テストケース一覧が返る                                                   |
 
 - テストで使うファイルパスは絶対パスで指定すること
 - Fixtures ファイルがない場合は Sources/ 配下のファイルで代替する
@@ -85,6 +86,7 @@ mcp__swift-selena-debug__list_available_tools
 ```
 
 失敗があった場合:
+
 - エラー内容を記載
 - 原因の推測を提示
 - 修正が必要な場合は対象ファイルと修正案を提示

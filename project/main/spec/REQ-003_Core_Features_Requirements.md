@@ -21,6 +21,7 @@ Swift-Selenaは**18個のツール**を提供（v0.5.3時点）
 > ℹ️ 以下のカテゴリ別内訳は **v0.5.3 時点**の分類である。**現行の公開ツールは `Sources/Constants.swift` の `ToolNames` / `Sources/Tools/Meta/MetaToolRegistry.swift` を正とする。** 現行で提供されないもの: 効率的読み取り（`read_symbol`）は計画のみで**未実装**、LSP機能（`find_symbol_references`）は 2025-10-27 `commit f0a547f` で**削除済み**、依存関係解析の `find_type_usages` は 2025-12-06 `commit 580b1f7` で**削除済み**。現行は v0.6.3+ のメタツールモード（`list_available_tools` / `get_tool_schema` / `execute_tool`）経由で解析ツールを公開する。
 
 **カテゴリ別:**
+
 ```
 プロジェクト管理: 1ツール
 ファイル検索: 2ツール
@@ -38,11 +39,13 @@ LSP機能: 1ツール（条件付き）
 ### 1.2 動作モード別
 
 **常時利用可能（17ツール）:**
+
 - ビルド不要
 - SwiftSyntaxベース
 - どんなプロジェクトでも動作
 
 **条件付き利用（1ツール）:**
+
 - ビルド可能時のみ
 - LSPベース
 - find_symbol_references（⚠️ v0.5.3 時点の記述。2025-10-27 `commit f0a547f` で削除済み。§2.9 参照）
@@ -59,15 +62,18 @@ LSP機能: 1ツール（条件付き）
 プロジェクトを初期化し、ProjectMemoryを作成する
 
 **なぜ必要か:**
+
 - 全ツールの前提条件
 - プロジェクトパスの設定
 - キャッシュの初期化
 - LSP接続の試行（v0.5.1+）
 
 **入力:**
+
 - `project_path`: プロジェクトルートのパス
 
 **出力:**
+
 ```
 ✅ Project initialized: /path/to/project
 
@@ -82,11 +88,13 @@ LSP機能: 1ツール（条件付き）
 ```
 
 **受入基準:**
+
 - ✅ ProjectMemory作成成功
 - ✅ ディレクトリ作成（~/.swift-selena/clients/...）
 - ✅ LSP接続試行（バックグラウンド、非ブロッキング）
 
 **ユースケース:**
+
 ```
 全てのツール使用前に必ず実行:
 
@@ -105,14 +113,17 @@ initialize_project("/Users/me/MyApp")
 ワイルドカードパターンでファイルを高速検索
 
 **なぜ必要か:**
+
 - プロジェクト内のファイルを素早く発見
 - 命名規則ベースの検索（*ViewModel.swift等）
 - grepより高速
 
 **入力:**
+
 - `pattern`: ワイルドカードパターン（`*Controller.swift`）
 
 **出力:**
+
 ```
 Found 23 files matching '*Controller.swift':
 
@@ -122,11 +133,13 @@ Found 23 files matching '*Controller.swift':
 ```
 
 **受入基準:**
+
 - ✅ ワイルドカード（*, ?）対応
 - ✅ NSRegularExpressionで実装
 - ✅ 1000ファイルプロジェクトで1秒以内
 
 **ユースケース:**
+
 ```
 UC: 全ViewControllerを見つける
   → find_files("*ViewController.swift")
@@ -145,6 +158,7 @@ UC: テストファイルを列挙
 正規表現でコード内容を検索（grep的）。結果量が膨大化する場合に備え、**出力モード**と**件数上限**で結果を制御でき、テキスト出力に加え**構造化結果**を併記する（v0.6.8、REQ-005 §4.1 / §4.2）
 
 **なぜ必要か:**
+
 - 特定の関数呼び出しを検索
 - パターンマッチング
 - コメント検索
@@ -152,6 +166,7 @@ UC: テストファイルを列挙
 - 呼び出し側（AI/Agent）がテキストパースなしで結果を加工できる構造化データの提供
 
 **入力:**
+
 - `pattern`: 正規表現
 - `include_patterns`: 対象に含める glob 配列（オプション、最大 20 件）
 - `exclude_patterns`: 対象から除外する glob 配列（オプション、最大 20 件、include に勝つ）
@@ -161,6 +176,7 @@ UC: テストファイルを列挙
 > v0.6.8 (REQ-005 / DES-104 §5.1) で `file_pattern` 単独パラメータを廃止し、`search_files_without_pattern` と共通の `include_patterns` / `exclude_patterns` 配列に統一した。
 
 **出力:**
+
 ```
 Found 12 matches:
 
@@ -172,9 +188,11 @@ Found 12 matches:
 { "matches": [ { "file": "...", "line": 15, "content": "func createUser" }, ... ],
   "total": 12, "truncated": false }
 ```
+
 人間可読テキスト（既存の行頭フォーマット `<file>:<line>: <content>` を維持）の末尾に、フィールド名で識別可能な構造化結果（`--- structured ---` JSON ブロック）を併記する（v0.6.8、REQ-005 §4.2）
 
 **受入基準:**
+
 - ✅ 正規表現対応
 - ✅ ファイルフィルタ対応（include / exclude patterns）
 - ✅ grep並みの速度
@@ -184,6 +202,7 @@ Found 12 matches:
 - ✅ 正規表現・glob の構文エラーは原因と修正案を含むエラーメッセージで明示（v0.6.8、REQ-005 §4.8）
 
 **ユースケース:**
+
 ```
 UC: TODO コメント検索
   → search_code("// TODO")
@@ -210,14 +229,17 @@ UC: 件数だけ把握したい
 ファイル内の全シンボル（Class, Function等）を列挙
 
 **なぜ必要か:**
+
 - ファイルの構造を素早く把握
 - AIがコードを理解する第一歩
 - 「このファイルに何がある？」に答える
 
 **入力:**
+
 - `file_path`: Swiftファイルのパス
 
 **出力（SwiftSyntax版）:**
+
 ```
 Symbols in UserManager.swift:
 
@@ -228,6 +250,7 @@ Symbols in UserManager.swift:
 ```
 
 **出力（LSP版、v0.5.4+）:**
+
 ```
 Symbols in UserManager.swift (LSP enhanced):
 
@@ -238,11 +261,13 @@ Symbols in UserManager.swift (LSP enhanced):
 ```
 
 **受入基準:**
+
 - ✅ Class, Struct, Enum, Protocol, Function, Variable全て検出
 - ✅ 正確な行番号
 - ✅ v0.5.4: LSP版で型情報表示
 
 **ユースケース:**
+
 ```
 UC: 初めて見るファイルの理解
   開発者: 「このファイルに何がある？」
@@ -264,16 +289,19 @@ UC: リファクタリング前の確認
 プロジェクト全体でシンボル定義を検索。同名シンボルが複数存在する場合に、**種別フィルタ**と**所属スコープ情報**で絞り込み・識別でき、構造化結果も併記する（v0.6.8、REQ-005 §4.4 / §4.2）
 
 **なぜ必要か:**
+
 - 「UserManagerクラスはどのファイル？」に答える
 - 定義箇所を特定
 - 複数ファイルにまたがる検索
 - 同名シンボルが異なるスコープ（ネスト型・extension・別モジュール）に複数存在する場合の判別
 
 **入力:**
+
 - `symbol_name`: シンボル名（例: "UserManager"）
 - `symbol_kinds`: シンボル種別フィルタ配列（オプション、最大 9 件、OR 結合）。`struct` / `class` / `enum` / `protocol` / `actor` / `function` / `variable` / `typealias` / `extension` の小文字スネーク 9 区分（v0.6.8、REQ-005 §4.4.1）
 
 **出力:**
+
 ```
 Found 2 definitions for 'UserManager':
 
@@ -285,9 +313,11 @@ Found 2 definitions for 'UserManager':
     { "file": "...", "line": 10, "kind": "class",
       "parent_scope": null, "extension_target": null, "module_name": "MyApp" }, ... ] }
 ```
+
 所属スコープ情報（**親スコープ名** / **extension 対象型** / **モジュール名**）を付与し、ルート定義・ネスト型・extension 由来の同名シンボルを区別できる。テキスト出力の末尾に構造化結果（`--- structured ---` JSON）を併記する（v0.6.8、REQ-005 §4.4.2 / §4.2）
 
 **受入基準:**
+
 - ✅ プロジェクト全体を検索
 - ✅ キャッシュで高速化
 - ✅ 複数定義を全て発見
@@ -300,6 +330,7 @@ Found 2 definitions for 'UserManager':
 - ✅ テキスト出力の末尾に構造化結果（`--- structured ---` JSON）を併記（v0.6.8、REQ-005 §4.2）
 
 **エラー時の挙動（v0.6.5+）:**
+
 - シンボルが見つからない場合、以下を含むメッセージを返す:
   - 検索したファイル数
   - 考えられる原因（スペルミス / 外部パッケージ定義 / 存在しない）
@@ -307,6 +338,7 @@ Found 2 definitions for 'UserManager':
 - `symbol_kinds` に未定義の種別が含まれる場合: 原因と有効な 9 区分を含む入力エラー（v0.6.8）
 
 **ユースケース:**
+
 ```
 UC: クラス定義の発見
   開発者: 「UserRepositoryProtocolはどこ？」
@@ -333,19 +365,23 @@ UC: シンボルが見つからない場合（v0.6.5+）
 シンボルの参照箇所をプロジェクト全体から検索（LSP不要）
 
 **なぜ必要か:**
+
 - LSP利用不可環境でも参照検索が必要
 - 削除済み `find_symbol_references`（LSP版）の代替として検討されたテキストベース検索
 - 単語境界を考慮した精度の高い検索
 
 **入力:**
+
 - `symbol_name`: シンボル名（例: "UserManager"）
 
 **単語境界の定義:**
 シンボルの前後が行頭/行末・空白・記号（`()[]{}.,;:<>!=+-*/&|^~?@#$%`）の場合にマッチ
+
 - ✅ マッチ: `User.name`, `let user: User`, `(User)`
 - ❌ 非マッチ: `UserName`, `AppUser`, `userId`
 
 **出力:**
+
 ```
 Found 15 references to 'User':
 
@@ -358,15 +394,18 @@ Total: 15 references in 8 files
 ```
 
 **受入基準:**
+
 - ✅ 単語境界を考慮した検索（部分一致を除外）
 - ✅ ファイルパス・行番号・該当行の内容を返す
 - ✅ 参照が見つからない場合は空のリストを返す（エラーではない）
 - ✅ プロジェクト未初期化: `initialize_project` の案内
 
 **制限事項:**
+
 - テキストベース検索のため、LSPほど正確ではない（同名の異なるシンボルを区別できない）
 
 **ユースケース:**
+
 ```
 UC: LSP無効環境でのリファクタリング影響確認
   開発者: 「User型がどこで使われてる？」
@@ -386,16 +425,19 @@ UC: find_symbol_references との使い分け
 特定シンボル（関数、クラス等）のコードのみを読み取り
 
 **なぜ必要か:**
+
 - ファイル全体を読むとコンテキスト消費が大きい
 - 特定関数の実装だけ見たい
 - 大規模ファイル（5000行+）での効率化
 
 **入力:**
+
 - `file_path`: ファイルパス
 - `symbol_path`: シンボルパス（例: "UserManager/createUser"）
 
 **出力:**
-```
+
+````
 [Method] createUser
 Location: UserManager.swift:20-35
 
@@ -409,9 +451,9 @@ func createUser(name: String) async throws -> User {
     try await repository.save(user)
     return user
 }
-```
-```
+````
 
+```
 **受入基準:**
 - ✅ シンボル単位で抽出
 - ✅ ネストしたシンボル対応（Class/method）
@@ -419,16 +461,17 @@ func createUser(name: String) async throws -> User {
 
 **ユースケース:**
 ```
+
 UC: 特定メソッドの実装確認
-  開発者: 「createUserメソッドの実装を見せて」
-  read_symbol("UserManager.swift", "UserManager/createUser")
-  → メソッドのみ表示（ファイル全体は読まない）
+開発者: 「createUserメソッドの実装を見せて」
+read_symbol("UserManager.swift", "UserManager/createUser")
+→ メソッドのみ表示（ファイル全体は読まない）
 
 UC: コンテキスト節約
-  5000行のファイルで1つのメソッドだけ見たい
-  → read_symbol使用で95%のコンテキスト節約
-```
+5000行のファイルで1つのメソッドだけ見たい
+→ read_symbol使用で95%のコンテキスト節約
 
+```
 ---
 
 ### 2.4 SwiftUI解析
@@ -448,6 +491,7 @@ SwiftUI Property Wrapper（@State, @Binding等）を検出
 
 **出力:**
 ```
+
 Property Wrappers in ContentView.swift:
 
 @State: counter (type: Int, line: 15)
@@ -455,8 +499,8 @@ Property Wrappers in ContentView.swift:
 @StateObject: viewModel (type: ContentViewModel, line: 17)
 @ObservedObject: settings (type: Settings, line: 18)
 @EnvironmentObject: appState (type: AppState, line: 19)
-```
 
+```
 **受入基準:**
 - ✅ 全Property Wrapper検出（@State, @Binding, @StateObject, @ObservedObject, @EnvironmentObject, @Environment等）
 - ✅ プロパティ名、型名、行番号を抽出
@@ -464,22 +508,23 @@ Property Wrappers in ContentView.swift:
 
 **ユースケース:**
 ```
+
 UC: SwiftUIビューの状態管理理解
-  開発者: 「このビューの状態はどうなってる？」
-  list_property_wrappers("ProfileView.swift")
+開発者: 「このビューの状態はどうなってる？」
+list_property_wrappers("ProfileView.swift")
 
-  結果:
-  @State name: String  ← ローカル状態
-  @Binding isPresented: Bool  ← 親から注入
-  @StateObject viewModel: ProfileViewModel  ← ViewModelの所有
+結果:
+@State name: String ← ローカル状態
+@Binding isPresented: Bool ← 親から注入
+@StateObject viewModel: ProfileViewModel ← ViewModelの所有
 
-  → 状態管理フローを完全に把握
+→ 状態管理フローを完全に把握
 
 UC: リファクタリング時の依存確認
-  @EnvironmentObjectを使っているビューを全て見つける
-  → 影響範囲を把握
-```
+@EnvironmentObjectを使っているビューを全て見つける
+→ 影響範囲を把握
 
+```
 ---
 
 #### list_protocol_conformances
@@ -497,18 +542,19 @@ Protocol準拠と継承関係を解析
 
 **出力:**
 ```
+
 Protocol Conformances in ViewController.swift:
 
 [Class] ViewController (line: 10)
-  Type: Class
-  Superclass: UIViewController
-  Protocols: UITableViewDelegate, UITableViewDataSource
+Type: Class
+Superclass: UIViewController
+Protocols: UITableViewDelegate, UITableViewDataSource
 
 [Struct] UserData (line: 50)
-  Type: Struct
-  Protocols: Codable, Equatable
-```
+Type: Struct
+Protocols: Codable, Equatable
 
+```
 **受入基準:**
 - ✅ スーパークラス検出
 - ✅ Protocol準拠検出
@@ -516,16 +562,17 @@ Protocol Conformances in ViewController.swift:
 
 **ユースケース:**
 ```
+
 UC: Protocolの実装状況確認
-  開発者: 「RepositoryProtocolを実装しているクラスは？」
-  → 各ファイルでlist_protocol_conformancesを実行
-  → 実装クラスを発見
+開発者: 「RepositoryProtocolを実装しているクラスは？」
+→ 各ファイルでlist_protocol_conformancesを実行
+→ 実装クラスを発見
 
 UC: 継承階層の確認
-  開発者: 「このクラスは何を継承してる？」
-  → スーパークラスを即座に確認
-```
+開発者: 「このクラスは何を継承してる？」
+→ スーパークラスを即座に確認
 
+```
 ---
 
 #### list_extensions
@@ -543,19 +590,22 @@ Extension（拡張）を解析
 
 **出力:**
 ```
+
 Extensions in String+Ext.swift:
 
 Extension: String (line: 10)
-  Conforms to: CustomStringConvertible
-  Members:
-    - [Function] trimmed (line: 12)
-    - [Function] isValidEmail (line: 18)
+Conforms to: CustomStringConvertible
+Members:
+
+- [Function] trimmed (line: 12)
+- [Function] isValidEmail (line: 18)
 
 Extension: String (line: 30)
-  Members:
-    - [Function] toInt (line: 32)
-```
+Members:
 
+- [Function] toInt (line: 32)
+
+```
 **受入基準:**
 - ✅ 拡張対象の型を検出
 - ✅ Protocol準拠（Extension内）を検出
@@ -563,16 +613,17 @@ Extension: String (line: 30)
 
 **ユースケース:**
 ```
+
 UC: Stringの拡張メソッド確認
-  開発者: 「Stringに何のメソッドを追加してる？」
-  list_extensions("String+Ext.swift")
-  → trimmed(), isValidEmail(), toInt() を発見
+開発者: 「Stringに何のメソッドを追加してる？」
+list_extensions("String+Ext.swift")
+→ trimmed(), isValidEmail(), toInt() を発見
 
 UC: Protocol準拠の実装場所
-  開発者: 「EquatableはどこでExtensionしてる？」
-  → Extension内のProtocol準拠を発見
-```
+開発者: 「EquatableはどこでExtensionしてる？」
+→ Extension内のProtocol準拠を発見
 
+```
 ---
 
 ### 2.5 依存関係解析
@@ -592,18 +643,20 @@ UC: Protocol準拠の実装場所
 
 **出力:**
 ```
+
 Import Analysis:
 
 Most used modules:
-  1. Foundation: 85 files
-  2. SwiftUI: 42 files
-  3. Combine: 28 files
-  4. XCTest: 15 files
+
+1. Foundation: 85 files
+2. SwiftUI: 42 files
+3. Combine: 28 files
+4. XCTest: 15 files
 
 Total imports: 170
 Unique modules: 12
-```
 
+```
 **受入基準:**
 - ✅ 全Swiftファイルを走査
 - ✅ モジュール使用頻度を集計
@@ -611,17 +664,18 @@ Unique modules: 12
 
 **ユースケース:**
 ```
+
 UC: 使用モジュールの把握
-  アーキテクト: 「どのフレームワークを使ってる？」
-  analyze_imports()
-  → Foundation, SwiftUI, Combineが主要モジュール
+アーキテクト: 「どのフレームワークを使ってる？」
+analyze_imports()
+→ Foundation, SwiftUI, Combineが主要モジュール
 
 UC: 不要な依存の検出
-  analyze_imports()
-  → Alamofireが1ファイルのみ
-  → 削除候補として検討
-```
+analyze_imports()
+→ Alamofireが1ファイルのみ
+→ 削除候補として検討
 
+```
 ---
 
 #### get_type_hierarchy
@@ -639,38 +693,40 @@ UC: 不要な依存の検出
 
 **出力（SwiftSyntax版）:**
 ```
+
 Type Hierarchy for 'UserViewController':
 
 [Class] UserViewController
-  Location: UserViewController.swift:15
+Location: UserViewController.swift:15
 
 Inherits from:
-  └─ BaseViewController
+└─ BaseViewController
 
 Conforms to:
-  └─ UITableViewDelegate
-  └─ UITableViewDataSource
+└─ UITableViewDelegate
+└─ UITableViewDataSource
 
 Subclasses:
-  └─ AdminUserViewController
-```
+└─ AdminUserViewController
 
+```
 **出力（LSP版、v0.5.4+）:**
 ```
+
 Type Hierarchy for 'UserViewController' (LSP enhanced):
 
 [Class] UserViewController
-  Location: UserViewController.swift:15
-  Type Detail: class UserViewController: BaseViewController
+Location: UserViewController.swift:15
+Type Detail: class UserViewController: BaseViewController
 
 Inherits from:
-  └─ BaseViewController
+└─ BaseViewController
 
 Conforms to:
-  └─ UITableViewDelegate
-  └─ UITableViewDataSource
-```
+└─ UITableViewDelegate
+└─ UITableViewDataSource
 
+```
 **受入基準:**
 - ✅ スーパークラス検出
 - ✅ サブクラス検出（プロジェクト全体から）
@@ -688,21 +744,22 @@ Conforms to:
 
 **ユースケース:**
 ```
+
 UC: 継承階層の可視化
-  開発者: 「BaseViewControllerを継承しているクラスは？」
-  get_type_hierarchy("BaseViewController")
-  → 5つのサブクラスを発見
+開発者: 「BaseViewControllerを継承しているクラスは？」
+get_type_hierarchy("BaseViewController")
+→ 5つのサブクラスを発見
 
 UC: Protocol実装の確認
-  get_type_hierarchy("UserRepositoryProtocol")
-  → Protocolを実装している型を列挙
+get_type_hierarchy("UserRepositoryProtocol")
+→ Protocolを実装している型を列挙
 
 UC: 型が見つからない場合（v0.6.5+）
-  get_type_hierarchy("NonExistent")
-  → "Type not found. Searched 42 files, 87 types detected.
-     Possible causes: typo / defined in external package"
-```
+get_type_hierarchy("NonExistent")
+→ "Type not found. Searched 42 files, 87 types detected.
+Possible causes: typo / defined in external package"
 
+```
 ---
 
 #### find_test_cases
@@ -720,20 +777,23 @@ XCTestケースとテストメソッドを検出
 
 **出力:**
 ```
+
 XCTest Cases Found:
 
 UserManagerTests (UserManagerTests.swift:10)
-  - testCreateUser (line: 15)
-  - testDeleteUser (line: 25)
-  - testUpdateUser (line: 35)
+
+- testCreateUser (line: 15)
+- testDeleteUser (line: 25)
+- testUpdateUser (line: 35)
 
 UserRepositoryTests (UserRepositoryTests.swift:8)
-  - testSave (line: 12)
-  - testFind (line: 20)
+
+- testSave (line: 12)
+- testFind (line: 20)
 
 Total: 2 test classes, 5 test methods
-```
 
+```
 **受入基準:**
 - ✅ XCTestCase継承クラスを全て検出
 - ✅ test*メソッドを全て列挙
@@ -741,18 +801,19 @@ Total: 2 test classes, 5 test methods
 
 **ユースケース:**
 ```
+
 UC: テストカバレッジ確認
-  QA: 「UserManagerのテストはある？」
-  find_test_cases()
-  → UserManagerTests が存在
-  → 3つのテストメソッドを確認
+QA: 「UserManagerのテストはある？」
+find_test_cases()
+→ UserManagerTests が存在
+→ 3つのテストメソッドを確認
 
 UC: テスト追加の計画
-  find_test_cases()
-  → 既存テストを把握
-  → 不足しているテストを特定
-```
+find_test_cases()
+→ 既存テストを把握
+→ 不足しているテストを特定
 
+```
 ---
 
 #### analyze_file_metrics
@@ -774,19 +835,20 @@ UC: テスト追加の計画
 
 **出力:**
 ```
+
 File Metrics (sorted by lines, threshold: 500):
 
 Files exceeding threshold (3 files):
-  SwiftSyntaxAnalyzer.swift: 580 lines (24.3 KB)
-  LSPClient.swift:           552 lines (21.8 KB)
-  ProjectMemory.swift:       510 lines (18.2 KB)
+SwiftSyntaxAnalyzer.swift: 580 lines (24.3 KB)
+LSPClient.swift: 552 lines (21.8 KB)
+ProjectMemory.swift: 510 lines (18.2 KB)
 
 Summary:
-  Total files: 42
-  Total lines: 8,420
-  Files over threshold: 3 (7.1%)
-```
+Total files: 42
+Total lines: 8,420
+Files over threshold: 3 (7.1%)
 
+```
 **受入基準:**
 - ✅ 正確な行数を返す（空行・コメント行含む）
 - ✅ 行数しきい値でフィルタリング
@@ -799,15 +861,16 @@ Summary:
 
 **ユースケース:**
 ```
+
 UC: リファクタリング候補の検出
-  analyze_file_metrics(threshold_lines: 500)
-  → 500行超のファイルを列挙 → 分割候補を把握
+analyze_file_metrics(threshold_lines: 500)
+→ 500行超のファイルを列挙 → 分割候補を把握
 
 UC: 最大ファイルの確認
-  analyze_file_metrics(sort_by: "lines", limit: 5)
-  → 行数上位5ファイルを取得
-```
+analyze_file_metrics(sort_by: "lines", limit: 5)
+→ 行数上位5ファイルを取得
 
+```
 ---
 
 #### find_type_usages（削除済み・歴史的記録）
@@ -827,16 +890,17 @@ UC: 最大ファイルの確認
 
 **出力:**
 ```
+
 Type 'User' is used in:
 
-  UserManager.swift:20 - Function parameter
-  UserRepository.swift:15 - Function return type
-  ProfileView.swift:18 - Variable declaration
-  ...
+UserManager.swift:20 - Function parameter
+UserRepository.swift:15 - Function return type
+ProfileView.swift:18 - Variable declaration
+...
 
 Total: 15 usages
-```
 
+```
 **受入基準:**
 - ✅ 変数宣言での使用検出
 - ✅ 関数パラメータでの使用検出
@@ -844,16 +908,17 @@ Total: 15 usages
 
 **ユースケース:**
 ```
+
 UC: リファクタリング影響確認（ビルド不可時）
-  開発者: 「User型を変更したい、どこで使ってる？」
-  search_code("User", output_mode: "file_list")
-  → 15ファイルに参照候補（テキストベース）
+開発者: 「User型を変更したい、どこで使ってる？」
+search_code("User", output_mode: "file_list")
+→ 15ファイルに参照候補（テキストベース）
 
 UC: LSP版との使い分け
-  過去案: ビルド可能時は find_symbol_references、ビルド不可時は find_type_usages
-  現行: search_code と find_symbol_definition を組み合わせる
-```
+過去案: ビルド可能時は find_symbol_references、ビルド不可時は find_type_usages
+現行: search_code と find_symbol_definition を組み合わせる
 
+```
 ---
 
 ### 2.6 効率的読み取り
@@ -881,18 +946,21 @@ UC: LSP版との使い分け
 
 **出力:**
 ```
+
 Analysis mode set to: SwiftUI
 
 推奨ツール:
+
 - list_property_wrappers: SwiftUI状態管理の把握
 - list_protocol_conformances: View Protocolの確認
 - search_code: @Stateプロパティの参照候補
 
 分析のポイント:
+
 - Property Wrapperに注目
 - 状態のフローを追う
-```
 
+```
 **受入基準:**
 - ✅ 5つのモード対応
 - ✅ モード別推奨ツール表示
@@ -900,15 +968,16 @@ Analysis mode set to: SwiftUI
 
 **ユースケース:**
 ```
+
 UC: SwiftUI開発支援
-  set_analysis_mode("SwiftUI")
-  → SwiftUI特化のツール使用ガイド表示
+set_analysis_mode("SwiftUI")
+→ SwiftUI特化のツール使用ガイド表示
 
 UC: テスト分析
-  set_analysis_mode("Testing")
-  → find_test_cases, test coverageに関する推奨表示
-```
+set_analysis_mode("Testing")
+→ find_test_cases, test coverageに関する推奨表示
 
+```
 ---
 
 #### think_about_analysis
@@ -926,18 +995,21 @@ UC: テスト分析
 
 **出力:**
 ```
+
 🤔 分析の振り返り
 
 収集した情報:
+
 - 15個のシンボルを調査
 - 3つのファイルを解析
 
 次のステップ候補:
+
 - 依存関係を確認（analyze_imports）
 - テストカバレッジを確認（find_test_cases）
 - 具体的な実装を読む（read_symbol）
-```
 
+```
 **受入基準:**
 - ✅ ProjectMemoryから情報取得
 - ✅ 次のステップを提案
@@ -962,12 +1034,13 @@ UC: テスト分析
 
 **出力:**
 ```
+
 ✅ Note added with tags: architecture, decision
 
 Content: UserManagerはSingletonパターンを使用。
 理由: 複数インスタンスを防ぐため。
-```
 
+```
 **受入基準:**
 - ✅ JSON形式で永続化（memory.json）
 - ✅ タイムスタンプ付き
@@ -975,20 +1048,21 @@ Content: UserManagerはSingletonパターンを使用。
 
 **ユースケース:**
 ```
+
 UC: 設計決定の記録
-  add_note(
-    content: "認証はFirebase Authを使用。理由: 実装コスト削減",
-    tags: ["architecture", "auth"]
-  )
-  → 後で検索可能
+add_note(
+content: "認証はFirebase Authを使用。理由: 実装コスト削減",
+tags: ["architecture", "auth"]
+)
+→ 後で検索可能
 
 UC: バグ調査メモ
-  add_note(
-    content: "UserManager.createUserでメモリリーク発見。原因調査中",
-    tags: ["bug", "memory"]
-  )
-```
+add_note(
+content: "UserManager.createUserでメモリリーク発見。原因調査中",
+tags: ["bug", "memory"]
+)
 
+```
 ---
 
 #### search_notes
@@ -1001,6 +1075,7 @@ UC: バグ調査メモ
 
 **出力:**
 ```
+
 Found 2 notes matching 'auth':
 
 [2025-10-20 10:30] Tags: architecture, auth
@@ -1008,8 +1083,8 @@ Found 2 notes matching 'auth':
 
 [2025-10-22 14:15] Tags: auth, security
 OAuth実装時の注意: リフレッシュトークンの保存場所
-```
 
+```
 **受入基準:**
 - ✅ 内容とタグで検索
 - ✅ タイムスタンプ順で表示
@@ -1036,72 +1111,72 @@ OAuth実装時の注意: リフレッシュトークンの保存場所
 ### 3.1 典型的なワークフロー
 
 #### ワークフロー1: 初めてのプロジェクト理解
-
 ```
+
 Step 1: プロジェクト初期化
-  initialize_project("/path/to/project")
+initialize_project("/path/to/project")
 
 Step 2: 全体構造把握
-  find_files("*.swift")
-  → 全Swiftファイル一覧
+find_files("*.swift")
+→ 全Swiftファイル一覧
 
 Step 3: 主要ファイルの解析
-  list_symbols("UserManager.swift")
-  → クラス・メソッド一覧
+list_symbols("UserManager.swift")
+→ クラス・メソッド一覧
 
 Step 4: 依存関係確認
-  analyze_imports()
-  → 使用モジュール把握
+analyze_imports()
+→ 使用モジュール把握
 
 Step 5: 詳細確認
-  read_symbol("UserManager.swift", "UserManager/createUser")
-  → 特定メソッドの実装確認
-```
+read_symbol("UserManager.swift", "UserManager/createUser")
+→ 特定メソッドの実装確認
 
+```
 ---
 
 #### ワークフロー2: リファクタリング
 
 > ⚠️ 旧ワークフローは削除済みツール（`find_symbol_references` / `find_type_usages`）を前提としていた。現在は `search_code`（テキストベースの参照検索）と `find_symbol_definition`（定義・所属スコープ確認）で代替する。
-
 ```
+
 Step 1: 参照箇所の確認
-  search_code("UserManager", output_mode: "file_list")
-  → UserManager を参照するファイル一覧
+search_code("UserManager", output_mode: "file_list")
+→ UserManager を参照するファイル一覧
 
 Step 2: 定義の確認
-  find_symbol_definition("UserManager", symbol_kinds: ["class"])
-  → 定義箇所と所属スコープ情報
+find_symbol_definition("UserManager", symbol_kinds: ["class"])
+→ 定義箇所と所属スコープ情報
 
 Step 3: テスト確認
-  find_test_cases()
-  → UserManagerTests の存在確認
+find_test_cases()
+→ UserManagerTests の存在確認
 
 Step 4: リファクタリング実施
-  （コード変更）
+（コード変更）
 
 Step 5: メモ記録
-  add_note("UserManager リファクタリング完了", tags: ["refactoring"])
-```
+add_note("UserManager リファクタリング完了", tags: ["refactoring"])
 
+```
 ---
 
 #### ワークフロー3: SwiftUI開発
-
 ```
+
 Step 1: ビューの状態管理確認
-  list_property_wrappers("ContentView.swift")
-  → @State, @Binding等を列挙
+list_property_wrappers("ContentView.swift")
+→ @State, @Binding等を列挙
 
 Step 2: Protocol準拠確認
-  list_protocol_conformances("ContentView.swift")
-  → View Protocolの実装確認
+list_protocol_conformances("ContentView.swift")
+→ View Protocolの実装確認
 
 Step 3: メソッド確認（LSP版）
-  list_symbols("ContentView.swift")  # v0.5.4+
-  → body変数の型まで表示
-```
+list_symbols("ContentView.swift") # v0.5.4+
+→ body変数の型まで表示
 
+```
 ---
 
 ### 3.2 ツール選択ガイド
@@ -1223,3 +1298,4 @@ Step 3: メソッド確認（LSP版）
 - REQ-003: コア機能要件（本文書）
 
 **次:** 全要件定義書のレビューと改善
+```

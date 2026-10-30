@@ -73,9 +73,9 @@ After installation, `swift-selena` is on your `PATH` (typically `$(brew --prefix
 
 #### Install time
 
-| Situation | Time | What happens |
-| --- | --- | --- |
-| Bottle available (Apple Silicon, macOS 15 / macOS 26) | Seconds | Downloads a prebuilt binary |
+| Situation                                                                  | Time                                     | What happens                                                                                                       |
+| -------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Bottle available (Apple Silicon, macOS 15 / macOS 26)                      | Seconds                                  | Downloads a prebuilt binary                                                                                        |
 | No bottle (Intel Macs, unsupported OS versions, releases without a bottle) | Several minutes to more than ten minutes | Builds from source, compiling dependencies such as swift-syntax (about 3 minutes on Apple Silicon with Xcode 27.1) |
 
 Requirements when building from source:
@@ -103,12 +103,12 @@ In the registration steps below, replace `swift-selena` with `$(pwd)/.build/rele
 
 Every client launches `swift-selena` as a **stdio** MCP server.
 
-| Client | How to configure | Config file |
-| --- | --- | --- |
-| [Claude Code](#claude-code) | `claude mcp add` | `~/.claude.json` / `.mcp.json` |
-| [Claude Desktop](#claude-desktop) | Edit JSON | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-| [Cursor](#cursor) | Edit JSON | `~/.cursor/mcp.json` / `.cursor/mcp.json` |
-| [Codex (CLI / IDE extension)](#codex) | `codex mcp add` or edit TOML | `~/.codex/config.toml` / `.codex/config.toml` |
+| Client                                | How to configure             | Config file                                                       |
+| ------------------------------------- | ---------------------------- | ----------------------------------------------------------------- |
+| [Claude Code](#claude-code)           | `claude mcp add`             | `~/.claude.json` / `.mcp.json`                                    |
+| [Claude Desktop](#claude-desktop)     | Edit JSON                    | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| [Cursor](#cursor)                     | Edit JSON                    | `~/.cursor/mcp.json` / `.cursor/mcp.json`                         |
+| [Codex (CLI / IDE extension)](#codex) | `codex mcp add` or edit TOML | `~/.codex/config.toml` / `.codex/config.toml`                     |
 
 ### Common notes
 
@@ -128,11 +128,11 @@ The examples below assume Homebrew on Apple Silicon (`/opt/homebrew`).
 
 If the binary is on your `PATH`, no absolute path is needed. Pick a scope:
 
-| Scope | Command | Applies to |
-| --- | --- | --- |
-| `local` (default) | `claude mcp add swift-selena -- swift-selena` | This project only, just you |
-| `project` | `claude mcp add -s project swift-selena -- swift-selena` | This project, shared with the team via `.mcp.json` |
-| `user` | `claude mcp add -s user swift-selena -- swift-selena` | All of your projects |
+| Scope             | Command                                                  | Applies to                                         |
+| ----------------- | -------------------------------------------------------- | -------------------------------------------------- |
+| `local` (default) | `claude mcp add swift-selena -- swift-selena`            | This project only, just you                        |
+| `project`         | `claude mcp add -s project swift-selena -- swift-selena` | This project, shared with the team via `.mcp.json` |
+| `user`            | `claude mcp add -s user swift-selena -- swift-selena`    | All of your projects                               |
 
 > **`project` scope note:** `.mcp.json` is committed to the repository and shared with your team. Because the registered `command` is `swift-selena` (resolved via `PATH`), every teammate must have `swift-selena` on their `PATH` (for example via this Homebrew formula).
 
@@ -275,28 +275,28 @@ Result:
 
 Swift-Selena uses **meta tool mode**: only the following 4 tools are exposed to the client. The analysis tools are compiled in like everything else but hidden from the MCP tool list and run through `execute_tool`, which keeps context window usage low.
 
-| Exposed tool | Role |
-| --- | --- |
-| `initialize_project` | Initializes the project (always run first) |
+| Exposed tool           | Role                                                      |
+| ---------------------- | --------------------------------------------------------- |
+| `initialize_project`   | Initializes the project (always run first)                |
 | `list_available_tools` | Lists the available analysis tools and their descriptions |
-| `get_tool_schema` | Returns the JSON schema of a specific tool |
-| `execute_tool` | Runs an analysis tool by name |
+| `get_tool_schema`      | Returns the JSON schema of a specific tool                |
+| `execute_tool`         | Runs an analysis tool by name                             |
 
 ### Analysis tools (via `execute_tool`)
 
-| Category | Tool | Summary |
-| --- | --- | --- |
-| File search | `find_files` | Find files by wildcard pattern (e.g. `*ViewModel.swift`) |
-| | `search_code` | Search code by regex. Supports `output_mode`, `limit`, `include_patterns`, `exclude_patterns` |
-| | `search_files_without_pattern` | Find files that do not match a pattern (like `grep -L`). Supports `include_patterns`, `exclude_patterns` |
-| Symbol analysis | `list_symbols` | List symbols such as classes, structs, and functions |
-| | `find_symbol_definition` | Find a symbol definition across the project. Supports `symbol_kinds` and scope information |
-| SwiftUI analysis | `list_property_wrappers` | Detect SwiftUI property wrappers (`@State`, `@Binding`, etc.) |
-| | `list_protocol_conformances` | Analyze protocol conformances and inheritance (`UITableViewDelegate`, `ObservableObject`, etc.) |
-| | `list_extensions` | Analyze extensions (extended type, protocol conformances, members) |
-| Code analysis | `analyze_imports` | Analyze import dependencies across the project (module usage statistics, cached) |
-| | `get_type_hierarchy` | Get a type's inheritance hierarchy (superclass, subclasses, conforming types, cached) |
-| | `find_test_cases` | Detect XCTest and Swift Testing (`@Test`, `@Suite`) test cases |
+| Category         | Tool                           | Summary                                                                                                  |
+| ---------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| File search      | `find_files`                   | Find files by wildcard pattern (e.g. `*ViewModel.swift`)                                                 |
+|                  | `search_code`                  | Search code by regex. Supports `output_mode`, `limit`, `include_patterns`, `exclude_patterns`            |
+|                  | `search_files_without_pattern` | Find files that do not match a pattern (like `grep -L`). Supports `include_patterns`, `exclude_patterns` |
+| Symbol analysis  | `list_symbols`                 | List symbols such as classes, structs, and functions                                                     |
+|                  | `find_symbol_definition`       | Find a symbol definition across the project. Supports `symbol_kinds` and scope information               |
+| SwiftUI analysis | `list_property_wrappers`       | Detect SwiftUI property wrappers (`@State`, `@Binding`, etc.)                                            |
+|                  | `list_protocol_conformances`   | Analyze protocol conformances and inheritance (`UITableViewDelegate`, `ObservableObject`, etc.)          |
+|                  | `list_extensions`              | Analyze extensions (extended type, protocol conformances, members)                                       |
+| Code analysis    | `analyze_imports`              | Analyze import dependencies across the project (module usage statistics, cached)                         |
+|                  | `get_type_hierarchy`           | Get a type's inheritance hierarchy (superclass, subclasses, conforming types, cached)                    |
+|                  | `find_test_cases`              | Detect XCTest and Swift Testing (`@Test`, `@Suite`) test cases                                           |
 
 ### Tool specification notes
 
@@ -369,12 +369,12 @@ If you built from source, run `.build/release/Swift-Selena` instead.
 2. Check that the config file path and the absolute `command` path are correct
 3. Check the client's logs
 
-| Client | How to check |
-| --- | --- |
-| Claude Code | `claude mcp list` |
-| Claude Desktop | `tail -f ~/Library/Logs/Claude/mcp*.log` |
-| Cursor | Output panel (`Cmd+Shift+U`) → **MCP Logs** |
-| Codex | `codex mcp list` / `/mcp` |
+| Client         | How to check                                |
+| -------------- | ------------------------------------------- |
+| Claude Code    | `claude mcp list`                           |
+| Claude Desktop | `tail -f ~/Library/Logs/Claude/mcp*.log`    |
+| Cursor         | Output panel (`Cmd+Shift+U`) → **MCP Logs** |
+| Codex          | `codex mcp list` / `/mcp`                   |
 
 The server's own log is at `~/.swift-selena/logs/server.log`.
 
@@ -396,11 +396,11 @@ It is rebuilt the next time `initialize_project` runs.
 
 By default, **meta tool mode** (v0.6.3+) is used. To expose the 12 tools directly without the meta tools, set the environment variable `SWIFT_SELENA_LEGACY=1`.
 
-| Client | Setting |
-| --- | --- |
-| Claude Code | `claude mcp add swift-selena -e SWIFT_SELENA_LEGACY=1 -- swift-selena` |
-| Claude Desktop, Cursor | Add `"SWIFT_SELENA_LEGACY": "1"` to `env` |
-| Codex | `codex mcp add swift-selena --env SWIFT_SELENA_LEGACY=1 -- swift-selena`, or add `SWIFT_SELENA_LEGACY = "1"` under `[mcp_servers.swift-selena.env]` |
+| Client                 | Setting                                                                                                                                             |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code            | `claude mcp add swift-selena -e SWIFT_SELENA_LEGACY=1 -- swift-selena`                                                                              |
+| Claude Desktop, Cursor | Add `"SWIFT_SELENA_LEGACY": "1"` to `env`                                                                                                           |
+| Codex                  | `codex mcp add swift-selena --env SWIFT_SELENA_LEGACY=1 -- swift-selena`, or add `SWIFT_SELENA_LEGACY = "1"` under `[mcp_servers.swift-selena.env]` |
 
 Claude Desktop example:
 

@@ -5,6 +5,7 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
 ## AI Interaction Language [MANDATORY]
 
 **All interaction must be conducted in Japanese**
+
 - Technical terms and English words may be used as they are
 - Source code comments are also written in Japanese
 - Files are also written in Japanese. However, when the file being modified is already written in English, or when the user specifies otherwise, write in English
@@ -61,6 +62,7 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
 ## Development Language and Frameworks
 
 Use the technologies available on the platforms and versions defined in Package.swift.
+
 - **macOS**: 13.0+
 - **Swift**: 6.1 (`swift-tools-version`; the language mode is Swift 5 via `swiftLanguageModes: [.v5]`)
 - **Type**: Swift Package (MCP Server)
@@ -140,6 +142,7 @@ Claude/Client
 ```
 
 **Key principles**:
+
 - New tools conform to the MCPTool protocol (existing exceptions: `InitializeProjectTool` is called directly by SwiftMCPServer, and `ExecuteToolTool` has its own signature that takes an `LSPState`)
 - Static analysis with SwiftSyntax (build-free)
 - Semantic analysis through LSP integration (auxiliary; disabled when a `.xcodeproj` exists directly under the project root)
@@ -157,10 +160,10 @@ swift test
 swift build -c release
 ```
 
-
 ## Important Constraints [MANDATORY]
 
 ### Mandatory Requirements
+
 - **NEVER modify Package.swift** without explicit permission
 - **Japanese comments required** in source code (all code comments are in Japanese)
 - **Requirements documents (project/{feature}/spec/**/*.md) have the highest priority** (over all other documents)
@@ -170,6 +173,7 @@ swift build -c release
 - **Update the specification index**: after adding, changing, deleting, or moving a file under project/{feature}/spec/ or project/{feature}/design/, run `/forge:update-db-specs` (same as "Automatic DB index update" above)
 
 ### MCP Server Implementation Principles
+
 - **MCPTool conformance**: new tools implement the `MCPTool` protocol (defined in `Sources/Tools/ToolProtocol.swift`)
 - **Static analysis first**: SwiftSyntax-based analysis is the baseline; LSP is used as a supplement
 - **Use the cache**: analysis results are cached in ProjectMemory
@@ -178,7 +182,9 @@ swift build -c release
 ## Use of MCP [MANDATORY]
 
 ### Swift-Selena MCP (recommended, fast)
+
 **Situations for use**:
+
 - **Before implementing**: search for existing similar implementations to prevent duplication
 - **Refactoring**: search every use of a type or symbol to prevent missed changes
 - **Architecture check**: detect layer violations, check protocol conformance
@@ -188,14 +194,15 @@ swift build -c release
 **Alternative when not connected**: the Grep/Glob tools (slower, less precise)
 
 ### Gemini MCP
+
 - Checking how to use OS frameworks
 - Investigating how to use external APIs
 - Web search (Google search)
 
-
 ## Critical Implementation Constraints
 
 ### Sources/Tools/ - Tool Implementation Constraints
+
 - **MCPTool conformance**: new tools conform to the `MCPTool` protocol defined in `Sources/Tools/ToolProtocol.swift` (`InitializeProjectTool` and `ExecuteToolTool` are existing exceptions)
 - **Category placement**:
   - `Analysis/` - code analysis (imports, type hierarchy, etc.)
@@ -207,6 +214,7 @@ swift build -c release
 - **Error handling**: analysis errors are included in the MCP response as proper error messages
 
 ### Sources/Selena/ - Core Analysis Engine Constraints
+
 - **Core/FileSearcher**: fast file-system-based search
 - **Core/SwiftSyntaxAnalyzer**: static analysis with SwiftSyntax (build-free), using the visitors under Visitors/
 - **Core/ProjectMemory**: cache management of analysis results (persisted to `memory.json`, invalidated by file modification time). This file is the whole cache layer
@@ -214,6 +222,7 @@ swift build -c release
 - **Visitors/**: SwiftSyntax SyntaxVisitor subclasses (symbol, import, type analysis, etc.)
 
 ### Code Header Format [MANDATORY]
+
 - **ALWAYS add/update Code Header Format** when creating/modifying Swift files
 - **Required marker**: `[Code Header Format]` at the beginning of header comment
 - **Required sections**:

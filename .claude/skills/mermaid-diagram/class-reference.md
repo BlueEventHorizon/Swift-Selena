@@ -258,6 +258,7 @@ classDiagram
 ### Error 1: Colon in method syntax
 
 **Broken:**
+
 ```mermaid
 classDiagram
     class MyClass {
@@ -266,6 +267,7 @@ classDiagram
 ```
 
 **Fixed:**
+
 ```mermaid
 classDiagram
     class MyClass {
@@ -278,6 +280,7 @@ classDiagram
 ### Error 2: Undefined node in relationship
 
 **Broken:**
+
 ```mermaid
 classDiagram
     Animal <|-- Dog
@@ -285,6 +288,7 @@ classDiagram
 ```
 
 **Fixed:**
+
 ```mermaid
 classDiagram
     class Animal
@@ -299,12 +303,14 @@ classDiagram
 ### Error 3: Special characters in class name
 
 **Broken:**
+
 ```mermaid
 classDiagram
     class My:Class
 ```
 
 **Fixed:**
+
 ```mermaid
 classDiagram
     class MyClass
@@ -315,12 +321,14 @@ classDiagram
 ### Error 4: Generic syntax
 
 **Broken:**
+
 ```mermaid
 classDiagram
     class List<String>
 ```
 
 **Fixed:**
+
 ```mermaid
 classDiagram
     class List~String~
@@ -400,14 +408,14 @@ Use class diagram with stereotypes for object-like diagrams.
 
 ## Quick Reference
 
-| Relationship | Syntax | Meaning |
-|-------------|--------|---------|
-| Inheritance | `A <\|-- B` | B extends A |
-| Composition | `A *-- B` | A owns B (strong) |
-| Aggregation | `A o-- B` | A has B (weak) |
-| Association | `A --> B` | A uses B |
-| Dependency | `A ..> B` | A depends on B |
-| Realization | `A <\|.. B` | B implements A |
+| Relationship | Syntax      | Meaning           |
+| ------------ | ----------- | ----------------- |
+| Inheritance  | `A <\|-- B` | B extends A       |
+| Composition  | `A *-- B`   | A owns B (strong) |
+| Aggregation  | `A o-- B`   | A has B (weak)    |
+| Association  | `A --> B`   | A uses B          |
+| Dependency   | `A ..> B`   | A depends on B    |
+| Realization  | `A <\|.. B` | B implements A    |
 
 ---
 
