@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=CHANGELOG.md sha256=555ffbe20525 -->
+<!-- bilingual-docs: source=CHANGELOG.md sha256=6a2f103cde64 -->
 
 [English](../CHANGELOG.md) | 日本語
 
@@ -7,6 +7,31 @@
 Swift-Selenaのリリース履歴
 
 ---
+
+## 0.6.13 - 2026-10-30
+
+### キャッシュ無効化の修正
+
+- **fix**: 型準拠キャッシュと Import キャッシュが、それぞれ専用のファイル更新時刻インデックス（`typeFileIndex`、`importFileIndex`）を持つようにした。従来はシンボルキャッシュのインデックスに相乗りしていたため、シンボルを再キャッシュすると古い型・Import エントリが最新として返っていた。`get_type_hierarchy` は呼び出しごとに、削除されたファイル由来のエントリを捨て、新規・変更ファイルだけを再解析する
+- **change**: `cacheVersion` を 6 に bump。既存の `memory.json` は一度だけ全破棄・再構築される。先に `VersionProbe` でバージョンだけを読むようにし、旧スキーマを破損ファイルと誤認しないようにした
+- **test**: `TypeConformanceCacheTests`（9 ケース）を追加し、未使用の `Tests/CacheTests` を削除
+
+### ツールチェーン
+
+- **change**: `Package.swift` の宣言を `swift-tools-version: 6.1` にした。固定した依存（swift-nio 2.98.0 が 6.1 を要求）を解決できる最小バージョンで、言語モードは Swift 5 のまま（`swiftLanguageModes: [.v5]`）。README・DEVELOPMENT・Formula・CLAUDE.md の要件表記を Swift 6.1（Xcode 16.3）以上に統一
+
+### 開発ツール
+
+- **feat**: `make register-cursor` / `unregister-cursor`（`~/.cursor/mcp.json`、パス指定時はそのプロジェクトの `.cursor/mcp.json` を編集）と `make register-codex` / `unregister-codex`（`codex mcp add` / `remove`）を追加
+- **change**: make ターゲットを `register-release` → `register-claude`、`register-desktop` → `register-claude-app`、`register-debug` → `register-claude-debug` に改名（`unregister-*` も同様）。`register-claude` / `unregister-claude` でパスを空にした場合は、カレントディレクトリではなく user スコープ（`-s user`）を対象にするよう変更
+- **fix**: `bottle.yml` の publish ジョブで `gh` の対象リポジトリを明示
+
+### ドキュメント
+
+- **change**: ルート文書の正本を英語にした。`README.md`・`CHANGELOG.md`・`CLAUDE.md` は英語で、日本語版は `ja/` 配下（`README.ja.md`、`CHANGELOG.ja.md`、`CLAUDE.ja.md`、`DEVELOPMENT.ja.md`、`PROJECT-OVERVIEW.ja.md`）。`README_en.md` は `README.md` に改名
+- **docs**: `PROJECT-OVERVIEW.md` を追加（開発に参加する人と、文書を保守する AI のための設計意図・構成・用語集）
+- **docs**: `CONTRIBUTING.md` を `DEVELOPMENT.md` に改名し、開発ガイドとして全面的に書き直し。README を再構成し、Cursor・Codex への登録手順を追加
+- **docs**: 実装と食い違っていた記述を修正（メタツールモードは解析ツールを動的ロードするのではなく一覧から隠す、LSP の無効化条件はビルド可否ではなく `.xcodeproj` の有無、ツール数、`Sources/` ツリー）
 
 ## 0.6.12 - 2026-10-29
 

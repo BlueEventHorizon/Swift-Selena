@@ -6,6 +6,31 @@ Release history of Swift-Selena.
 
 ---
 
+## 0.6.13 - 2026-10-30
+
+### Cache invalidation fix
+
+- **fix**: The type conformance cache and the import cache now each keep their own per-file modification index (`typeFileIndex`, `importFileIndex`). They used to share the symbol cache's index, so refreshing symbols made stale type or import entries look current. `get_type_hierarchy` now drops entries of deleted files and re-parses only new or changed files on every call
+- **change**: `cacheVersion` bumped to 6. An existing `memory.json` is discarded and rebuilt once. A `VersionProbe` reads the version before the full decode, so an old schema is no longer mistaken for a corrupt file
+- **test**: Added `TypeConformanceCacheTests` (9 cases) and removed the unused `Tests/CacheTests`
+
+### Toolchain
+
+- **change**: `Package.swift` declares `swift-tools-version: 6.1`, the lowest version that resolves the pinned dependencies (swift-nio 2.98.0 requires 6.1). The language mode stays Swift 5 (`swiftLanguageModes: [.v5]`). README, DEVELOPMENT, the Formula, and CLAUDE.md now state Swift 6.1 (Xcode 16.3) or later
+
+### Development tooling
+
+- **feat**: Added `make register-cursor` / `unregister-cursor` (edits `~/.cursor/mcp.json`, or a project's `.cursor/mcp.json` when a path is given) and `make register-codex` / `unregister-codex` (`codex mcp add` / `remove`)
+- **change**: Renamed the make targets `register-release` → `register-claude`, `register-desktop` → `register-claude-app`, `register-debug` → `register-claude-debug`, and their `unregister-*` counterparts. `register-claude` / `unregister-claude` with an empty path now use the user scope (`-s user`) instead of the current directory
+- **fix**: The `bottle.yml` publish job names the target repository for `gh`
+
+### Documentation
+
+- **change**: English is now the canonical language of the root documents. `README.md`, `CHANGELOG.md`, and `CLAUDE.md` are English; the Japanese versions live under `ja/` (`README.ja.md`, `CHANGELOG.ja.md`, `CLAUDE.ja.md`, `DEVELOPMENT.ja.md`, `PROJECT-OVERVIEW.ja.md`). `README_en.md` was renamed to `README.md`
+- **docs**: Added `PROJECT-OVERVIEW.md` (design intent, structure, and glossary for contributors and for the AI that maintains the documents)
+- **docs**: Renamed `CONTRIBUTING.md` to `DEVELOPMENT.md` and rewrote it as a development guide. Restructured the README and added Cursor and Codex registration steps
+- **docs**: Corrected descriptions that no longer matched the implementation: meta tool mode hides the analysis tools instead of loading them dynamically, LSP is disabled by a `.xcodeproj` rather than by build-ability, tool counts, and the `Sources/` tree
+
 ## 0.6.12 - 2026-10-29
 
 ### Homebrew bottle distribution
