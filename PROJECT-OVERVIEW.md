@@ -1,6 +1,8 @@
+English | [日本語](ja/PROJECT-OVERVIEW.ja.md)
+
 # Swift-Selena: Project Overview
 
-This document is for people who join the development of Swift-Selena and for the AI that writes or fixes its documents. For installation and usage, see `README_en.md` (English) and `README.md` (Japanese). For the rules the development AI must follow, see `CLAUDE.md`. This survey describes the development branch after release 0.6.12: `AppConstants.version` in `Sources/Constants.swift` is still 0.6.12, while changes made after that tag (the cache format v6 and the Swift 6.1 requirement among them) are described as they are in the source, not as released.
+This document is for people who join the development of Swift-Selena and for the AI that writes or fixes its documents. For installation and usage, see `README.md` (English) and `ja/README.ja.md` (Japanese). For the rules the development AI must follow, see `CLAUDE.md`. This survey describes the development branch after release 0.6.12: `AppConstants.version` in `Sources/Constants.swift` is still 0.6.12, while changes made after that tag (the cache format v6 and the Swift 6.1 requirement among them) are described as they are in the source, not as released.
 
 ## 1. Position
 
@@ -57,10 +59,10 @@ The canonical version is `AppConstants.version`. Git tags have no `v` prefix. Re
 
 | Path | Role |
 | --- | --- |
-| `README.md`, `README_en.md` | Introduction for first-time users: Japanese and English. The repository's English README is currently `README_en.md` |
+| `README.md` | Introduction for first-time users (English). The Japanese version is `ja/README.ja.md` |
 | `DEVELOPMENT.md`, `DEVELOPMENT.ja.md` | Development guide: build, test, add a tool, CI, release procedure |
 | `CLAUDE.md` | Mandatory rules for the development AI. `AGENTS.md` is a symbolic link to it, and `GEMINI.md` only imports it |
-| `CHANGELOG.md` | Release history (written in Japanese) |
+| `CHANGELOG.md` | Release history (English; Japanese version in `ja/CHANGELOG.ja.md`) |
 | `Sources/` | The server. `SwiftMCPServer.swift` (entry point), `Constants.swift`, `Logging/`, `Selena/` (analysis engine: `Core/`, `LSP/`, `Visitors/` with 8 visitors, `DebugRunner.swift`), `Tools/` (`Project/`, `FileSystem/`, `Symbols/`, `SwiftUI/`, `Analysis/`, `Meta/`, `ToolProtocol.swift`, `ResultEncoder.swift`) |
 | `Tests/` | Test targets and `Tests/Fixtures/` (sample code to analyze). Five targets are registered in `Package.swift` |
 | `scripts/`, `makefile`, `Formula/`, `.github/workflows/` | Client registration, version and tag verification, bottle merging, the Homebrew Formula, and CI |
@@ -114,10 +116,10 @@ The project does not ship a plugin (no `.claude-plugin/plugin.json`). The `.clau
 ## 5. Writing conventions
 
 - **Document IDs.** Write IDs as they are, with the original prefix and number, and do not translate them: `REQ-001`, `DES-104`, `FR-006`, `NFR-001`, `UC-001`. Sections are cited as "REQ-003 section 2.2". Plain document names are not translated either.
-- **Headings of documents that are still in Japanese.** The spec, design, and plan documents and `CHANGELOG.md` are written in Japanese. When an English document quotes one of their headings, keep the Japanese text in quotation marks and add a short English gloss in parentheses, for example "Swift-Selena 要件定義書" (Swift-Selena requirements). Do not quote Japanese anywhere else in English files, except in the glossary.
+- **Headings of documents that are still in Japanese.** The spec, design, and plan documents are written in Japanese. When an English document quotes one of their headings, keep the Japanese text in quotation marks and add a short English gloss in parentheses, for example "Swift-Selena 要件定義書" (Swift-Selena requirements). Do not quote Japanese anywhere else in English files, except in the glossary.
 - **Code blocks.** Code, commands, paths, flags, tool names, and identifiers are never translated. Comments in source code are written in Japanese in this project (`CLAUDE.md`); in an English document, translate a prose comment inside a code block into English, and leave the code unchanged.
 - **Tool and parameter names** (`search_code`, `output_mode`, `symbol_kinds`) are kept as they are.
 - **Versions.** Write release versions without a `v` prefix (`0.6.12`). A phrase such as "available since v0.6.3" may keep the `v` (`CLAUDE.md`).
 - **Term choice.** Use the English rendering in the glossary everywhere. In particular, keep "meta tool mode" and "legacy mode" distinct, and use "requirements document", "design document", and "plan document" for the three kinds of document in `project/`.
-- **Language of the repository.** Interaction with the AI and source comments are in Japanese. Files are written in Japanese unless an existing file is in English or the user asks for English (`CLAUDE.md`). The English files in this repository (`README_en.md`, `DEVELOPMENT.md`) already exist and are kept as they are.
+- **Language of the repository.** Interaction with the AI and source comments are in Japanese. Files are written in Japanese unless an existing file is in English or the user asks for English (`CLAUDE.md`). The root documents `README.md`, `CHANGELOG.md`, `CLAUDE.md`, `PROJECT-OVERVIEW.md`, and `DEVELOPMENT.md` are English, with Japanese versions under `ja/` (`DEVELOPMENT.ja.md` sits beside its English file).
 - **Tool lists.** Do not copy a tool count or list from the old spec and design documents. State the list from `ToolNames` and `MetaToolRegistry.swift`.

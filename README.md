@@ -1,144 +1,144 @@
+English | [日本語](ja/README.ja.md)
+
 # Swift Selena - Swift Analyzer MCP Server with respect to Serena
 
 <img width="400" src="selena.png">
 
-**Swift Selena** は、Swift プロジェクトのコード解析を AI エージェントに提供する MCP (Model Context Protocol) サーバーです。ビルドエラーがあるコードでも動作し、SwiftUI アプリ開発を強力にサポートします。Claude Code / Claude Desktop / Cursor / Codex など、MCP 対応のクライアントから利用できます。
+**Swift Selena** is an MCP (Model Context Protocol) server that gives AI agents Swift code analysis capabilities. It works even when the code has build errors, and strongly supports SwiftUI app development. It runs with any MCP-capable client, including Claude Code, Claude Desktop, Cursor, and Codex.
 
 [![Swift 6.1+](https://img.shields.io/badge/Swift-6.1+-orange.svg)](https://swift.org)
 [![Platform macOS](https://img.shields.io/badge/platform-macOS%2013+-lightgrey.svg)](https://www.apple.com/macos/)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-[English version](README_en.md)
+## Table of Contents
 
-## 目次
+- [Key Features](#key-features)
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Connecting MCP Clients](#connecting-mcp-clients)
+- [Usage](#usage)
+- [Provided Tools](#provided-tools)
+- [Configuration, Data, and Logs](#configuration-data-and-logs)
+- [Troubleshooting](#troubleshooting)
+- [Advanced Configuration](#advanced-configuration)
+- [Architecture](#architecture)
+- [Contributing and License](#contributing-and-license)
 
-- [主な特徴](#主な特徴)
-- [クイックスタート](#クイックスタート)
-- [インストール](#インストール)
-- [MCP クライアントへの登録](#mcp-クライアントへの登録)
-- [使い方](#使い方)
-- [提供ツール](#提供ツール)
-- [設定・データ・ログ](#設定データログ)
-- [トラブルシューティング](#トラブルシューティング)
-- [高度な設定](#高度な設定)
-- [アーキテクチャ](#アーキテクチャ)
-- [コントリビューション・ライセンス](#コントリビューションライセンス)
+## Key Features
 
-## 主な特徴
+- **Build-free**: Works even with build errors, thanks to SwiftSyntax-based static analysis
+- **LSP integration**: Enhances supported tools with SourceKit-LSP when available; SwiftSyntax remains the fallback
+- **Meta tool mode**: Reduces context window usage with dynamic tool loading (v0.6.3+)
+- **Swift Testing support**: Detects both XCTest and Swift Testing (`@Test`, `@Suite`) test cases
+- **SwiftUI support**: Automatically detects property wrappers (`@State`, `@Binding`, etc.)
+- **Fast search**: Filesystem-based search stays fast on large projects
+- **Smart caching**: Caches analysis results to speed up repeated queries
+- **Multi-client**: Use Claude Code, Claude Desktop, Cursor, and Codex at the same time (data is separated per client)
 
-- **ビルド不要**: SwiftSyntax ベースの静的解析により、ビルドエラーがあっても動作します
-- **LSP 統合**: 利用可能な場合は SourceKit-LSP で対応ツールを強化し、不可の場合は SwiftSyntax で動作します
-- **メタツールモード**: 動的ツールロードでコンテキストウィンドウの使用量を削減します（v0.6.3+）
-- **Swift Testing 対応**: XCTest と Swift Testing（`@Test`, `@Suite`）の両方を検出します
-- **SwiftUI 対応**: Property Wrapper（`@State`, `@Binding` 等）を自動検出します
-- **高速検索**: ファイルシステムベースの検索で、大規模プロジェクトでも高速です
-- **スマートキャッシュ**: 解析結果をキャッシュし、繰り返しのクエリを高速化します
-- **複数クライアント対応**: Claude Code・Claude Desktop・Cursor・Codex を同時に使えます（クライアントごとにデータを分離）
-
-## クイックスタート
+## Quick Start
 
 ```bash
-# 1. インストール（bottle があれば数秒で完了します）
+# 1. Install (finishes in seconds when a bottle is available)
 brew tap blueeventhorizon/swift-selena https://github.com/BlueEventHorizon/Swift-Selena
 brew install blueeventhorizon/swift-selena/swift-selena
 
-# 2. 使っているクライアントに登録（例: Claude Code）
+# 2. Register with your client (example: Claude Code)
 claude mcp add swift-selena -- swift-selena
 ```
 
-3. クライアントで Swift プロジェクトを開き、「このプロジェクトを解析して」と頼みます。
+3. Open a Swift project in your client and ask it to "analyze this project".
 
-Claude Desktop・Cursor・Codex の登録方法は [MCP クライアントへの登録](#mcp-クライアントへの登録) を参照してください。
+For Claude Desktop, Cursor, and Codex, see [Connecting MCP Clients](#connecting-mcp-clients).
 
-## インストール
+## Installation
 
-### 必要要件
+### Requirements
 
-- macOS 13.0 以上
-- MCP に対応したクライアント（[Claude Code](https://docs.claude.com/claude-code) / [Claude Desktop](https://claude.ai/download) / [Cursor](https://cursor.com) / [Codex](https://developers.openai.com/codex) など）
-- ソースからビルドする場合のみ: Swift 6.1（Xcode 16.3）以上
+- macOS 13.0 or later
+- An MCP-capable client ([Claude Code](https://docs.claude.com/claude-code) / [Claude Desktop](https://claude.ai/download) / [Cursor](https://cursor.com) / [Codex](https://developers.openai.com/codex), etc.)
+- Only when building from source: Swift 6.1 (Xcode 16.3) or later
 
-### Homebrew（推奨）
+### Homebrew (Recommended)
 
-本リポジトリ自体を tap として利用できます（専用の `homebrew-*` リポジトリは不要です）。
+This repository itself serves as the tap — no separate `homebrew-*` repository is needed.
 
 ```bash
 brew tap blueeventhorizon/swift-selena https://github.com/BlueEventHorizon/Swift-Selena
 brew install blueeventhorizon/swift-selena/swift-selena
-# tap 後は短縮形も使えます:
+# After tapping, the short form also works:
 # brew install swift-selena
 ```
 
-インストール後、`swift-selena` が `PATH` 上（通常は `$(brew --prefix)/bin/swift-selena`）に配置されます。
+After installation, `swift-selena` is on your `PATH` (typically `$(brew --prefix)/bin/swift-selena`).
 
-#### インストール時間について
+#### Install time
 
-| 状況 | 所要時間 | 内容 |
+| Situation | Time | What happens |
 | --- | --- | --- |
-| bottle あり（Apple Silicon・macOS 15 / macOS 26） | 数秒 | ビルド済みバイナリを取得するだけです |
-| bottle なし（Intel Mac・未対応 OS・bottle 未公開のバージョン） | 数分〜十数分 | ソースからビルドします。swift-syntax などの依存もコンパイルするため時間がかかります（Apple Silicon・Xcode 27.1 で約 3 分） |
+| Bottle available (Apple Silicon, macOS 15 / macOS 26) | Seconds | Downloads a prebuilt binary |
+| No bottle (Intel Macs, unsupported OS versions, releases without a bottle) | Several to ten-plus minutes | Builds from source, compiling dependencies such as swift-syntax (about 3 minutes on Apple Silicon with Xcode 27.1) |
 
-ソースビルドになる場合の要件:
+Requirements when building from source:
 
-- macOS 13.0+ 上で Swift 6.1+（Xcode 16.3+）が必要です。動作確認済みの環境は macOS 26 / Xcode 27.1（Swift 6.4）です
-- Command Line Tools のみでのビルドは**未検証**です。CLT のみの環境で失敗する場合は、フル Xcode をインストールしてください
+- Swift 6.1+ (Xcode 16.3+) on macOS 13.0+. Verified on macOS 26 / Xcode 27.1 (Swift 6.4)
+- A Command Line Tools-only build is **unverified**. If it fails with only CLT installed, install full Xcode
 
-> **`brew doctor` の「Command Line Tools for Xcode xx をダウンロードしてください」という警告について**
-> Homebrew が、Xcode と Command Line Tools のバージョン差を検出して出す警告です。`swift build` は `xcode-select` が指す Xcode のツールチェーンを使うため、Swift-Selena のビルドには影響しません。
+> **About the `brew doctor` warning "You should download the Command Line Tools for Xcode xx"**
+> Homebrew prints this when the Command Line Tools are older than the installed Xcode. `swift build` uses the toolchain that `xcode-select` points to, so this does not affect building Swift-Selena.
 
-### ソースからビルド（代替）
+### Build from Source (Alternative)
 
-Homebrew が使えない環境では、手動でビルドします。
+If Homebrew is unavailable, build manually:
 
 ```bash
 git clone https://github.com/BlueEventHorizon/Swift-Selena.git
 cd Swift-Selena
 swift build -c release -Xswiftc -Osize
-# 成果物: .build/release/Swift-Selena
+# Artifact: .build/release/Swift-Selena
 ```
 
-以降の登録手順では、`swift-selena` を `$(pwd)/.build/release/Swift-Selena` に読み替えてください。`make` コマンド、ローカル開発時の登録、リリース手順は [DEVELOPMENT.ja.md](DEVELOPMENT.ja.md) を参照してください。
+In the registration steps below, replace `swift-selena` with `$(pwd)/.build/release/Swift-Selena`. For `make` commands, local development registration, and the release procedure, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
-## MCP クライアントへの登録
+## Connecting MCP Clients
 
-どのクライアントも、`swift-selena` を **stdio** の MCP サーバーとして起動します。
+Every client launches `swift-selena` as a **stdio** MCP server.
 
-| クライアント | 設定方法 | 設定ファイル |
+| Client | How to configure | Config file |
 | --- | --- | --- |
 | [Claude Code](#claude-code) | `claude mcp add` | `~/.claude.json` / `.mcp.json` |
-| [Claude Desktop](#claude-desktop) | JSON を編集 | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-| [Cursor](#cursor) | JSON を編集 | `~/.cursor/mcp.json` / `.cursor/mcp.json` |
-| [Codex（CLI / IDE 拡張）](#codex) | `codex mcp add` または TOML を編集 | `~/.codex/config.toml` / `.codex/config.toml` |
+| [Claude Desktop](#claude-desktop) | Edit JSON | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| [Cursor](#cursor) | Edit JSON | `~/.cursor/mcp.json` / `.cursor/mcp.json` |
+| [Codex (CLI / IDE extension)](#codex) | `codex mcp add` or edit TOML | `~/.codex/config.toml` / `.codex/config.toml` |
 
-### 共通の注意
+### Common notes
 
-- **GUI アプリ（Claude Desktop・Cursor・Codex IDE 拡張）は、シェルの `PATH` を継承しないことがあります。** 設定には絶対パスを書くのが確実です。絶対パスは次のコマンドで確認できます。
+- **GUI apps (Claude Desktop, Cursor, the Codex IDE extension) may not inherit your shell `PATH`.** Using an absolute path in the configuration is the safest. Find it with:
 
   ```bash
   echo "$(brew --prefix)/bin/swift-selena"
-  # 例: Apple Silicon → /opt/homebrew/bin/swift-selena / Intel → /usr/local/bin/swift-selena
+  # e.g. Apple Silicon → /opt/homebrew/bin/swift-selena / Intel → /usr/local/bin/swift-selena
   ```
 
-- **JSON や TOML の中に `$(brew --prefix)` を書かないでください。** シェル展開されないため、上のコマンドで得た絶対パスをそのまま貼り付けます。
-- **`MCP_CLIENT_ID` でクライアントごとにデータを分離します。** 同じ値を使うクライアントは、同じ解析キャッシュを共有します。詳細は [データ保存場所](#データ保存場所) を参照してください。
+- **Do not write `$(brew --prefix)` inside JSON or TOML.** It is not shell-expanded; paste the absolute path printed by the command above.
+- **`MCP_CLIENT_ID` separates data per client.** Clients that use the same value share one analysis cache. See [Data location](#data-location).
 
-以下の例は、Apple Silicon の Homebrew（`/opt/homebrew`）を想定しています。
+The examples below assume Homebrew on Apple Silicon (`/opt/homebrew`).
 
 ### Claude Code
 
-バイナリが `PATH` 上にあれば、絶対パスは不要です。スコープを選んでください。
+If the binary is on your `PATH`, no absolute path is needed. Pick a scope:
 
-| スコープ | コマンド | 有効範囲 |
+| Scope | Command | Applies to |
 | --- | --- | --- |
-| `local`（デフォルト） | `claude mcp add swift-selena -- swift-selena` | このプロジェクトのみ・自分だけ |
-| `project` | `claude mcp add -s project swift-selena -- swift-selena` | このプロジェクト・`.mcp.json` でチーム共有 |
-| `user` | `claude mcp add -s user swift-selena -- swift-selena` | 自分の全プロジェクト |
+| `local` (default) | `claude mcp add swift-selena -- swift-selena` | This project only, just you |
+| `project` | `claude mcp add -s project swift-selena -- swift-selena` | This project, shared with the team via `.mcp.json` |
+| `user` | `claude mcp add -s user swift-selena -- swift-selena` | All of your projects |
 
-> **`project` スコープの注意:** `.mcp.json` をリポジトリにコミットしてチームで共有します。`command` が `swift-selena`（`PATH` で解決）なので、**チームメンバー全員が `swift-selena` を `PATH` 上に持っている**（例: この Homebrew formula で導入）必要があります。
+> **`project` scope note:** `.mcp.json` is committed to the repository and shared with your team. Because the registered `command` is `swift-selena` (resolved via `PATH`), every teammate must have `swift-selena` on their `PATH` (for example via this Homebrew formula).
 
 ### Claude Desktop
 
-`~/Library/Application Support/Claude/claude_desktop_config.json` を編集します。
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
@@ -151,11 +151,11 @@ swift build -c release -Xswiftc -Osize
 }
 ```
 
-編集後、Claude Desktop を再起動します。
+Restart Claude Desktop afterwards.
 
 ### Cursor
 
-プロジェクト単位は `.cursor/mcp.json`、全プロジェクト共通は `~/.cursor/mcp.json` を編集します。
+Edit `.cursor/mcp.json` for a single project, or `~/.cursor/mcp.json` for all projects:
 
 ```json
 {
@@ -169,23 +169,23 @@ swift build -c release -Xswiftc -Osize
 }
 ```
 
-- 保存後、Cursor の **Customize** サイドバーで `swift-selena` が有効になっていることを確認します。チャットの `Available Tools` に表示されれば接続できています
-- 接続に失敗する場合は、Output パネル（`Cmd+Shift+U`）で **MCP Logs** を選んでエラーを確認します
-- `.cursor/mcp.json` をリポジトリにコミットする場合は、`command` の絶対パスがチーム全員の環境で同じであることを確認してください
+- After saving, check in Cursor's **Customize** sidebar that `swift-selena` is enabled. If its tools appear under `Available Tools` in chat, it is connected
+- If it fails to connect, open the Output panel (`Cmd+Shift+U`) and select **MCP Logs** to see the error
+- If you commit `.cursor/mcp.json`, make sure the absolute `command` path is the same on every teammate's machine
 
 ### Codex
 
-Codex CLI・IDE 拡張・デスクトップアプリは、同じ設定を共有します。
+The Codex CLI, IDE extension, and desktop app share the same configuration.
 
-**コマンドで登録する場合:**
+**Register with a command:**
 
 ```bash
 codex mcp add swift-selena --env MCP_CLIENT_ID=codex -- "$(brew --prefix)/bin/swift-selena"
 ```
 
-`$(brew --prefix)` はシェルがコマンド実行前に展開するため、登録されるのは絶対パスです。
+The shell expands `$(brew --prefix)` before the command runs, so an absolute path is what gets registered.
 
-**設定ファイルを直接編集する場合:** `~/.codex/config.toml`（プロジェクト単位は `.codex/config.toml`。信頼済みのプロジェクトのみ有効）に追記します。
+**Or edit the config file:** append to `~/.codex/config.toml` (per-project: `.codex/config.toml`, effective only for trusted projects):
 
 ```toml
 [mcp_servers.swift-selena]
@@ -195,56 +195,56 @@ command = "/opt/homebrew/bin/swift-selena"
 MCP_CLIENT_ID = "codex"
 ```
 
-- 登録を確認するには、`codex mcp list` を実行するか、Codex の画面で `/mcp` と入力します
-- IDE 拡張からは、歯車メニューの **MCP servers** → **Add server** → **STDIO** でも追加できます。追加後に **Restart extension** を実行します
+- To verify, run `codex mcp list`, or type `/mcp` in Codex
+- In the IDE extension you can also use the gear menu → **MCP servers** → **Add server** → **STDIO**. Then run **Restart extension**
 
-## 使い方
+## Usage
 
-### 基本的な流れ
+### Basic flow
 
-1. **プロジェクトを初期化する**: クライアントに「この Swift プロジェクトを解析して」と頼むと、`initialize_project` が自動で実行されます
-2. **コードを検索・解析する**: 「ViewModel を探して」→ `find_files` で `*ViewModel.swift` を検索します。「`@State` を使っているファイルは？」→ `list_property_wrappers` で検出します
-3. **コード構造を調べる**: 「ViewController の型階層を表示して」→ `get_type_hierarchy` で継承関係を表示します
+1. **Initialize the project**: Ask your client to "analyze this Swift project"; `initialize_project` runs automatically
+2. **Search and analyze code**: "Find the ViewModels" → `find_files` searches `*ViewModel.swift`. "Which files use `@State`?" → `list_property_wrappers` detects them
+3. **Inspect code structure**: "Show the type hierarchy of ViewController" → `get_type_hierarchy` shows the inheritance
 
-### 実践例
+### Examples
 
-#### SwiftUI の Property Wrapper を確認
+#### Check SwiftUI property wrappers
 
 ```
-あなた: ContentView.swift で使われている Property Wrapper を教えて
+You: Which property wrappers does ContentView.swift use?
 
-AI: list_property_wrappers を実行
-結果:
+AI: runs list_property_wrappers
+Result:
 [@State] counter: Int (line 12)
 [@ObservedObject] viewModel: ViewModel (line 13)
 [@EnvironmentObject] appState: AppState (line 14)
 ```
 
-#### 特定の関数を探す
+#### Find a specific function
 
 ```
-あなた: fetchData という関数がどこにあるか探して
+You: Where is the function fetchData?
 
-AI: find_symbol_definition を実行
-結果:
+AI: runs find_symbol_definition
+Result:
 [Function] fetchData
   File: /path/to/NetworkManager.swift
   Line: 45
 ```
 
-#### Protocol 準拠を確認
+#### Check protocol conformances
 
 ```
-あなた: ViewController がどのプロトコルに準拠しているか教えて
+You: Which protocols does ViewController conform to?
 
-AI: list_protocol_conformances を実行
-結果:
+AI: runs list_protocol_conformances
+Result:
 [Class] ViewController (line 25)
   Inherits from: UIViewController
   Conforms to: UITableViewDelegate, UITableViewDataSource
 ```
 
-#### 本番コードの Swift ファイルだけを検索
+#### Search production Swift files only
 
 ```json
 {
@@ -256,9 +256,9 @@ AI: list_protocol_conformances を実行
 }
 ```
 
-（`search_code` のパラメータ例です）
+(Example parameters for `search_code`.)
 
-#### シンボル定義を種別で絞り込む
+#### Narrow symbol definitions by kind
 
 ```json
 {
@@ -267,58 +267,58 @@ AI: list_protocol_conformances を実行
 }
 ```
 
-（`find_symbol_definition` のパラメータ例です。結果には Scope 行と structured JSON ブロックが含まれます）
+(Example parameters for `find_symbol_definition`. The result includes a Scope line and a structured JSON block.)
 
-## 提供ツール
+## Provided Tools
 
-### メタツールモード（v0.6.3+）
+### Meta tool mode (v0.6.3+)
 
-Swift-Selena は**メタツールモード**を採用しており、クライアントには次の 4 つのツールだけを公開します。実際の解析ツールはオンデマンドで動的にロードされるため、コンテキストウィンドウの使用量を抑えられます。
+Swift-Selena uses **meta tool mode**: only the following 4 tools are exposed to the client. The actual analysis tools are loaded dynamically on demand, which keeps context window usage low.
 
-| 公開ツール | 役割 |
+| Exposed tool | Role |
 | --- | --- |
-| `initialize_project` | プロジェクトを初期化します（最初に必ず実行） |
-| `list_available_tools` | 利用可能な解析ツールの一覧と説明を表示します |
-| `get_tool_schema` | 特定ツールの JSON スキーマを取得します |
-| `execute_tool` | 解析ツールを名前で実行します |
+| `initialize_project` | Initializes the project (always run first) |
+| `list_available_tools` | Lists the available analysis tools and their descriptions |
+| `get_tool_schema` | Returns the JSON schema of a specific tool |
+| `execute_tool` | Runs an analysis tool by name |
 
-### 解析ツール（`execute_tool` 経由）
+### Analysis tools (via `execute_tool`)
 
-| カテゴリ | ツール | 概要 |
+| Category | Tool | Summary |
 | --- | --- | --- |
-| ファイル検索 | `find_files` | ワイルドカードパターンでファイルを検索（例: `*ViewModel.swift`） |
-| | `search_code` | 正規表現でコード内容を検索。`output_mode`・`limit`・`include_patterns`・`exclude_patterns` に対応 |
-| | `search_files_without_pattern` | パターンにマッチしないファイルを検索（`grep -L` 相当）。`include_patterns`・`exclude_patterns` に対応 |
-| シンボル解析 | `list_symbols` | Class・Struct・Function などのシンボル一覧 |
-| | `find_symbol_definition` | プロジェクト全体でシンボル定義を検索。`symbol_kinds` とスコープ情報に対応 |
-| SwiftUI 解析 | `list_property_wrappers` | SwiftUI の Property Wrapper（`@State`, `@Binding` 等）を検出 |
-| | `list_protocol_conformances` | Protocol 準拠と継承関係を解析（`UITableViewDelegate`, `ObservableObject` 等） |
-| | `list_extensions` | Extension を解析（拡張対象の型・プロトコル準拠・メンバー一覧） |
-| コード解析 | `analyze_imports` | プロジェクト全体の Import 依存関係を解析（モジュール使用統計、キャッシュ利用） |
-| | `get_type_hierarchy` | 型の継承階層を取得（スーパークラス・サブクラス・Protocol 準拠型、キャッシュ利用） |
-| | `find_test_cases` | XCTest と Swift Testing（`@Test`, `@Suite`）のテストケースを検出 |
+| File search | `find_files` | Find files by wildcard pattern (e.g. `*ViewModel.swift`) |
+| | `search_code` | Search code by regex. Supports `output_mode`, `limit`, `include_patterns`, `exclude_patterns` |
+| | `search_files_without_pattern` | Find files that do not match a pattern (like `grep -L`). Supports `include_patterns`, `exclude_patterns` |
+| Symbol analysis | `list_symbols` | List symbols such as classes, structs, and functions |
+| | `find_symbol_definition` | Find a symbol definition across the project. Supports `symbol_kinds` and scope information |
+| SwiftUI analysis | `list_property_wrappers` | Detect SwiftUI property wrappers (`@State`, `@Binding`, etc.) |
+| | `list_protocol_conformances` | Analyze protocol conformances and inheritance (`UITableViewDelegate`, `ObservableObject`, etc.) |
+| | `list_extensions` | Analyze extensions (extended type, protocol conformances, members) |
+| Code analysis | `analyze_imports` | Analyze import dependencies across the project (module usage statistics, cached) |
+| | `get_type_hierarchy` | Get a type's inheritance hierarchy (superclass, subclasses, conforming types, cached) |
+| | `find_test_cases` | Detect XCTest and Swift Testing (`@Test`, `@Suite`) test cases |
 
-### ツール仕様の補足
+### Tool specification notes
 
-- `search_code` の `output_mode` は `match_detail`（既定）、`file_list`、`count_only` です
-- `search_code` の `limit` は 1〜10,000 です。10,000 を超える値は内部上限に切り詰められ、結果に通知されます
-- `search_code` と `search_files_without_pattern` は `include_patterns` / `exclude_patterns` を使用します。旧 `file_pattern` は意図的に廃止済みで、指定されても無視されます
-- `find_symbol_definition` の `symbol_kinds` には、`struct`・`class`・`enum`・`protocol`・`actor`・`function`・`variable`・`typealias`・`extension` を指定できます
-- `search_code` と `find_symbol_definition` は、人間向けテキスト出力の末尾に `--- structured ---` の JSON ブロックを付加します
-- LSP 強化はベストエフォートです。`.xcodeproj` を含む Xcode プロジェクトのディレクトリでは現在 LSP を無効化し、SwiftSyntax 解析にフォールバックします
+- `search_code`'s `output_mode` is `match_detail` (default), `file_list`, or `count_only`
+- `search_code`'s `limit` is 1–10,000. Values above 10,000 are clamped to the internal maximum and the result says so
+- `search_code` and `search_files_without_pattern` use `include_patterns` / `exclude_patterns`. The old `file_pattern` was intentionally removed and is ignored if passed
+- `find_symbol_definition`'s `symbol_kinds` accepts `struct`, `class`, `enum`, `protocol`, `actor`, `function`, `variable`, `typealias`, and `extension`
+- `search_code` and `find_symbol_definition` append a `--- structured ---` JSON block to the end of their human-readable text output
+- LSP enhancement is best-effort. Xcode project directories containing `.xcodeproj` currently disable LSP, and SwiftSyntax analysis is used instead
 
-## 設定・データ・ログ
+## Configuration, Data, and Logs
 
-### データ保存場所
+### Data location
 
-解析キャッシュは `~/.swift-selena/` に保存されます。
+The analysis cache is stored under `~/.swift-selena/`:
 
 ```
 ~/.swift-selena/
 ├── logs/
-│   └── server.log                # ログ
+│   └── server.log                # log
 └── clients/
-    ├── default/                  # MCP_CLIENT_ID 未設定（Claude Code など）
+    ├── default/                  # MCP_CLIENT_ID unset (e.g. Claude Code)
     │   └── projects/
     │       └── YourProject-abc12345/
     │           └── memory.json
@@ -327,21 +327,21 @@ Swift-Selena は**メタツールモード**を採用しており、クライア
     └── codex/                    # MCP_CLIENT_ID=codex
 ```
 
-- プロジェクトパスの SHA256 ハッシュで同一プロジェクトを識別し、異なるプロジェクトは自動的に分離されます
-- `MCP_CLIENT_ID` が異なるクライアントは、データが自動的に分離されます（未設定の場合は `default`）
+- The same project is identified by the SHA256 hash of its path; different projects are separated automatically
+- Clients with different `MCP_CLIENT_ID` values get separate data automatically (`default` when unset)
 
-> **注意:** 同じ `MCP_CLIENT_ID`（例: 複数の Claude Code ウィンドウ）で同じプロジェクトを同時に開くと、メモリファイルへの書き込みが競合する可能性があります。同じプロジェクトを複数のウィンドウで作業する場合は、異なる `MCP_CLIENT_ID` を設定してください。
+> **Note:** Opening the same project at the same time from clients that share one `MCP_CLIENT_ID` (e.g. several Claude Code windows) can cause write conflicts on the memory file. When working on one project from several windows, give each a different `MCP_CLIENT_ID`.
 
-### ログ（v0.5.3+）
+### Logs (v0.5.3+)
 
-デバッグ用のログは `~/.swift-selena/logs/server.log` に出力されます。
+Debug logs go to `~/.swift-selena/logs/server.log`.
 
 ```bash
-# リアルタイムで監視
+# Watch in real time
 tail -f ~/.swift-selena/logs/server.log
 ```
 
-サーバーの起動、ツールの実行、LSP の接続状態（成功 / 失敗）、エラーと診断情報を確認できます。
+You can see server startup, tool execution, LSP connection status (success / failure), and errors with diagnostics.
 
 ```
 [17:29:24] ℹ️ [info] Starting Swift MCP Server...
@@ -350,59 +350,59 @@ tail -f ~/.swift-selena/logs/server.log
 [17:29:51] ℹ️ [info] ✅ LSP connected successfully
 ```
 
-## トラブルシューティング
+## Troubleshooting
 
-### MCP サーバーが起動しない
+### The MCP server does not start
 
-バイナリが起動し、開始バナーを表示するか確認します。
+Check that the binary starts and prints the startup banner:
 
 ```bash
 swift-selena
-# "Starting Swift MCP Server..." が表示されれば OK。Ctrl+C で終了
+# OK if "Starting Swift MCP Server..." appears. Exit with Ctrl+C
 ```
 
-ソースからビルドした場合は `.build/release/Swift-Selena` を実行してください。
+If you built from source, run `.build/release/Swift-Selena` instead.
 
-### ツールが見つからない・接続できない
+### Tools are missing or the client cannot connect
 
-1. クライアントを再起動します（Codex IDE 拡張は **Restart extension**）
-2. 設定ファイルのパスと `command` の絶対パスが正しいか確認します
-3. クライアント側のログを確認します
+1. Restart the client (for the Codex IDE extension, **Restart extension**)
+2. Check that the config file path and the absolute `command` path are correct
+3. Check the client's logs
 
-| クライアント | 確認方法 |
+| Client | How to check |
 | --- | --- |
 | Claude Code | `claude mcp list` |
 | Claude Desktop | `tail -f ~/Library/Logs/Claude/mcp*.log` |
-| Cursor | Output パネル（`Cmd+Shift+U`）→ **MCP Logs** |
+| Cursor | Output panel (`Cmd+Shift+U`) → **MCP Logs** |
 | Codex | `codex mcp list` / `/mcp` |
 
-サーバー自身のログは `~/.swift-selena/logs/server.log` にあります。
+The server's own log is at `~/.swift-selena/logs/server.log`.
 
-### `brew install` が遅い
+### `brew install` is slow
 
-bottle が無い環境では、ソースからビルドするため数分〜十数分かかります。詳細は [インストール時間について](#インストール時間について) を参照してください。
+Without a bottle, the install builds from source and takes several to ten-plus minutes. See [Install time](#install-time).
 
-### 古いキャッシュをクリア
+### Clear the old cache
 
 ```bash
 rm -rf ~/.swift-selena/
 ```
 
-次回の `initialize_project` 実行時に再構築されます。
+It is rebuilt the next time `initialize_project` runs.
 
-## 高度な設定
+## Advanced Configuration
 
-### レガシーモード（全ツール直接公開）
+### Legacy mode (expose all tools directly)
 
-デフォルトでは**メタツールモード**（v0.6.3+）を使用します。メタツールを経由せず 12 個のツールを直接公開したい場合は、環境変数 `SWIFT_SELENA_LEGACY=1` を設定します。
+By default, **meta tool mode** (v0.6.3+) is used. To expose the 12 tools directly without the meta tools, set the environment variable `SWIFT_SELENA_LEGACY=1`.
 
-| クライアント | 設定 |
+| Client | Setting |
 | --- | --- |
 | Claude Code | `claude mcp add swift-selena -e SWIFT_SELENA_LEGACY=1 -- swift-selena` |
-| Claude Desktop・Cursor | `env` に `"SWIFT_SELENA_LEGACY": "1"` を追加します |
-| Codex | `codex mcp add swift-selena --env SWIFT_SELENA_LEGACY=1 -- swift-selena`、または `[mcp_servers.swift-selena.env]` に `SWIFT_SELENA_LEGACY = "1"` を追加します |
+| Claude Desktop, Cursor | Add `"SWIFT_SELENA_LEGACY": "1"` to `env` |
+| Codex | `codex mcp add swift-selena --env SWIFT_SELENA_LEGACY=1 -- swift-selena`, or add `SWIFT_SELENA_LEGACY = "1"` under `[mcp_servers.swift-selena.env]` |
 
-Claude Desktop の例:
+Claude Desktop example:
 
 ```json
 {
@@ -418,32 +418,32 @@ Claude Desktop の例:
 }
 ```
 
-レガシーモードで直接公開される 12 個のツール:
-`initialize_project`、`find_files`、`search_code`、`search_files_without_pattern`、`list_symbols`、`find_symbol_definition`、`list_property_wrappers`、`list_protocol_conformances`、`list_extensions`、`analyze_imports`、`get_type_hierarchy`、`find_test_cases`
+The 12 tools exposed directly in legacy mode:
+`initialize_project`, `find_files`, `search_code`, `search_files_without_pattern`, `list_symbols`, `find_symbol_definition`, `list_property_wrappers`, `list_protocol_conformances`, `list_extensions`, `analyze_imports`, `get_type_hierarchy`, `find_test_cases`
 
-## アーキテクチャ
+## Architecture
 
-### コアコンポーネント
+### Core components
 
-- **FileSearcher**: ファイルシステムベースの高速検索
-- **SwiftSyntaxAnalyzer**: AST 解析によるシンボル抽出
-- **ProjectMemory**: 解析結果の永続化とキャッシュ管理
+- **FileSearcher**: Fast filesystem-based search
+- **SwiftSyntaxAnalyzer**: Symbol extraction through AST analysis
+- **ProjectMemory**: Persistence and cache management of analysis results
 
-### 技術スタック
+### Tech stack
 
-- **[MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)** (0.12.0) - MCP プロトコル実装
-- **[SwiftSyntax](https://github.com/apple/swift-syntax)** (602.0.0) - 構文解析
-- **CryptoKit** - プロジェクトパスのハッシュ化
-- **swift-log**（MCP Swift SDK 経由） - ロギング
+- **[MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)** (0.12.0) - MCP protocol implementation
+- **[SwiftSyntax](https://github.com/apple/swift-syntax)** (602.0.0) - Syntax parsing
+- **CryptoKit** - Hashing of project paths
+- **swift-log** (via the MCP Swift SDK) - Logging
 
-## コントリビューション・ライセンス
+## Contributing and License
 
-Issue・Pull Request を歓迎します。ビルド・テスト・ツールの追加・CI・リリース手順（バージョン更新 + Homebrew Formula、図解付き）は [開発ガイド（DEVELOPMENT.ja.md）](DEVELOPMENT.ja.md) を参照してください。
+Issues and pull requests are welcome. For building, testing, adding tools, CI, and the release procedure (version bump + Homebrew Formula, with diagrams), see the [Development Guide (DEVELOPMENT.md)](DEVELOPMENT.md).
 
-MIT License - 詳細は [LICENSE](LICENSE) を参照してください。
+MIT License - see [LICENSE](LICENSE) for details.
 
-## 参考
+## References
 
-- [Model Context Protocol](https://modelcontextprotocol.io/) - MCP プロトコル仕様
-- [SwiftSyntax](https://github.com/apple/swift-syntax) - Swift 構文解析ライブラリ
+- [Model Context Protocol](https://modelcontextprotocol.io/) - MCP protocol specification
+- [SwiftSyntax](https://github.com/apple/swift-syntax) - Swift syntax parsing library
 - [Anthropic](https://www.anthropic.com/) - Claude AI

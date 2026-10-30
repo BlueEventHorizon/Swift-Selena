@@ -191,7 +191,7 @@ ProjectMemory（解析結果のキャッシュ）
 4. **メタツールモードの振り分け**: `Sources/Tools/Meta/ExecuteToolTool.swift` の `switch` に追加します
 5. **レガシーモードの振り分け**: `Sources/SwiftMCPServer.swift` の `ListTools` と `CallTool` に追加します
 6. **テスト**: `Tests/` にテストを追加し、必要なら `Package.swift` にターゲットを登録します
-7. **ドキュメント**: [README.md](README.md) と [README_en.md](README_en.md) の「提供ツール」を更新します
+7. **ドキュメント**: [README.md](README.md) と [ja/README.ja.md](ja/README.ja.md) の「提供ツール」を更新します
 
 カテゴリは、既存の `Analysis` / `FileSystem` / `Symbols` / `SwiftUI` から選びます。
 

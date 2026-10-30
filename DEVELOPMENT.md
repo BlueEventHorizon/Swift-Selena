@@ -2,7 +2,7 @@
 
 A guide for Swift-Selena developers and maintainers. It covers **building, testing, debugging, adding tools, CI, and releasing**.
 
-For usage and Homebrew installation, see [README_en.md](README_en.md). Issues and pull requests are welcome.
+For usage and Homebrew installation, see [README.md](README.md). Issues and pull requests are welcome.
 
 日本語版: [DEVELOPMENT.ja.md](DEVELOPMENT.ja.md)
 
@@ -131,7 +131,7 @@ claude mcp add -s user swift-selena -- /path/to/Swift-Selena/.build/release/Swif
 }
 ```
 
-**Cursor** (`~/.cursor/mcp.json`) and **Codex** (`~/.codex/config.toml`) work the same way with that path as `command`. For the syntax, see [README_en.md](README_en.md#connecting-mcp-clients).
+**Cursor** (`~/.cursor/mcp.json`) and **Codex** (`~/.codex/config.toml`) work the same way with that path as `command`. For the syntax, see [README.md](README.md#connecting-mcp-clients).
 
 ## Project Layout
 
@@ -191,7 +191,7 @@ Use an existing, similar tool as a reference (e.g. `Sources/Tools/Symbols/ListSy
 4. **Meta mode dispatch**: add a case to the `switch` in `Sources/Tools/Meta/ExecuteToolTool.swift`
 5. **Legacy mode dispatch**: add it to `ListTools` and `CallTool` in `Sources/SwiftMCPServer.swift`
 6. **Tests**: add tests under `Tests/`, and register a target in `Package.swift` if needed
-7. **Docs**: update "Provided Tools" in [README.md](README.md) and [README_en.md](README_en.md)
+7. **Docs**: update "Provided Tools" in [README.md](README.md) and [ja/README.ja.md](ja/README.ja.md)
 
 Choose a category from the existing `Analysis` / `FileSystem` / `Symbols` / `SwiftUI`.
 
