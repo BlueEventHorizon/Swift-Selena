@@ -84,13 +84,13 @@ Sample code to analyze lives in `Tests/Fixtures/`. A new test target also needs 
 | `make build` | — | DEBUG build |
 | `make build-release` | — | RELEASE build |
 | `make clean` | — | Clean build artifacts |
-| `make register-claude` | Claude Code | Register the RELEASE version (prompts for the target project path) |
-| `make unregister-claude` | Claude Code | Unregister the RELEASE version (prompts for the target project path) |
+| `make register-claude` | Claude Code | Register the RELEASE version (asks for a project path; leave empty to register for all projects, `-s user`) |
+| `make unregister-claude` | Claude Code | Unregister the RELEASE version (same prompt; empty = user scope) |
 | `make register-claude-app` | Claude Desktop | Register with the Claude Desktop app |
 | `make unregister-claude-app` | Claude Desktop | Unregister from the Claude Desktop app |
-| `make register-cursor` | Cursor | Register the RELEASE version with Cursor (prompts for the target project path; empty = all projects, `~/.cursor/mcp.json`) |
+| `make register-cursor` | Cursor | Register the RELEASE version with Cursor (asks for a project path; leave empty for `~/.cursor/mcp.json`, all projects) |
 | `make unregister-cursor` | Cursor | Unregister from Cursor (same prompt) |
-| `make register-codex` | Codex | Register the RELEASE version with Codex (`codex mcp add`, `~/.codex/config.toml`) |
+| `make register-codex` | Codex | Register the RELEASE version with Codex (`codex mcp add`, `~/.codex/config.toml`; the Codex CLI has no per-project option, so this always applies to all projects) |
 | `make unregister-codex` | Codex | Unregister from Codex (`codex mcp remove`) |
 | `make register-claude-debug` | Claude Code | Build the DEBUG version and register it with the Swift-Selena project |
 | `make unregister-claude-debug` | Claude Code | Unregister the DEBUG version from the Swift-Selena project |
@@ -103,9 +103,9 @@ Register a binary you built yourself (instead of the Homebrew release). **The MC
 ### With make (recommended)
 
 ```bash
-make register-claude        # Claude Code — prompts for the target project path
+make register-claude        # Claude Code — asks for a project path; leave empty for all projects (user scope)
 make register-claude-app    # Claude Desktop app
-make register-cursor        # Cursor — prompts for the target project path (empty = ~/.cursor/mcp.json)
+make register-cursor        # Cursor — asks for a project path; leave empty for ~/.cursor/mcp.json
 make register-codex         # Codex — codex mcp add (~/.codex/config.toml)
 make register-claude-debug  # Claude Code — builds and registers the DEBUG build with the Swift-Selena project itself
 ```
