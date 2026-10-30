@@ -62,9 +62,15 @@ jobs:
       - name: Upload bottles to the release
         env:
           GH_TOKEN: ${{ github.token }}
+          # この job には checkout が無く git リポジトリが存在しないため、対象 repo を明示する
+          GH_REPO: ${{ github.repository }}
         run: |
           # bottle 名の "--" は GitHub が "." に変換するため、アップロード名を揃える
           cd bottles
-          for f in *.tar.gz; do mv "$f" "${f/--/-}"; done
+          ls -la
+          for f in *.tar.gz; do
+            n="${f/--/-}"
+            [ "$f" = "$n" ] || mv "$f" "$n"
+          done
           gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "$TAG" --notes "Homebrew bottles for $TAG"
           gh release upload "$TAG" *.tar.gz *.bottle.json --clobber
