@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=CLAUDE.md sha256=7607d531a668 -->
+<!-- bilingual-docs: source=CLAUDE.md sha256=34d3eeb4d431 -->
 
 # CLAUDE.md
 
@@ -17,22 +17,22 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
   - 注: フォルダーベース登録済みのため、ファイル追加時は変更不要
 - **NEVER modify Info.plist or XCConfig files** without explicit permission
 - **要件定義書（project/{feature}/spec/）が最優先**（すべてのドキュメントに優先）
-- **文書不整合の即時報告**: `rules/`、`specs/`、`.claude/` 内の文書で不整合・矛盾を発見した場合、作業を中断して最優先でユーザーに報告すること
+- **文書不整合の即時報告**: `docs/`、`project/`、`.claude/` 内の文書で不整合・矛盾を発見した場合、作業を中断して最優先でユーザーに報告すること
 - **Use existing code** before creating new ones (Sources/Tools/, Sources/Selena/)
 - **既存コード参考必須**: 新規コード作成前に、既存の類似実装を検索して参考にすること
 - **ファイルヘッダーのCreated by**: git config user.nameの値を使用
 - **作業開始時の文書検索**: 文書読解が必要な作業は、`/forge:query-db-rules` `/forge:query-db-specs` で関連文書を特定し、該当する文書を読んでから作業に入ること
 - **DB インデックス自動更新**: docs/ 配下の文書を追加・変更・削除したら `/forge:update-db-rules`、project/{feature}/spec/ または project/{feature}/design/ 配下の文書を追加・変更・削除・移動したら `/forge:update-db-specs` を実行すること（索引の対象範囲は `.doc_structure.yaml` が定義）
-- **DB インデックス直接編集禁止**: `.claude/doc-advisor/` および `.claude/doc-db/` 配下のインデックスファイルは直接編集せず、`/forge:update-db-rules` / `/forge:update-db-specs` で更新すること
+- **DB インデックス直接編集禁止**: `.claude/.doc-advisor/` 配下のインデックスファイルは直接編集せず、`/forge:update-db-rules` / `/forge:update-db-specs` で更新すること
 - **Swift-Selena MCP の利用検討**: Swift-Selena MCP が接続されている場合、コードの分析・解析作業で MCP の説明から効率的・効果的か判定し、利用を検討すること（実験は不要、MCP の説明で判断）
-- **Xcode MCP の利用検討**: Xcode MCP が接続されている場合、Skill（`/xcode:build` / `/xcode:test`）が対応していない場面でのみ、MCP の説明から効果的か判定し、利用を検討すること
+- **Xcode MCP の利用検討**: Xcode MCP が接続されている場合、Skill（`/xcode-build` / `/xcode-test`）が対応していない場面でのみ、MCP の説明から効果的か判定し、利用を検討すること
 - **MCP サーバー再起動を伴うテストはユーザー依頼必須**: MCP サーバー（Swift-Selena MCP 等）の再起動を要するエンドツーエンドテスト（コード変更後の挙動確認、キャッシュ破棄を伴う動作確認など）は、**AI が独断で実施せず、必ずユーザーに再起動を依頼してから実施すること**
   - AI 側からは別プロセスである MCP サーバーを再起動できない
   - 再起動が必要な場合は、再起動手順（バイナリ再ビルド要否、必要なキャッシュ削除、確認したい挙動）を明示してユーザーに依頼する
   - ユニットテストでの代替検証で済む場合はそれを優先し、E2E 検証の要否を判断する
 - **バージョン表記規約**（Issue #38 で確立。プロジェクト全体で参照すべき正規）:
   - **canonical（真実の源）**: `Sources/Constants.swift` の `AppConstants.version`（例: `"0.6.10"`）。`/forge:update-version` で更新する
-  - **git tag**: `MAJOR.MINOR.PATCH` 形式（**`v` プレフィックスなし**、例: `0.6.10`）。既存 16 個の tag と整合
+  - **git tag**: `MAJOR.MINOR.PATCH` 形式（**`v` プレフィックスなし**、例: `0.6.10`）。既存の tag と整合
   - **CHANGELOG.md header (新規 entry)**: `## VERSION - YYYY-MM-DD` 形式（**`v` プレフィックスなし**、例: `## 0.6.10 - 2026-05-27`）。過去 entry (`## v0.6.X` 形式) は historical record として遡及修正しない
   - **`.version-config.yaml`** の `tag_format` は `"{version}"`（`v` なし）
   - **例外**: `README.md` / `README.ja.md` 内の「機能 X は v0.6.3 以降で利用可能」等の**機能登場版マーカー**は `v` 付きを許容（独立した文脈表記）
@@ -95,6 +95,7 @@ Sources/
 ├── SwiftMCPServer.swift     # MCPサーバーエントリーポイント
 ├── Constants.swift          # 定数定義・環境変数キー
 ├── Logging/                 # ロギング機能
+│   └── FileLogHandler.swift
 ├── Selena/                  # コア解析エンジン
 │   ├── Core/                # コア機能
 │   │   ├── FileSearcher.swift       # ファイルシステムベースの高速検索
@@ -116,10 +117,10 @@ Sources/
 └── Tools/                   # MCPツール実装
     ├── Analysis/            # コード解析ツール（3ツール）
     ├── FileSystem/          # ファイル操作ツール（3ツール）
-    ├── Meta/                # メタツール（3ツール + MetaToolRegistry）
+    ├── Meta/                # メタツール（3ツール + MetaToolRegistry + CapabilityRegistry）
     ├── Project/             # プロジェクト管理ツール（1ツール）
     ├── SwiftUI/             # SwiftUI解析ツール（3ツール）
-    ├── Symbols/             # シンボル解析ツール（2ツール）
+    ├── Symbols/             # シンボル解析ツール（2ツール + SymbolKindMapper）
     ├── ToolProtocol.swift   # ツール共通プロトコル
     └── ResultEncoder.swift  # ツール結果のエンコード
 ```
@@ -203,7 +204,7 @@ swift build -c release
   - `FileSystem/` - ファイル操作（find_files, search_code等）
   - `Symbols/` - シンボル解析（list_symbols, find_symbol_definition等）
   - `SwiftUI/` - SwiftUI固有解析（property wrappers, protocol conformances等）
-  - `Meta/` - メタツール（list_available_tools, get_tool_schema, execute_tool）＋MetaToolRegistry（レジストリ）
+  - `Meta/` - メタツール（list_available_tools, get_tool_schema, execute_tool）＋MetaToolRegistry（レジストリ）＋CapabilityRegistry（利用可能ツール一覧）
   - `Project/` - プロジェクト管理（initialize_project等）
 - **エラーハンドリング**: 解析エラーは適切なエラーメッセージとしてMCP応答に含める
 

@@ -15,22 +15,22 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
   - Note: files are registered folder-based, so no change is needed when adding files
 - **NEVER modify Info.plist or XCConfig files** without explicit permission
 - **Requirements documents (project/{feature}/spec/) have the highest priority** (over all other documents)
-- **Report document inconsistencies immediately**: when you find an inconsistency or contradiction in a document under `rules/`, `specs/`, or `.claude/`, stop the work and report it to the user as the top priority
+- **Report document inconsistencies immediately**: when you find an inconsistency or contradiction in a document under `docs/`, `project/`, or `.claude/`, stop the work and report it to the user as the top priority
 - **Use existing code** before creating new ones (Sources/Tools/, Sources/Selena/)
 - **Referring to existing code is mandatory**: before writing new code, search for existing similar implementations and use them as reference
 - **"Created by" in file headers**: use the value of git config user.name
 - **Document search at the start of work**: for work that requires reading documents, identify the relevant documents with `/forge:query-db-rules` and `/forge:query-db-specs`, read them, and only then start the work
 - **Automatic DB index update**: run `/forge:update-db-rules` after adding, changing, or deleting a document under docs/, and `/forge:update-db-specs` after adding, changing, deleting, or moving a document under project/{feature}/spec/ or project/{feature}/design/ (the scope of the index is defined by `.doc_structure.yaml`)
-- **No direct editing of DB indexes**: do not edit the index files under `.claude/doc-advisor/` and `.claude/doc-db/` directly; update them with `/forge:update-db-rules` / `/forge:update-db-specs`
+- **No direct editing of DB indexes**: do not edit the index files under `.claude/.doc-advisor/` directly; update them with `/forge:update-db-rules` / `/forge:update-db-specs`
 - **Consider using the Swift-Selena MCP**: when the Swift-Selena MCP is connected, judge from the MCP's description whether it is efficient and effective for code analysis work, and consider using it (no experiment is needed; decide from the MCP's description)
-- **Consider using the Xcode MCP**: when the Xcode MCP is connected, only in situations the Skills (`/xcode:build` / `/xcode:test`) do not cover, judge from the MCP's description whether it is effective, and consider using it
+- **Consider using the Xcode MCP**: when the Xcode MCP is connected, only in situations the Skills (`/xcode-build` / `/xcode-test`) do not cover, judge from the MCP's description whether it is effective, and consider using it
 - **Tests that require an MCP server restart need a request to the user**: an end-to-end test that requires restarting an MCP server (such as the Swift-Selena MCP), for example checking behavior after a code change or checking behavior with the cache discarded, **must not be run by the AI on its own judgment; always ask the user to restart first, then run it**
   - The AI cannot restart the MCP server, which is a separate process
   - When a restart is needed, ask the user and state the restart procedure explicitly (whether the binary must be rebuilt, which caches must be deleted, which behavior you want to check)
   - When verification can be substituted by unit tests, prefer that, and decide whether E2E verification is needed
 - **Version notation convention** (established in Issue #38; the canonical reference for the whole project):
   - **canonical (source of truth)**: `AppConstants.version` in `Sources/Constants.swift` (for example `"0.6.10"`). Updated with `/forge:update-version`
-  - **git tag**: `MAJOR.MINOR.PATCH` format (**no `v` prefix**, for example `0.6.10`). Consistent with the 16 existing tags
+  - **git tag**: `MAJOR.MINOR.PATCH` format (**no `v` prefix**, for example `0.6.10`). Consistent with the existing tags
   - **CHANGELOG.md header (new entries)**: `## VERSION - YYYY-MM-DD` format (**no `v` prefix**, for example `## 0.6.10 - 2026-05-27`). Past entries (`## v0.6.X` format) are a historical record and are not fixed retroactively
   - **`.version-config.yaml`**: `tag_format` is `"{version}"` (no `v`)
   - **Exception**: **feature-introduction markers** in the README files, such as "feature X is available since v0.6.3", may keep the `v` (an independent contextual notation)
@@ -93,6 +93,7 @@ Sources/
 ├── SwiftMCPServer.swift     # MCP server entry point
 ├── Constants.swift          # Constant definitions and environment variable keys
 ├── Logging/                 # Logging
+│   └── FileLogHandler.swift
 ├── Selena/                  # Core analysis engine
 │   ├── Core/                # Core features
 │   │   ├── FileSearcher.swift       # Fast file-system-based search
@@ -114,10 +115,10 @@ Sources/
 └── Tools/                   # MCP tool implementations
     ├── Analysis/            # Code analysis tools (3 tools)
     ├── FileSystem/          # File operation tools (3 tools)
-    ├── Meta/                # Meta tools (3 tools + MetaToolRegistry)
+    ├── Meta/                # Meta tools (3 tools + MetaToolRegistry + CapabilityRegistry)
     ├── Project/             # Project management tools (1 tool)
     ├── SwiftUI/             # SwiftUI analysis tools (3 tools)
-    ├── Symbols/             # Symbol analysis tools (2 tools)
+    ├── Symbols/             # Symbol analysis tools (2 tools + SymbolKindMapper)
     ├── ToolProtocol.swift   # Common tool protocol
     └── ResultEncoder.swift  # Encoding of tool results
 ```
@@ -201,7 +202,7 @@ swift build -c release
   - `FileSystem/` - file operations (find_files, search_code, etc.)
   - `Symbols/` - symbol analysis (list_symbols, find_symbol_definition, etc.)
   - `SwiftUI/` - SwiftUI-specific analysis (property wrappers, protocol conformances, etc.)
-  - `Meta/` - meta tools (list_available_tools, get_tool_schema, execute_tool) + MetaToolRegistry (the registry)
+  - `Meta/` - meta tools (list_available_tools, get_tool_schema, execute_tool) + MetaToolRegistry (the registry) + CapabilityRegistry (list of available tools)
   - `Project/` - project management (initialize_project, etc.)
 - **Error handling**: analysis errors are included in the MCP response as proper error messages
 

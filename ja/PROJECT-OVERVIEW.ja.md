@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=PROJECT-OVERVIEW.md sha256=1119d763fb74 -->
+<!-- bilingual-docs: source=PROJECT-OVERVIEW.md sha256=4db0a07be7c4 -->
 
 [English](../PROJECT-OVERVIEW.md) | 日本語
 
@@ -123,5 +123,5 @@ spec と design の文書は v0.5.x から v0.6.x にかけて段階的に書か
 - **ツール名とパラメータ名**（`search_code`、`output_mode`、`symbol_kinds`）はそのまま使います。
 - **バージョン。** リリースのバージョンは `v` なしで書きます（`0.6.12`）。「v0.6.3 以降で利用可能」のような表記は `v` を付けてよいです（`CLAUDE.md`）。
 - **用語の選び方。** 用語集の英語表記をどこでも使います。特に「meta tool mode」と「legacy mode」は区別し、`project/` の三種類の文書には「requirements document」「design document」「plan document」を使います。
-- **リポジトリの言語。** AI との対話とソースコメントは日本語で書きます。ファイルも日本語で書きますが、すでに英語で書かれたファイル、またはユーザーが英語を指定したファイルは英語です（`CLAUDE.md`）。ルートの `README.md`、`CHANGELOG.md`、`CLAUDE.md`、`PROJECT-OVERVIEW.md`、`DEVELOPMENT.md` は英語で、日本語版は `ja/` にあります（`DEVELOPMENT.ja.md` は英語版と同じ階層）。
+- **リポジトリの言語。** AI との対話とソースコメントは日本語で書きます。ファイルも日本語で書きますが、すでに英語で書かれたファイル、またはユーザーが英語を指定したファイルは英語です（`CLAUDE.md`）。ルートの `README.md`、`CHANGELOG.md`、`CLAUDE.md`、`PROJECT-OVERVIEW.md`、`DEVELOPMENT.md` は英語で、日本語版は `ja/` にあります。
 - **ツール一覧。** 古い spec と design の文書からツール数や一覧を写さないでください。一覧は `ToolNames` と `MetaToolRegistry.swift` から書きます。

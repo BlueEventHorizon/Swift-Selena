@@ -14,7 +14,7 @@ Release history of Swift-Selena.
 - **feat**: Added `scripts/merge_bottles.sh`, which writes the bottle JSON from the Release into the Formula (run it on a working branch; the change reaches `main` through the usual develop → main flow)
 - **docs**: README.md / README_en.md now describe how long a source build takes, what a bottle is, the verified environment (macOS 26 / Xcode 27.1), and that the `brew doctor` warning about the Command Line Tools has no effect on the build
 - **docs**: Added Phase 3 (bottle merge) to the release procedure in CLAUDE.md
-- **change**: Release tags are now placed on the first-parent line of `main`. The Formula no longer has a `revision:` and resolves the source by `tag:` alone (the tag commit contains the Formula itself, so its SHA cannot be written into the Formula; this removes that circular dependency). `scripts/verify_release_tag.sh`, `release_tag_check.yml`, CLAUDE.md, and CONTRIBUTING were updated to the new procedure
+- **change**: Release tags are now placed on the first-parent line of `main`. The Formula no longer has a `revision:` and resolves the source by `tag:` alone (the tag commit contains the Formula itself, so its SHA cannot be written into the Formula; this removes that circular dependency). `scripts/verify_release_tag.sh`, `release_tag_check.yml`, CLAUDE.md, and CONTRIBUTING (now DEVELOPMENT.md) were updated to the new procedure
 
 ## 0.6.11 - 2026-05-31
 
@@ -119,7 +119,7 @@ Release history of Swift-Selena.
 
 ### Documents
 
-- **docs**: Added REQ-005 (requirements for the search and symbol tool extensions) and DES-104 (design document)
+- **docs**: Added REQ-005 (requirements for the search and symbol tool extensions; a new document that reuses the ID of the old REQ-005 merged into REQ-003 at v0.6.6) and DES-104 (design document)
 - **docs**: Added the improve plan document and set up traceability for REQ-005 / DES-104
 - **docs**: Corrected `ToolProtocol` to `MCPTool` in CLAUDE.md
 - **docs**: Made it a rule that tests requiring an MCP server restart must be requested from the user
@@ -202,7 +202,7 @@ Release history of Swift-Selena.
 | `make register-desktop` | Claude Desktop | Register with Claude Desktop |
 | `make unregister-desktop` | Claude Desktop | Unregister from Claude Desktop |
 
-**Total tools:** 15 (4 meta tools + 11 analysis tools)
+**Total tools:** 15 (`initialize_project` + 3 meta tools + 11 analysis tools)
 
 ---
 
@@ -595,4 +595,4 @@ For the detailed development plan, see:
 
 ---
 
-**Last Updated**: 2026-03-11
+**Last Updated**: 2026-10-30

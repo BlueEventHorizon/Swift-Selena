@@ -4,7 +4,7 @@ A guide for Swift-Selena developers and maintainers. It covers **building, testi
 
 For usage and Homebrew installation, see [README.md](README.md). Issues and pull requests are welcome.
 
-日本語版: [DEVELOPMENT.ja.md](DEVELOPMENT.ja.md)
+English | [日本語](ja/DEVELOPMENT.ja.md)
 
 ## Table of Contents
 
