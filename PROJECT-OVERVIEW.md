@@ -2,11 +2,11 @@ English | [日本語](ja/PROJECT-OVERVIEW.ja.md)
 
 # Swift-Selena: Project Overview
 
-This document is for people who join the development of Swift-Selena and for the AI that writes or fixes its documents. For installation and usage, see `README.md` (English) and `ja/README.ja.md` (Japanese). For the rules the development AI must follow, see `CLAUDE.md`. This survey describes the development branch after release 0.6.12: `AppConstants.version` in `Sources/Constants.swift` is still 0.6.12, while changes made after that tag (the cache format v6 and the Swift 6.1 requirement among them) are described as they are in the source, not as released.
+This document is for new contributors to Swift-Selena and for the AI that writes or fixes its documents. For installation and usage, see `README.md` (English) and `ja/README.ja.md` (Japanese). For the rules the development AI must follow, see `CLAUDE.md`. This survey describes the development branch after release 0.6.12: `AppConstants.version` in `Sources/Constants.swift` is still 0.6.12, while changes made after that tag (the cache format v6 and the Swift 6.1 requirement among them) are described as they are in the source, not as released.
 
 ## 1. Position
 
-Swift-Selena is an MCP (Model Context Protocol) server, written as a Swift Package, that gives AI agents code analysis for Swift projects. It runs as a local process that clients start and talk to over stdio (JSON-RPC). Clients named in the README are Claude Code, Claude Desktop, Cursor, and Codex. It requires macOS 13.0 or later and a Swift 6.1 toolchain (Xcode 16.3) or later to build (`Package.swift`, `swift-tools-version: 6.1`, the lowest version that resolves the pinned dependencies: swift-nio 2.98.0 requires 6.1, and swift-log 1.12.0 declares 6.2 but ships a `Package@swift-6.1.swift` manifest for 6.1); the language mode stays Swift 5 (`swiftLanguageModes: [.v5]`). Verified on Swift 6.4. It is distributed through a Homebrew tap that is this repository itself (`Formula/swift-selena.rb`).
+Swift-Selena is an MCP (Model Context Protocol) server, written as a Swift Package, that gives AI agents code analysis for Swift projects. It runs as a local process that clients start and talk to over stdio (JSON-RPC). The clients listed in the README are Claude Code, Claude Desktop, Cursor, and Codex. It requires macOS 13.0 or later and a Swift 6.1 toolchain (Xcode 16.3) or later to build (`Package.swift`, `swift-tools-version: 6.1`, the lowest version that resolves the pinned dependencies: swift-nio 2.98.0 requires 6.1, and swift-log 1.12.0 declares 6.2 but ships a `Package@swift-6.1.swift` manifest for 6.1); the language mode stays Swift 5 (`swiftLanguageModes: [.v5]`). The project has been verified with Swift 6.4. It is distributed through a Homebrew tap that is this repository itself (`Formula/swift-selena.rb`).
 
 The problem it addresses, as stated in the overall requirements (`project/main/spec/REQ-001_Swift_Selena_Overall_Requirements.md`):
 
@@ -14,7 +14,7 @@ The problem it addresses, as stated in the overall requirements (`project/main/s
 - Source code should not leave the local machine.
 - Results must be fast on large projects.
 
-The same requirements compare it with Serena (a general-purpose, multi-language MCP server), SourceKit-LSP, and Xcode. Its stated distinct value is: no build needed, Swift-specific analysis (SwiftUI property wrappers, protocol conformances, extensions, tests), and MCP integration. It is read-only toward the analyzed project: it does not change the project's code and does not build it (REQ-001 section 7). It does write its own cache and logs under `~/.swift-selena/`.
+The same requirements compare it with Serena (a general-purpose, multi-language MCP server), SourceKit-LSP, and Xcode. Its key differentiators, as the requirements state them, are: no build needed, Swift-specific analysis (SwiftUI property wrappers, protocol conformances, extensions, tests), and MCP integration. It treats the analyzed project as read-only: it does not change the project's code and does not build it (REQ-001 section 7). It does write its own cache and logs under `~/.swift-selena/`.
 
 ## 2. Design intent and how it works
 
@@ -60,7 +60,7 @@ The canonical version is `AppConstants.version`. Git tags have no `v` prefix. Re
 | Path | Role |
 | --- | --- |
 | `README.md` | Introduction for first-time users (English). The Japanese version is `ja/README.ja.md` |
-| `DEVELOPMENT.md`, `DEVELOPMENT.ja.md` | Development guide: build, test, add a tool, CI, release procedure |
+| `DEVELOPMENT.md` | Development guide: build, test, add a tool, CI, release procedure. Japanese version in `ja/DEVELOPMENT.ja.md` |
 | `CLAUDE.md` | Mandatory rules for the development AI. `AGENTS.md` is a symbolic link to it, and `GEMINI.md` only imports it |
 | `CHANGELOG.md` | Release history (English; Japanese version in `ja/CHANGELOG.ja.md`) |
 | `Sources/` | The server. `SwiftMCPServer.swift` (entry point), `Constants.swift`, `Logging/`, `Selena/` (analysis engine: `Core/`, `LSP/`, `Visitors/` with 8 visitors, `DebugRunner.swift`), `Tools/` (`Project/`, `FileSystem/`, `Symbols/`, `SwiftUI/`, `Analysis/`, `Meta/`, `ToolProtocol.swift`, `ResultEncoder.swift`) |
@@ -101,7 +101,7 @@ The project does not ship a plugin (no `.claude-plugin/plugin.json`). The `.clau
 | コードヘッダー | Code Header | The structured header comment of a Swift file, starting with `[Code Header Format]`. Format in `docs/format/code_header_format.md` |
 | Code Header DB | Code Header DB | Planned database and semantic search over Code Headers (REQ-004, DES-006). Kept as the name in the documents |
 | 要件定義書 | requirements document | A file in `project/{feature}/spec/`, ID prefix `REQ-`. It has the highest priority of all documents |
-| 設計書 | design document | A file in `project/{feature}/design/`, ID `DES-XXX`. It describes how to build, not what |
+| 設計書 | design document | A file in `project/{feature}/design/`, ID `DES-XXX`. It describes how a feature is implemented, not what it must do |
 | 計画書 | plan document | A file in `project/{feature}/plan/`, named `{feature}_plan.md` |
 | Feature | feature | A unit directory under `project/` (for example `main`) |
 | 仕様書 | specification (spec) | General word for requirements and design documents together. Indexed by `.doc_structure.yaml` |

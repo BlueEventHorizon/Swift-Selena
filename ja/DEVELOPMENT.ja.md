@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=DEVELOPMENT.md sha256=e91c57b492d4 -->
+<!-- bilingual-docs: source=DEVELOPMENT.md sha256=88d2a12db55d -->
 
 # 開発ガイド
 
@@ -180,7 +180,7 @@ ProjectMemory（解析結果のキャッシュ）
 
 - **メタツールモード（既定）**: クライアントに公開するのは `initialize_project`・`list_available_tools`・`get_tool_schema`・`execute_tool` の 4 つです。解析ツールは `execute_tool` が名前で振り分けます
 - **レガシーモード**（`SWIFT_SELENA_LEGACY=1`）: 12 個のツールを直接公開します。`SwiftMCPServer.swift` の `ListTools` / `CallTool` が直接振り分けます
-- **静的解析が基本**: SwiftSyntax による解析を基本とし、LSP は補助的に使います（ビルド可能で、`.xcodeproj` を含まないプロジェクトのみ）
+- **静的解析が基本**: SwiftSyntax による解析を基本とし、LSP は補助的に使います（プロジェクトルート直下に `.xcodeproj` がある場合は無効。ビルド可否は判定しません）
 - **キャッシュ**: 解析結果は `ProjectMemory` が `~/.swift-selena/` に永続化します
 
 ## 新しいツールを追加する

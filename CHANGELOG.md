@@ -47,7 +47,7 @@ Release history of Swift-Selena.
 
 - **feat**: Added the `.claude/skills/xcode-build` and `.claude/skills/xcode-test` skills (commit `4b57a94`)
 - **fix**: Fixed defects in the xcode skills (commit `ce0a40b`)
-- **fix**: Fixed forge-db related defects (commit `74cd007`)
+- **fix**: Fixed forge-db-related defects (commit `74cd007`)
 - **chore**: Removed the unneeded `.claude/skills/skill-creator` files and `.claude/doc-db/index/rules/*` (commit `35e43c5`)
 
 ### Notes
@@ -106,7 +106,7 @@ Release history of Swift-Selena.
 
 ### Cache schema
 
-- **fix**: `cacheVersion` bumped in steps from v3 to v4 to v5
+- **fix**: Bumped `cacheVersion` in steps from v3 to v4 to v5
   - v4: `SymbolInfo` gained `parentScope` / `extensionTarget` / `moduleName`
   - v5: corrects the history of fields having been added within the same cacheVersion; v4 caches from the three-field period are discarded and rebuilt
 - **fix**: On a version mismatch or decode failure the cache recovers to empty memory and sets the `cache_warning` flag (DES-104 section 8.2)
@@ -120,7 +120,7 @@ Release history of Swift-Selena.
 ### Documents
 
 - **docs**: Added REQ-005 (requirements for the search and symbol tool extensions; a new document that reuses the ID of the old REQ-005 merged into REQ-003 at v0.6.6) and DES-104 (design document)
-- **docs**: Added the improve plan document and set up traceability for REQ-005 / DES-104
+- **docs**: Added the plan document of the `improve` feature and set up traceability for REQ-005 / DES-104
 - **docs**: Corrected `ToolProtocol` to `MCPTool` in CLAUDE.md
 - **docs**: Made it a rule that tests requiring an MCP server restart must be requested from the user
 

@@ -38,7 +38,7 @@ cd Swift-Selena
 
 | Branch | Role |
 | --- | --- |
-| `main` | Released history. Release tags go on `main`'s first-parent line |
+| `main` | Release history. Release tags go on `main`'s first-parent line |
 | `develop` | Integration branch and the target of pull requests |
 | Working branches | Branch off `develop` (e.g. `feature/xxx`, `fix/xxx`, `docs/xxx`) |
 
@@ -178,7 +178,7 @@ Client
 
 - **Meta tool mode (default)**: the client sees only `initialize_project`, `list_available_tools`, `get_tool_schema`, and `execute_tool`. `execute_tool` dispatches to the analysis tools by name
 - **Legacy mode** (`SWIFT_SELENA_LEGACY=1`): 12 tools are exposed directly, and `ListTools` / `CallTool` in `SwiftMCPServer.swift` dispatch to them
-- **Static analysis first**: SwiftSyntax is the foundation; LSP is auxiliary (only for projects that can build and do not contain `.xcodeproj`)
+- **Static analysis first**: SwiftSyntax is the foundation; LSP is auxiliary (disabled when a `.xcodeproj` exists directly under the project root; whether the project can be built is not checked)
 - **Caching**: `ProjectMemory` persists analysis results under `~/.swift-selena/`
 
 ## Adding a New Tool
@@ -349,7 +349,7 @@ When a tag is pushed, `bottle.yml` builds bottles for Apple Silicon (macOS 15 / 
 
 1. **Check Actions**: confirm that **Build Bottles** succeeded and that Release `{version}` has `*.bottle.tar.gz` and `*.bottle.json` attached. To re-run without recreating the tag, use `Run workflow` on **Build Bottles** in Actions and enter `{version}` as the tag
 2. **Create a working branch** from `develop`
-3. **Apply to the Formula**: with `gh auth login` done, run the following. It writes a `bottle do` block into `Formula/swift-selena.rb`
+3. **Apply to the Formula**: after authenticating with `gh auth login`, run the following. It writes a `bottle do` block into `Formula/swift-selena.rb`
 
    ```bash
    scripts/merge_bottles.sh {version}

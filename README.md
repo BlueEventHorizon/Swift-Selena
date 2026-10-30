@@ -4,7 +4,7 @@ English | [日本語](ja/README.ja.md)
 
 <img width="400" src="selena.png">
 
-**Swift Selena** is an MCP (Model Context Protocol) server that gives AI agents Swift code analysis capabilities. It works even when the code has build errors, and strongly supports SwiftUI app development. It runs with any MCP-capable client, including Claude Code, Claude Desktop, Cursor, and Codex.
+**Swift Selena** is an MCP (Model Context Protocol) server that gives AI agents Swift code analysis capabilities. It works even when the code has build errors, and provides strong support for SwiftUI app development. It runs with any MCP-capable client, including Claude Code, Claude Desktop, Cursor, and Codex.
 
 [![Swift 6.1+](https://img.shields.io/badge/Swift-6.1+-orange.svg)](https://swift.org)
 [![Platform macOS](https://img.shields.io/badge/platform-macOS%2013+-lightgrey.svg)](https://www.apple.com/macos/)
@@ -28,7 +28,7 @@ English | [日本語](ja/README.ja.md)
 
 - **Build-free**: Works even with build errors, thanks to SwiftSyntax-based static analysis
 - **LSP integration**: Enhances supported tools with SourceKit-LSP when available; SwiftSyntax remains the fallback
-- **Meta tool mode**: Reduces context window usage with dynamic tool loading (v0.6.3+)
+- **Meta tool mode**: Reduces context window usage by hiding the analysis tools from the MCP tool list and dispatching them through `execute_tool` (v0.6.3+)
 - **Swift Testing support**: Detects both XCTest and Swift Testing (`@Test`, `@Suite`) test cases
 - **SwiftUI support**: Automatically detects property wrappers (`@State`, `@Binding`, etc.)
 - **Fast search**: Filesystem-based search stays fast on large projects
@@ -76,7 +76,7 @@ After installation, `swift-selena` is on your `PATH` (typically `$(brew --prefix
 | Situation | Time | What happens |
 | --- | --- | --- |
 | Bottle available (Apple Silicon, macOS 15 / macOS 26) | Seconds | Downloads a prebuilt binary |
-| No bottle (Intel Macs, unsupported OS versions, releases without a bottle) | Several to ten-plus minutes | Builds from source, compiling dependencies such as swift-syntax (about 3 minutes on Apple Silicon with Xcode 27.1) |
+| No bottle (Intel Macs, unsupported OS versions, releases without a bottle) | Several minutes to more than ten minutes | Builds from source, compiling dependencies such as swift-syntax (about 3 minutes on Apple Silicon with Xcode 27.1) |
 
 Requirements when building from source:
 
@@ -273,7 +273,7 @@ Result:
 
 ### Meta tool mode (v0.6.3+)
 
-Swift-Selena uses **meta tool mode**: only the following 4 tools are exposed to the client. The actual analysis tools are loaded dynamically on demand, which keeps context window usage low.
+Swift-Selena uses **meta tool mode**: only the following 4 tools are exposed to the client. The analysis tools are compiled in like everything else but hidden from the MCP tool list and run through `execute_tool`, which keeps context window usage low.
 
 | Exposed tool | Role |
 | --- | --- |
@@ -380,7 +380,7 @@ The server's own log is at `~/.swift-selena/logs/server.log`.
 
 ### `brew install` is slow
 
-Without a bottle, the install builds from source and takes several to ten-plus minutes. See [Install time](#install-time).
+Without a bottle, the install builds from source and takes several minutes to more than ten minutes. See [Install time](#install-time).
 
 ### Clear the old cache
 
@@ -427,7 +427,7 @@ The 12 tools exposed directly in legacy mode:
 
 - **FileSearcher**: Fast filesystem-based search
 - **SwiftSyntaxAnalyzer**: Symbol extraction through AST analysis
-- **ProjectMemory**: Persistence and cache management of analysis results
+- **ProjectMemory**: Persistent storage and cache management for analysis results
 
 ### Tech stack
 

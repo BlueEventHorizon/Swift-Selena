@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=CHANGELOG.md sha256=30ec42b38f1c -->
+<!-- bilingual-docs: source=CHANGELOG.md sha256=555ffbe20525 -->
 
 [English](../CHANGELOG.md) | 日本語
 
@@ -122,7 +122,7 @@ Swift-Selenaのリリース履歴
 ### ドキュメント
 
 - **docs**: REQ-005（検索・シンボルツール拡張要件。v0.6.6 で REQ-003 に統合された旧 REQ-005 とは別文書で、ID を再利用）と DES-104（設計書）を追加
-- **docs**: improve 計画書を追加し、REQ-005 / DES-104 のトレーサビリティを整備
+- **docs**: `improve` feature の計画書を追加し、REQ-005 / DES-104 のトレーサビリティを整備
 - **docs**: CLAUDE.md の `ToolProtocol` → `MCPTool` 文言を訂正
 - **docs**: MCP サーバー再起動を伴うテストはユーザー依頼必須をルール化
 

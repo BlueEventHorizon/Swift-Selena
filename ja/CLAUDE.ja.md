@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=CLAUDE.md sha256=34d3eeb4d431 -->
+<!-- bilingual-docs: source=CLAUDE.md sha256=1c83c65e7f6f -->
 
 # CLAUDE.md
 
@@ -144,7 +144,7 @@ Claude/Client
 **重要原則**:
 - 新規ツールは MCPTool プロトコルに準拠（既存の例外: `InitializeProjectTool` は SwiftMCPServer が直接呼び出し、`ExecuteToolTool` は `LSPState` を受け取る独自シグネチャ）
 - SwiftSyntaxによる静的解析（ビルド不要）
-- LSP統合によるセマンティック解析（ビルド可能時）
+- LSP統合によるセマンティック解析（補助的。プロジェクトルート直下に `.xcodeproj` がある場合は無効）
 
 ## Build Commands
 

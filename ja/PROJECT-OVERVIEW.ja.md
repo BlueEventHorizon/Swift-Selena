@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=PROJECT-OVERVIEW.md sha256=4db0a07be7c4 -->
+<!-- bilingual-docs: source=PROJECT-OVERVIEW.md sha256=d1bcff0e9a24 -->
 
 [English](../PROJECT-OVERVIEW.md) | 日本語
 
@@ -55,14 +55,14 @@ spec と design の文書は v0.5.x から v0.6.x にかけて段階的に書か
 
 ### リリースとバージョン
 
-正となるバージョンは `AppConstants.version` です。git tag に `v` は付けません。リリースタグは `main` の第 1 親ライン上に打ち、Formula は `tag:` のみを使います（`revision:` は書きません）。正式な手順は `CLAUDE.md` にあり、`DEVELOPMENT.ja.md` に図があります。CI は整合性の検証（`scripts/verify_version_consistency.sh`、`scripts/verify_release_tag.sh`）と、tag push 時の bottle ビルドを行います。`swift build` や `swift test` を実行するワークフローはなく、テストはローカルで実行します。
+正となるバージョンは `AppConstants.version` です。git tag に `v` は付けません。リリースタグは `main` の第 1 親ライン上に打ち、Formula は `tag:` のみを使います（`revision:` は書きません）。正式な手順は `CLAUDE.md` にあり、`ja/DEVELOPMENT.ja.md` に図があります。CI は整合性の検証（`scripts/verify_version_consistency.sh`、`scripts/verify_release_tag.sh`）と、tag push 時の bottle ビルドを行います。`swift build` や `swift test` を実行するワークフローはなく、テストはローカルで実行します。
 
 ## 3. 構成
 
 | パス | 役割 |
 | --- | --- |
 | `README.md` | 初めて使う人向けの紹介（英語）。日本語版は `ja/README.ja.md` |
-| `DEVELOPMENT.md`, `DEVELOPMENT.ja.md` | 開発ガイド。ビルド、テスト、ツール追加、CI、リリース手順 |
+| `DEVELOPMENT.md` | 開発ガイド。ビルド、テスト、ツール追加、CI、リリース手順。日本語版は `ja/DEVELOPMENT.ja.md` |
 | `CLAUDE.md` | 開発 AI が守る必須事項。`AGENTS.md` はこれへのシンボリックリンク、`GEMINI.md` は読み込むだけ |
 | `CHANGELOG.md` | リリース履歴（英語。日本語版は `ja/CHANGELOG.ja.md`） |
 | `Sources/` | サーバー本体。`SwiftMCPServer.swift`（エントリーポイント）、`Constants.swift`、`Logging/`、`Selena/`（解析エンジン: `Core/`、`LSP/`、`Visitors/`（visitor 8 個）、`DebugRunner.swift`）、`Tools/`（`Project/`、`FileSystem/`、`Symbols/`、`SwiftUI/`、`Analysis/`、`Meta/`、`ToolProtocol.swift`、`ResultEncoder.swift`） |
