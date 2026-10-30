@@ -2,9 +2,9 @@
 
 A guide for Swift-Selena developers and maintainers. It covers **building, testing, debugging, adding tools, CI, and releasing**.
 
-For usage and Homebrew installation, see [README_en.md](README_en.md). Issues and pull requests are welcome.
+For usage and Homebrew installation, see [README.md](README.md). Issues and pull requests are welcome.
 
-日本語版: [DEVELOPMENT.ja.md](DEVELOPMENT.ja.md)
+English | [日本語](ja/DEVELOPMENT.ja.md)
 
 ## Table of Contents
 
@@ -38,7 +38,7 @@ cd Swift-Selena
 
 | Branch | Role |
 | --- | --- |
-| `main` | Released history. Release tags go on `main`'s first-parent line |
+| `main` | Release history. Release tags go on `main`'s first-parent line |
 | `develop` | Integration branch and the target of pull requests |
 | Working branches | Branch off `develop` (e.g. `feature/xxx`, `fix/xxx`, `docs/xxx`) |
 
@@ -131,7 +131,7 @@ claude mcp add -s user swift-selena -- /path/to/Swift-Selena/.build/release/Swif
 }
 ```
 
-**Cursor** (`~/.cursor/mcp.json`) and **Codex** (`~/.codex/config.toml`) work the same way with that path as `command`. For the syntax, see [README_en.md](README_en.md#connecting-mcp-clients).
+**Cursor** (`~/.cursor/mcp.json`) and **Codex** (`~/.codex/config.toml`) work the same way with that path as `command`. For the syntax, see [README.md](README.md#connecting-mcp-clients).
 
 ## Project Layout
 
@@ -178,7 +178,7 @@ Client
 
 - **Meta tool mode (default)**: the client sees only `initialize_project`, `list_available_tools`, `get_tool_schema`, and `execute_tool`. `execute_tool` dispatches to the analysis tools by name
 - **Legacy mode** (`SWIFT_SELENA_LEGACY=1`): 12 tools are exposed directly, and `ListTools` / `CallTool` in `SwiftMCPServer.swift` dispatch to them
-- **Static analysis first**: SwiftSyntax is the foundation; LSP is auxiliary (only for projects that can build and do not contain `.xcodeproj`)
+- **Static analysis first**: SwiftSyntax is the foundation; LSP is auxiliary (disabled when a `.xcodeproj` exists directly under the project root; whether the project can be built is not checked)
 - **Caching**: `ProjectMemory` persists analysis results under `~/.swift-selena/`
 
 ## Adding a New Tool
@@ -191,7 +191,7 @@ Use an existing, similar tool as a reference (e.g. `Sources/Tools/Symbols/ListSy
 4. **Meta mode dispatch**: add a case to the `switch` in `Sources/Tools/Meta/ExecuteToolTool.swift`
 5. **Legacy mode dispatch**: add it to `ListTools` and `CallTool` in `Sources/SwiftMCPServer.swift`
 6. **Tests**: add tests under `Tests/`, and register a target in `Package.swift` if needed
-7. **Docs**: update "Provided Tools" in [README.md](README.md) and [README_en.md](README_en.md)
+7. **Docs**: update "Provided Tools" in [README.md](README.md) and [ja/README.ja.md](ja/README.ja.md)
 
 Choose a category from the existing `Analysis` / `FileSystem` / `Symbols` / `SwiftUI`.
 
@@ -349,7 +349,7 @@ When a tag is pushed, `bottle.yml` builds bottles for Apple Silicon (macOS 15 / 
 
 1. **Check Actions**: confirm that **Build Bottles** succeeded and that Release `{version}` has `*.bottle.tar.gz` and `*.bottle.json` attached. To re-run without recreating the tag, use `Run workflow` on **Build Bottles** in Actions and enter `{version}` as the tag
 2. **Create a working branch** from `develop`
-3. **Apply to the Formula**: with `gh auth login` done, run the following. It writes a `bottle do` block into `Formula/swift-selena.rb`
+3. **Apply to the Formula**: after authenticating with `gh auth login`, run the following. It writes a `bottle do` block into `Formula/swift-selena.rb`
 
    ```bash
    scripts/merge_bottles.sh {version}

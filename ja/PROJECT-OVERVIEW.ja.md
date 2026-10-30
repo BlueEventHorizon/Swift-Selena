@@ -1,6 +1,10 @@
+<!-- bilingual-docs: source=PROJECT-OVERVIEW.md sha256=d1bcff0e9a24 -->
+
+[English](../PROJECT-OVERVIEW.md) | 日本語
+
 # Swift-Selena: プロジェクト概要
 
-この文書は、Swift-Selena の開発に参加する人と、文書を書く・直す AI のためのものです。インストールと使い方は `README.md`（日本語）と `README_en.md`（英語）、開発 AI が守るべきルールは `CLAUDE.md` を参照してください。この文書が記述するのは、リリース 0.6.12 より後の開発ブランチの状態です。`Sources/Constants.swift` の `AppConstants.version` は 0.6.12 のままですが、タグ以後に入った変更（キャッシュ形式 v6、Swift 6.1 要件など）はソースの実態どおりに記述しており、まだリリースされていません。
+この文書は、Swift-Selena の開発に参加する人と、文書を書く・直す AI のためのものです。インストールと使い方は `README.md`（英語）と `ja/README.ja.md`（日本語）、開発 AI が守るべきルールは `CLAUDE.md` を参照してください。この文書が記述するのは、リリース 0.6.12 より後の開発ブランチの状態です。`Sources/Constants.swift` の `AppConstants.version` は 0.6.12 のままですが、タグ以後に入った変更（キャッシュ形式 v6、Swift 6.1 要件など）はソースの実態どおりに記述しており、まだリリースされていません。
 
 ## 1. 位置づけ
 
@@ -51,16 +55,16 @@ spec と design の文書は v0.5.x から v0.6.x にかけて段階的に書か
 
 ### リリースとバージョン
 
-正となるバージョンは `AppConstants.version` です。git tag に `v` は付けません。リリースタグは `main` の第 1 親ライン上に打ち、Formula は `tag:` のみを使います（`revision:` は書きません）。正式な手順は `CLAUDE.md` にあり、`DEVELOPMENT.ja.md` に図があります。CI は整合性の検証（`scripts/verify_version_consistency.sh`、`scripts/verify_release_tag.sh`）と、tag push 時の bottle ビルドを行います。`swift build` や `swift test` を実行するワークフローはなく、テストはローカルで実行します。
+正となるバージョンは `AppConstants.version` です。git tag に `v` は付けません。リリースタグは `main` の第 1 親ライン上に打ち、Formula は `tag:` のみを使います（`revision:` は書きません）。正式な手順は `CLAUDE.md` にあり、`ja/DEVELOPMENT.ja.md` に図があります。CI は整合性の検証（`scripts/verify_version_consistency.sh`、`scripts/verify_release_tag.sh`）と、tag push 時の bottle ビルドを行います。`swift build` や `swift test` を実行するワークフローはなく、テストはローカルで実行します。
 
 ## 3. 構成
 
 | パス | 役割 |
 | --- | --- |
-| `README.md`, `README_en.md` | 初めて使う人向けの紹介（日本語と英語）。このリポジトリの英語版 README は現在 `README_en.md` |
-| `DEVELOPMENT.md`, `DEVELOPMENT.ja.md` | 開発ガイド。ビルド、テスト、ツール追加、CI、リリース手順 |
+| `README.md` | 初めて使う人向けの紹介（英語）。日本語版は `ja/README.ja.md` |
+| `DEVELOPMENT.md` | 開発ガイド。ビルド、テスト、ツール追加、CI、リリース手順。日本語版は `ja/DEVELOPMENT.ja.md` |
 | `CLAUDE.md` | 開発 AI が守る必須事項。`AGENTS.md` はこれへのシンボリックリンク、`GEMINI.md` は読み込むだけ |
-| `CHANGELOG.md` | リリース履歴（日本語で記述） |
+| `CHANGELOG.md` | リリース履歴（英語。日本語版は `ja/CHANGELOG.ja.md`） |
 | `Sources/` | サーバー本体。`SwiftMCPServer.swift`（エントリーポイント）、`Constants.swift`、`Logging/`、`Selena/`（解析エンジン: `Core/`、`LSP/`、`Visitors/`（visitor 8 個）、`DebugRunner.swift`）、`Tools/`（`Project/`、`FileSystem/`、`Symbols/`、`SwiftUI/`、`Analysis/`、`Meta/`、`ToolProtocol.swift`、`ResultEncoder.swift`） |
 | `Tests/` | テストターゲットと `Tests/Fixtures/`（解析対象のサンプルコード）。`Package.swift` に登録されているのは 5 ターゲット |
 | `scripts/`, `makefile`, `Formula/`, `.github/workflows/` | クライアント登録、version と tag の検証、bottle の反映、Homebrew Formula、CI |
@@ -114,10 +118,10 @@ spec と design の文書は v0.5.x から v0.6.x にかけて段階的に書か
 ## 5. 表記の取り決め
 
 - **文書 ID。** ID は元の接頭辞と番号のまま書き、訳しません: `REQ-001`、`DES-104`、`FR-006`、`NFR-001`、`UC-001`。節は「REQ-003 の 2.2 節」のように引用します。文書名も訳しません。
-- **日本語のままの文書の見出し。** spec、design、plan の文書と `CHANGELOG.md` は日本語で書かれています。英語の文書がその見出しを引用するときは、日本語を引用符で囲んだまま残し、括弧で短い英語の説明を添えます（例: 「Swift-Selena 要件定義書」(Swift-Selena requirements)）。英語の文書では、用語集を除き、ほかの場所で日本語を引用しません。
+- **日本語のままの文書の見出し。** spec、design、plan の文書は日本語で書かれています。英語の文書がその見出しを引用するときは、日本語を引用符で囲んだまま残し、括弧で短い英語の説明を添えます（例: 「Swift-Selena 要件定義書」(Swift-Selena requirements)）。英語の文書では、用語集を除き、ほかの場所で日本語を引用しません。
 - **コードブロック。** コード、コマンド、パス、フラグ、ツール名、識別子は訳しません。このプロジェクトではソースコードのコメントを日本語で書きます（`CLAUDE.md`）。英語の文書では、コードブロック内の文章のコメントを英語に訳し、コード自体は変えません。
 - **ツール名とパラメータ名**（`search_code`、`output_mode`、`symbol_kinds`）はそのまま使います。
 - **バージョン。** リリースのバージョンは `v` なしで書きます（`0.6.12`）。「v0.6.3 以降で利用可能」のような表記は `v` を付けてよいです（`CLAUDE.md`）。
 - **用語の選び方。** 用語集の英語表記をどこでも使います。特に「meta tool mode」と「legacy mode」は区別し、`project/` の三種類の文書には「requirements document」「design document」「plan document」を使います。
-- **リポジトリの言語。** AI との対話とソースコメントは日本語で書きます。ファイルも日本語で書きますが、すでに英語で書かれたファイル、またはユーザーが英語を指定したファイルは英語です（`CLAUDE.md`）。このリポジトリの英語ファイル（`README_en.md`、`DEVELOPMENT.md`）はすでにあり、そのまま残します。
+- **リポジトリの言語。** AI との対話とソースコメントは日本語で書きます。ファイルも日本語で書きますが、すでに英語で書かれたファイル、またはユーザーが英語を指定したファイルは英語です（`CLAUDE.md`）。ルートの `README.md`、`CHANGELOG.md`、`CLAUDE.md`、`PROJECT-OVERVIEW.md`、`DEVELOPMENT.md` は英語で、日本語版は `ja/` にあります。
 - **ツール一覧。** 古い spec と design の文書からツール数や一覧を写さないでください。一覧は `ToolNames` と `MetaToolRegistry.swift` から書きます。

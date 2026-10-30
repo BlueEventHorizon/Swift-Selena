@@ -1,504 +1,506 @@
+English | [日本語](ja/CHANGELOG.ja.md)
+
 # Release History
 
-Swift-Selenaのリリース履歴
+Release history of Swift-Selena.
 
 ---
 
 ## 0.6.12 - 2026-10-29
 
-### Homebrew bottle 配布の追加
+### Homebrew bottle distribution
 
-- **feat**: tag push 時に Apple Silicon（macOS 15 / macOS 26）向け bottle をビルドして GitHub Release に添付する CI（`.github/workflows/bottle.yml`）を追加。CI は repo へ push しない
-- **feat**: Release の bottle JSON を Formula に反映する `scripts/merge_bottles.sh` を追加（作業ブランチで実行し、develop → main の通常フローで反映）
-- **docs**: README.md / README_en.md にソースビルドの所要時間・bottle の説明・動作確認環境（macOS 26 / Xcode 27.1）・`brew doctor` の CLT 警告がビルドに無関係である旨を追記
-- **docs**: CLAUDE.md の release 運用順序に Phase 3（bottle 反映）を追加
-- **change**: release タグを main の本流（第1親ライン）に打つ運用へ変更。Formula の `revision:` を廃止し `tag:` のみで解決する（tag commit が Formula 自身を含むため SHA を書けない循環を解消）。`scripts/verify_release_tag.sh` / `release_tag_check.yml` / CLAUDE.md / CONTRIBUTING を新運用へ更新
+- **feat**: Added CI (`.github/workflows/bottle.yml`) that builds bottles for Apple Silicon (macOS 15 / macOS 26) on a tag push and attaches them to the GitHub Release. The CI does not push to the repository
+- **feat**: Added `scripts/merge_bottles.sh`, which writes the bottle JSON from the Release into the Formula (run it on a working branch; the change reaches `main` through the usual develop → main flow)
+- **docs**: README.md / README_en.md now describe how long a source build takes, what a bottle is, the verified environment (macOS 26 / Xcode 27.1), and that the `brew doctor` warning about the Command Line Tools has no effect on the build
+- **docs**: Added Phase 3 (bottle merge) to the release procedure in CLAUDE.md
+- **change**: Release tags are now placed on the first-parent line of `main`. The Formula no longer has a `revision:` and resolves the source by `tag:` alone (the tag commit contains the Formula itself, so its SHA cannot be written into the Formula; this removes that circular dependency). `scripts/verify_release_tag.sh`, `release_tag_check.yml`, CLAUDE.md, and CONTRIBUTING (now DEVELOPMENT.md) were updated to the new procedure
 
 ## 0.6.11 - 2026-05-31
 
-### Issue #37: Homebrew install 対応
+### Issue #37: Homebrew install
 
-- **feat**: Homebrew Formula（`Formula/swift-selena.rb`）を追加。本リポジトリ自身を tap する source-build 方式で、`brew install` による 1 ステップ導入に対応（commit `4bb3f68`）
-  - `caveats` に Claude Code / Claude Desktop 別の MCP 登録手順を明示し、`test` で MCP `initialize` ハンドシェイク（`serverInfo.name`）を検証
-- **docs**: README.md / README.ja.md に Homebrew（推奨）セクションを追加し、source-build 手順と併記（commit `4bb3f68`, `7f111db`）
-- **docs**: 設計書 DES-101 §10.2 の install フローを Homebrew シーケンスへ更新（commit `4bb3f68`）
+- **feat**: Added a Homebrew Formula (`Formula/swift-selena.rb`). The repository itself is the tap and the Formula builds from source, so `brew install` is a one-step install (commit `4bb3f68`)
+  - `caveats` gives the MCP registration steps for Claude Code and Claude Desktop separately, and `test` verifies the MCP `initialize` handshake (`serverInfo.name`)
+- **docs**: Added a Homebrew (recommended) section to README.md / README.ja.md, alongside the source-build steps (commits `4bb3f68`, `7f111db`)
+- **docs**: Updated the install flow in design document DES-101 section 10.2 to the Homebrew sequence (commit `4bb3f68`)
 
-### Issue #38: バージョン表記の統一
+### Issue #38: Unified version notation
 
-- **chore**: バージョン表記をプロジェクト全体で統一。canonical を `Sources/Constants.swift` の `AppConstants.version` に定め、git tag / CHANGELOG header を `v` プレフィックスなしへ統一（commit `366da88`）
-- **feat**: バージョン整合性検証スクリプト `scripts/verify_version_consistency.sh` を追加し、CI ワークフロー `version_check.yml` で PR ごとに canonical・CHANGELOG 先頭 entry・`.version-config.yaml` の一致を自動検証（commit `366da88`）
-- **chore**: release 運用を 3 フェーズフロー（version bump → main で tag → Formula bump）として CLAUDE.md に明文化し、`.version-config.yaml` の `version_path` を引用符なしへ修正（commit `39e7485`）
+- **chore**: Unified the version notation across the project. The canonical version is `AppConstants.version` in `Sources/Constants.swift`; git tags and CHANGELOG headers no longer carry a `v` prefix (commit `366da88`)
+- **feat**: Added the version consistency script `scripts/verify_version_consistency.sh`; the CI workflow `version_check.yml` checks on every PR that the canonical version, the first CHANGELOG entry, and `.version-config.yaml` agree (commit `366da88`)
+- **chore**: Documented the release procedure in CLAUDE.md as a three-phase flow (version bump → tag on main → Formula bump), and removed the quotes from `version_path` in `.version-config.yaml` (commit `39e7485`)
 
-### 開発インフラ
+### Development infrastructure
 
-- **ci**: develop マージ時に対応 Issue を自動クローズする `close-issues-on-develop.yaml` を追加（commit `5ef3554`）
-- **chore**: git 管理から doc-advisor 検索インデックス（`.claude/doc-advisor/index/{rules,specs}/*`）を削除（commit `df17fcc`）
+- **ci**: Added `close-issues-on-develop.yaml`, which closes the corresponding Issues automatically on a merge into develop (commit `5ef3554`)
+- **chore**: Removed the doc-advisor search index (`.claude/doc-advisor/index/{rules,specs}/*`) from git (commit `df17fcc`)
 
-### 補足
+### Notes
 
-- 本 release は Homebrew 導入対応（#37）とバージョン表記統一（#38）が中心で、Swift-Selena MCP server 自体の公開ツール API・解析機能には変更がない
-- canonical（`Sources/Constants.swift`）を 0.6.10 → 0.6.11 に更新
+- This release is about Homebrew install support (#37) and unified version notation (#38). The public tool API and the analysis features of the Swift-Selena MCP server itself are unchanged
+- The canonical version (`Sources/Constants.swift`) was updated from 0.6.10 to 0.6.11
 
 ## 0.6.10 - 2026-05-27
 
-### 開発インフラ
+### Development infrastructure
 
-- **feat**: `.claude/skills/xcode-build` および `.claude/skills/xcode-test` の Skill を追加（commit `4b57a94`）
-- **fix**: xcode SKILL の不具合を修正（commit `ce0a40b`）
-- **fix**: forge-db 関連の不具合を修正（commit `74cd007`）
-- **chore**: 不要な `.claude/skills/skill-creator` ファイル群および `.claude/doc-db/index/rules/*` を削除（commit `35e43c5`）
+- **feat**: Added the `.claude/skills/xcode-build` and `.claude/skills/xcode-test` skills (commit `4b57a94`)
+- **fix**: Fixed defects in the xcode skills (commit `ce0a40b`)
+- **fix**: Fixed forge-db-related defects (commit `74cd007`)
+- **chore**: Removed the unneeded `.claude/skills/skill-creator` files and `.claude/doc-db/index/rules/*` (commit `35e43c5`)
 
-### 補足
+### Notes
 
-- 本 release は `.claude/` 配下の開発支援 Skill とドキュメントインデックスのみの変更で、Swift-Selena MCP server 自体の機能・公開ツール API には変更がない
-- 本 entry は Issue #38（バージョン表記の統一）で実 release 後に back-fill されたもの。`git log 0.6.9..0.6.10` と `git diff --name-status 0.6.9..0.6.10` を一次情報として再構成（GitHub Release v0.6.10 の release notes body が空であったため）
-- 本 entry から `v` プレフィックスなしの header 形式（`## VERSION - YYYY-MM-DD`）を採用。過去 entry（`## v0.6.X` 形式）は historical record として未改変
+- This release changes only the development skills and document indexes under `.claude/`. The features and public tool API of the Swift-Selena MCP server itself are unchanged
+- This entry was back-filled after the actual release, as part of Issue #38 (unified version notation). It was reconstructed from `git log 0.6.9..0.6.10` and `git diff --name-status 0.6.9..0.6.10` as primary sources, because the release notes body of GitHub Release v0.6.10 was empty
+- Starting with this entry, headings use the form without a `v` prefix (`## VERSION - YYYY-MM-DD`). Older entries (`## v0.6.X`) are kept unchanged as a historical record
 
 ## v0.6.9 - 2026-05-17
 
-### Issue #34: `search_files_without_pattern` のパラメータ API 統一
+### Issue #34: Unified parameter API for `search_files_without_pattern`
 
-- **breaking**: `search_files_without_pattern` の `file_pattern` パラメータを廃止
-  - `include_patterns` / `exclude_patterns`（glob 配列、各最大 20 件）へ統一し、`search_code` と API を揃えた
-  - 未知パラメータとして `file_pattern` が渡された場合は DES-104 §5.1 に従い無視（エラーにはしない）
-- **feat**: `FileSearcher.searchFilesWithoutPattern` を `includePatterns` / `excludePatterns` 引数に刷新
-  - `searchCode` と共通の `shouldSearchFile` / `compiledGlobRegexes` ヘルパを再利用し、include OR / exclude 優先の評価規則を統一
-- **feat**: `SearchFilesWithoutPatternTool` で正規表現構文・glob 構文・配列要素数を Tool 層で事前検証
-  - エラーは `ResultEncoder.buildErrorResponse(cause:suggestion:)` による DES-104 §8.1 統一形式で返却
-- **chore**: `Sources/Constants.swift` から `ParameterKeys.filePattern` 共有定数を完全削除
-- **test**: `BackwardCompatibilityTests` に `search_files_without_pattern` 用の 5 ケースを追加
-  - `file_pattern` 無視（破壊的変更の確認）
-  - `include_patterns` による絞り込み
-  - `exclude_patterns` の優先適用
-  - 配列要素数上限超過のエラー応答
-  - 不正な正規表現のエラー応答
-- **docs**: DES-104 を v2.1 に更新（issue #34 対応反映、両ツールへの §5.1 適用を明記）
-- **docs**: `REQ-003_Core_Features_Requirements.md` の `search_code` 入力欄を `include_patterns` / `exclude_patterns` に修正（v0.6.8 反映漏れの遡及補正）
-- **docs**: `mcp-test` Skill のテストパラメータ（`search_code` / `search_files_without_pattern`）を `file_pattern` から `include_patterns` に更新
+- **breaking**: Removed the `file_pattern` parameter of `search_files_without_pattern`
+  - Replaced by `include_patterns` / `exclude_patterns` (arrays of globs, up to 20 entries each), the same API as `search_code`
+  - If `file_pattern` is still passed, it is ignored as an unknown parameter per DES-104 section 5.1 (no error)
+- **feat**: `FileSearcher.searchFilesWithoutPattern` now takes `includePatterns` / `excludePatterns`
+  - It reuses the `shouldSearchFile` / `compiledGlobRegexes` helpers shared with `searchCode`, so both apply the same rule: include patterns are OR-ed, and exclude patterns take precedence
+- **feat**: `SearchFilesWithoutPatternTool` validates the regular expression syntax, glob syntax, and array sizes in the tool layer before searching
+  - Errors are returned in the unified DES-104 section 8.1 format through `ResultEncoder.buildErrorResponse(cause:suggestion:)`
+- **chore**: Removed the shared constant `ParameterKeys.filePattern` from `Sources/Constants.swift` entirely
+- **test**: Added 5 cases for `search_files_without_pattern` to `BackwardCompatibilityTests`
+  - `file_pattern` is ignored (confirms the breaking change)
+  - filtering with `include_patterns`
+  - `exclude_patterns` take precedence
+  - error response when an array exceeds the size limit
+  - error response for an invalid regular expression
+- **docs**: Updated DES-104 to v2.1 (reflects Issue #34 and states that section 5.1 applies to both tools)
+- **docs**: Corrected the `search_code` input fields in `REQ-003_Core_Features_Requirements.md` to `include_patterns` / `exclude_patterns` (a retroactive fix for an omission in 0.6.8)
+- **docs**: Updated the test parameters of the `mcp-test` skill (`search_code` / `search_files_without_pattern`) from `file_pattern` to `include_patterns`
 
 ---
 
 ## v0.6.8 - 2026-05-16
 
-### REQ-005 / DES-104: 検索・シンボルツール拡張
+### REQ-005 / DES-104: Search and symbol tool extensions
 
-- **feat**: `search_code` / `find_symbol_definition` / `list_symbols` を REQ-005 / DES-104 に基づき拡張
-  - `SymbolInfoV2` と `listSymbolsWithScope` を追加し、`parent_scope` / `extension_target` / `module_name` の 3 フィールドでシンボルのスコープを区別可能化
-  - `SymbolKindMapper` で 9 種別の小文字スネーク値（struct/class/enum/protocol/actor/function/variable/typealias/extension）と表示用 kind の対応を一元管理
-  - `symbol_kinds` フィルタ未指定時は優先返却順（Class/Struct/Enum/Protocol/Actor → 残り）で安定ソート
-  - `CapabilityRegistry` で Tool ごとのケーパビリティを登録、`list_available_tools` で取得可能化
-  - パース失敗ファイルは `skipped_files` として構造化結果に集約（DES-104 §8.4）
-- **feat**: `SymbolVisitorV2` を独立実装で追加（visit/visitPost 対称性によるスコープスタック方式）
-  - extension 自身を `Extension` 種別シンボルとして登録
-  - ネスト型・extension 内型・ルート型を `parent_scope` / `extension_target` で完全区別
-- **feat**: `module_name` 解決を `path:` 属性対応に拡張
-  - `Package.swift` の `.target(...)` / `.executableTarget(...)` 等を括弧深度で抽出し、`name` と `path` から target ルートを算出
-  - 最長プレフィックス一致で複数 target 構成を一意化
-  - `path: "Sources"` のように target 名とディレクトリ名が一致しない構成にも対応（Swift-Selena 自身が該当）
-  - target 解析失敗時は旧 `Sources/{firstName}/` パターンへフォールバック
+- **feat**: Extended `search_code` / `find_symbol_definition` / `list_symbols` according to REQ-005 / DES-104
+  - Added `SymbolInfoV2` and `listSymbolsWithScope`; three fields, `parent_scope` / `extension_target` / `module_name`, distinguish the scope of a symbol
+  - `SymbolKindMapper` is the single place that maps the 9 lowercase snake_case kind values (struct/class/enum/protocol/actor/function/variable/typealias/extension) to the display kinds
+  - When `symbol_kinds` is not given, results are stably sorted in a priority order (Class/Struct/Enum/Protocol/Actor first, then the rest)
+  - `CapabilityRegistry` registers the capabilities of each tool; `list_available_tools` returns them
+  - Files that fail to parse are collected as `skipped_files` in the structured result (DES-104 section 8.4)
+- **feat**: Added `SymbolVisitorV2` as an independent implementation (a scope stack kept symmetric through visit/visitPost)
+  - An extension itself is registered as a symbol of kind `Extension`
+  - Nested types, types inside extensions, and root types are fully distinguished through `parent_scope` / `extension_target`
+- **feat**: `module_name` resolution now understands the `path:` attribute
+  - `.target(...)`, `.executableTarget(...)`, and similar declarations in `Package.swift` are extracted by tracking parenthesis depth, and the target root is computed from `name` and `path`
+  - Longest-prefix matching gives a unique answer when there are several targets
+  - Layouts where the target name differs from the directory name, such as `path: "Sources"`, are supported (Swift-Selena itself is one)
+  - If target parsing fails, it falls back to the old `Sources/{firstName}/` pattern
 
-### 破壊的変更
+### Breaking changes
 
-- **breaking**: `search_code` の `file_pattern` パラメータを廃止（REQ-005 §4.3 / §4.6）
-  - `include_patterns` / `exclude_patterns` に統一
+- **breaking**: Removed the `file_pattern` parameter of `search_code` (REQ-005 sections 4.3 / 4.6)
+  - Replaced by `include_patterns` / `exclude_patterns`
 
-### キャッシュスキーマ
+### Cache schema
 
-- **fix**: `cacheVersion` を v3 → v4 → v5 へ段階的に bump
-  - v4: `SymbolInfo` に `parentScope` / `extensionTarget` / `moduleName` を追加
-  - v5: 同一 cacheVersion 内でフィールドを後追い拡張した経緯を是正、3 フィールド時代の v4 キャッシュを全破棄・再構築
-- **fix**: バージョン不一致 / デコード失敗時は空メモリへ復旧し `cache_warning` フラグを伝達（DES-104 §8.2）
+- **fix**: Bumped `cacheVersion` in steps from v3 to v4 to v5
+  - v4: `SymbolInfo` gained `parentScope` / `extensionTarget` / `moduleName`
+  - v5: corrects the history of fields having been added within the same cacheVersion; v4 caches from the three-field period are discarded and rebuilt
+- **fix**: On a version mismatch or decode failure the cache recovers to empty memory and sets the `cache_warning` flag (DES-104 section 8.2)
 
-### テスト
+### Tests
 
-- **test**: `SymbolVisitorV2Tests` を追加（スコープ区別 / push-pop 対称性 / モジュール名解決 6 ケース）
-- **test**: `SearchCodeToolTests` / `FindSymbolDefinitionToolTests` を追加
-- **test**: `BackwardCompatibilityTests` で v3→latest および v4→v5 マイグレーションを検証
+- **test**: Added `SymbolVisitorV2Tests` (scope distinction / push-pop symmetry / module name resolution, 6 cases)
+- **test**: Added `SearchCodeToolTests` / `FindSymbolDefinitionToolTests`
+- **test**: `BackwardCompatibilityTests` verifies the v3 → latest and v4 → v5 migrations
 
-### ドキュメント
+### Documents
 
-- **docs**: REQ-005（検索・シンボルツール拡張要件）と DES-104（設計書）を追加
-- **docs**: improve 計画書を追加し、REQ-005 / DES-104 のトレーサビリティを整備
-- **docs**: CLAUDE.md の `ToolProtocol` → `MCPTool` 文言を訂正
-- **docs**: MCP サーバー再起動を伴うテストはユーザー依頼必須をルール化
+- **docs**: Added REQ-005 (requirements for the search and symbol tool extensions; a new document that reuses the ID of the old REQ-005 merged into REQ-003 at v0.6.6) and DES-104 (design document)
+- **docs**: Added the plan document of the `improve` feature and set up traceability for REQ-005 / DES-104
+- **docs**: Corrected `ToolProtocol` to `MCPTool` in CLAUDE.md
+- **docs**: Made it a rule that tests requiring an MCP server restart must be requested from the user
 
 ---
 
 ## v0.6.7 - 2026-04-21
 
-### ビルドエラー対応
+### Build error fixes
 
-- **fix**: swift-sdk を 0.10.2 → 0.12.0 に更新（Swift 6.3.1 コンパイラの `StrictConcurrency` 強化により `NetworkTransport.swift` で `#SendingRisksDataRace` エラーが発生する問題を解消）
-- **fix**: `DebugRunner.swift` のパターンマッチを新 API に対応（`.text` enum case が 3 連想値 `(text:annotations:_meta:)` になったため `.text(let text, _, _)` へ修正）
+- **fix**: Updated swift-sdk from 0.10.2 to 0.12.0 (fixes the `#SendingRisksDataRace` error in `NetworkTransport.swift` caused by the stricter `StrictConcurrency` checking of the Swift 6.3.1 compiler)
+- **fix**: Updated the pattern match in `DebugRunner.swift` to the new API (the `.text` enum case now has three associated values, `(text:annotations:_meta:)`, so the pattern became `.text(let text, _, _)`)
 
 ---
 
 ## v0.6.6 - 2026-04-02
 
-### リファクタリング・品質改善
+### Refactoring and quality
 
-- LSPClient を actor 化し messageId の競合状態を解消
-- コードレビュー指摘対応: LSP ハング修正、同期初期化修正、URI エスケープ修正、パラメータパース修正、スレッドセーフティ改善
-- SearchFilesWithoutPatternTool のディレクトリ2重走査を解消
-- InitializeProjectTool の Dead Code 削除・String(describing:) 修正
-- エラー握りつぶし対応（save() 失敗を警告ログに記録）
-- Cache/ ディレクトリの Dead Code を削除
-- scripts/ 集約・Makefile 一元化
+- LSPClient is now an actor, which removes the race condition on messageId
+- Code review follow-ups: LSP hang fix, synchronous initialization fix, URI escaping fix, parameter parsing fix, thread safety improvements
+- SearchFilesWithoutPatternTool no longer walks directories twice
+- InitializeProjectTool: removed dead code and fixed the `String(describing:)` usage
+- Errors are no longer swallowed (a failed `save()` is written to the log as a warning)
+- Removed dead code in the `Cache/` directory
+- Consolidated `scripts/` and unified the Makefile
 
-### ドキュメント・設定整備
+### Documents and settings
 
-- REQ-005 を REQ-003 に統合（v0.6.5 要件を吸収、REQ-005 を削除）
-- doc-advisor 更新・旧 doc-advisor 削除
-- docs リファクタリング
-- settings.json 整備、settings.local.json を git 管理から除外
-- .gitignore 更新
+- Merged REQ-005 into REQ-003 (absorbing the 0.6.5 requirements) and deleted REQ-005
+- Updated doc-advisor and removed the old doc-advisor
+- Refactored docs
+- Set up `settings.json`; `settings.local.json` is no longer tracked by git
+- Updated `.gitignore`
 
 ---
 
 ## v0.6.3 - 2025/12/15〜2026/03/11
 
-### メタツールモード・Swift対応強化・スクリプト整理
+### Meta tool mode, Swift version support, script consolidation
 
-**新機能 - メタツールモード（2025-12-15）:**
-- ✅ **MetaToolRegistry** - 全解析ツールをレジストリで動的管理
-- ✅ **list_available_tools** - 利用可能なツール一覧と説明を表示
-- ✅ **get_tool_schema** - 特定ツールのJSONスキーマを取得
-- ✅ **execute_tool** - ツールを名前で実行（JSON引数渡し）
-- ✅ **SWIFT_SELENA_LEGACY=1** - 全ツール直接公開の従来モードをフォールバックとして維持
-- Claudeへの公開ツールを4つに削減、コンテキストウィンドウ消費を最小化
+**New feature: meta tool mode (2025-12-15):**
+- **MetaToolRegistry**: all analysis tools are managed dynamically through a registry
+- **list_available_tools**: lists the available tools with their descriptions
+- **get_tool_schema**: returns the JSON schema of one tool
+- **execute_tool**: runs a tool by name, with the arguments passed as JSON
+- **SWIFT_SELENA_LEGACY=1**: the previous mode, which exposes every tool directly, is kept as a fallback (legacy mode)
+- The tools exposed to Claude are reduced to four, minimizing context window consumption
 
-**Swift Version対応（2025-12-15）:**
-- ✅ **SymbolVisitor 強化** - 新しい Swift バージョンの構文に対応
+**Swift version support (2025-12-15):**
+- **SymbolVisitor**: handles the syntax of newer Swift versions
 
-**Swift Testing 強化（2025-12-17）:**
-- ✅ **SwiftTestingVisitor 新規追加** - `@Test` / `@Suite` マクロを専用 Visitor で検出
-- ✅ **FindTestCasesTool 改善** - XCTest と Swift Testing の両方を統合的に解析
+**Swift Testing (2025-12-17):**
+- **SwiftTestingVisitor** (new): a dedicated visitor detects the `@Test` / `@Suite` macros
+- **FindTestCasesTool**: analyzes XCTest and Swift Testing together
 
-**バグ修正 - Protocol認識（2026-01-06）:**
-- ✅ **TypeConformanceVisitor 大幅改修** - Protocol vs Class の認識精度を大幅改善
-  - `list_protocol_conformances` で Protocol がクラスとして誤認識される問題を修正
-  - Protocol宣言の専用検出ロジックを追加
-  - ProjectMemory への保存形式を整理
+**Bug fix: protocol recognition (2026-01-06):**
+- **TypeConformanceVisitor** reworked: much better at telling protocols from classes
+  - Fixed `list_protocol_conformances` reporting a protocol as a class
+  - Added dedicated detection of protocol declarations
+  - Cleaned up the storage format in ProjectMemory
 
-**その他（2026-01-06）:**
-- ✅ **MIT LICENSE ファイル追加** - ライセンス明示
+**Other (2026-01-06):**
+- Added the MIT LICENSE file
 
-**スクリプト整理・Makefile一元化（2026-03-11）:**
-- ✅ **scripts/ ディレクトリ新設** - 全 shell script を集約
+**Script consolidation and Makefile (2026-03-11):**
+- New `scripts/` directory holding every shell script
   - `register-release.sh`, `unregister-release.sh`, `register-debug.sh`, `register-desktop.sh`
-- ✅ **ルートの .sh を削除** - `register-selena-to-claude-code.sh` 等を廃止
-- ✅ **Makefile が唯一の入口** - make コマンド以外の直接実行を不要に
+- Removed the `.sh` files at the repository root (`register-selena-to-claude-code.sh` and others)
+- The Makefile is the single entry point; the scripts no longer need to be run directly
 
-**Makefile - 登録コマンド一覧:**
+**Makefile registration commands:**
 
-| コマンド | 対象 | 説明 |
-|---------|------|------|
-| `make register-release` | Claude Code | RELEASE版を登録（パスを対話入力） |
-| `make unregister-release` | Claude Code | RELEASE版の登録を解除（パスを対話入力） |
-| `make register-debug` | Claude Code | DEBUG版をビルド＆登録 |
-| `make unregister-debug` | Claude Code | DEBUG版を登録解除 |
-| `make register-desktop` | Claude Desktop | Claude Desktopに登録 |
-| `make unregister-desktop` | Claude Desktop | Claude Desktopから解除 |
+| Command | Target | Description |
+|---------|--------|-------------|
+| `make register-release` | Claude Code | Register the RELEASE build (path entered interactively) |
+| `make unregister-release` | Claude Code | Unregister the RELEASE build (path entered interactively) |
+| `make register-debug` | Claude Code | Build and register the DEBUG build |
+| `make unregister-debug` | Claude Code | Unregister the DEBUG build |
+| `make register-desktop` | Claude Desktop | Register with Claude Desktop |
+| `make unregister-desktop` | Claude Desktop | Unregister from Claude Desktop |
 
-**ツール総数:** 15個（MetaTool 4個 + 解析ツール 11個）
+**Total tools:** 15 (`initialize_project` + 3 meta tools + 11 analysis tools)
 
 ---
 
 ## v0.6.1 - 2025/12/06
 
-### ビルド・登録システムのリファクタリング
+### Build and registration refactoring
 
-**Makefile導入:**
-- ✅ **make build** - DEBUGビルド
-- ✅ **make build-release** - RELEASEビルド
-- ✅ **make register-debug** - DEBUG版をこのプロジェクトに登録
-- ✅ **make register-desktop** - Claude Desktopに登録
-- ✅ **make install-client-makefile TARGET=/path** - クライアント用Makefile配布
+**Makefile introduced:**
+- **make build**: DEBUG build
+- **make build-release**: RELEASE build
+- **make register-debug**: register the DEBUG build with this project
+- **make register-desktop**: register with Claude Desktop
+- **make install-client-makefile TARGET=/path**: distribute the client Makefile
 
-**ファイル構成変更:**
-- `register-*.sh` → `Tools/Scripts/` に移動
-- `Makefile`（クライアント用） → `Tools/Client/` に移動
-- 新規 `Makefile` でビルド・登録を一元管理
+**File layout changes:**
+- `register-*.sh` moved to `Tools/Scripts/`
+- The client `Makefile` moved to `Tools/Client/`
+- A new `Makefile` manages build and registration in one place
 
-**バグ修正:**
-- ✅ **DebugRunner パス修正** - ハードコードされたパスを動的検出に変更
-  - `detectProjectPath()` メソッド追加
+**Bug fixes:**
+- **DebugRunner path**: the hard-coded path is now detected dynamically
+  - Added the `detectProjectPath()` method
 
-**ツール総数:** 15個（変更なし）
+**Total tools:** 15 (unchanged)
 
 ---
 
 ## v0.5.5 - 2025/10/27
 
-### LSP安定化、MCP基盤修正、新ツール実装
+### LSP stabilization, MCP foundation fixes, new tool
 
-**新機能:**
-- ✅ **search_files_without_pattern** - grep -L相当、「ないものを探す」検索
-  - Code Header未作成ファイルの検出
-  - Import未記述ファイルの発見
-  - 統計情報表示（Files checked、Files without pattern、割合）
+**New feature:**
+- **search_files_without_pattern**: the equivalent of `grep -L`, a search for what is missing
+  - Finds files without a Code Header
+  - Finds files without an import statement
+  - Shows statistics (files checked, files without the pattern, percentage)
 
-**重要なバグ修正（6件）:**
-1. ✅ **正規表現マルチラインモード** - `.anchorsMatchLines`追加、`^import`が各行にマッチ
-2. ✅ **ゾンビプロセス** - `server.waitUntilCompleted()`でEOF正常終了、無限ループ削除
-3. ✅ **本番環境汚染** - `swift-selena-debug`別名登録で開発版と本番版を完全分離
-4. ✅ **LSP非同期通知混入** - Content-Length正確処理、publishDiagnosticsスキップ
-5. ✅ **LSPState単一プロジェクト** - Dictionary管理で複数プロジェクト対応
-6. ✅ **initialize_projectバックグラウンド** - 同期待機、LSP接続完了後にreturn
+**Important bug fixes (6):**
+1. **Multi-line regular expressions**: added `.anchorsMatchLines`, so `^import` matches on every line
+2. **Zombie process**: `server.waitUntilCompleted()` ends cleanly on EOF; the infinite loop was removed
+3. **Production environment contamination**: the development build is registered under the separate name `swift-selena-debug`, fully separating it from the production build
+4. **LSP asynchronous notifications mixed into responses**: Content-Length is handled exactly, and publishDiagnostics is skipped
+5. **LSPState limited to one project**: a Dictionary now manages several projects
+6. **initialize_project in the background**: waits synchronously and returns after the LSP connection completes
 
-**find_symbol_references削除:**
-- 調査結果: Swift Package（✅動作）、Xcodeプロジェクト（❌常に0件）
-- 原因: SourceKit-LSP Issue #730（Xcodeプロジェクト未サポート）
-- 決断: 削除（約270行）、代替手段（find_type_usages）を推奨
-- 理由: 全プロジェクトタイプで動作する構成を優先
+**find_symbol_references removed:**
+- Findings: works on Swift Packages; always returns 0 results on Xcode projects
+- Cause: SourceKit-LSP Issue #730 (Xcode projects not supported)
+- Decision: removed (about 270 lines); find_type_usages is recommended as the alternative
+- Reason: a configuration that works for every project type takes priority
 
-**ドキュメント整備:**
-- CLAUDE.md: 言語設定、失敗パターンと対策、チェックリスト、ドキュメント更新ルール追加
-- PLAN.md: v0.5.5の実装内容を反映
-- LATEST_CONVERSATION_HISTORY.md: v0.5.5サマリー作成
-- MCP_LSP_LEARNINGS.md: 重要な知見を追加
+**Documents:**
+- CLAUDE.md: added the language setting, failure patterns and countermeasures, a checklist, and document update rules
+- PLAN.md: reflects the 0.5.5 implementation
+- LATEST_CONVERSATION_HISTORY.md: 0.5.5 summary
+- MCP_LSP_LEARNINGS.md: added important lessons
 
-**重要な知見:**
-- MCP仕様: `server.waitUntilCompleted()`必須、無限ループは不要
-- LSP制限: Xcodeプロジェクトでは参照検索不可、documentSymbol/typeHierarchyは動作
-- 開発版と本番版の完全分離: 別名登録で本番環境汚染を防止
+**Lessons:**
+- MCP specification: `server.waitUntilCompleted()` is required; no infinite loop is needed
+- LSP limitation: reference search does not work on Xcode projects; documentSymbol / typeHierarchy do
+- Complete separation of development and production builds: registering under a different name prevents contamination of the production environment
 
-**ツール総数:** 18個（find_symbol_references削除により減少）
+**Total tools:** 18 (reduced by the removal of find_symbol_references)
 
-**詳細**: docs/LATEST_CONVERSATION_HISTORY.md、docs/MCP_LSP_LEARNINGS.md参照
+**Details**: see docs/LATEST_CONVERSATION_HISTORY.md and docs/MCP_LSP_LEARNINGS.md
 
 ---
 
 ## v0.5.4 - 2025/10/26
 
-### list_symbols、get_type_hierarchyにLSP型情報を統合
+### LSP type information in list_symbols and get_type_hierarchy
 
-**LSPClient拡張:**
-- ✅ **documentSymbol()** - textDocument/documentSymbol API実装
-- ✅ **typeHierarchy()** - textDocument/prepareTypeHierarchy API実装
-- LSPDocumentSymbol、LSPTypeHierarchy構造体追加
+**LSPClient extensions:**
+- **documentSymbol()**: implements the textDocument/documentSymbol API
+- **typeHierarchy()**: implements the textDocument/prepareTypeHierarchy API
+- Added the LSPDocumentSymbol and LSPTypeHierarchy structs
 
-**list_symbols強化:**
-- executeWithLSP()メソッド追加
-- LSP版: 型情報付き表示（例：`[Method] save: func save() throws`）
-- SwiftSyntax版: 従来通り（フォールバック）
-- symbolKindToString()でLSP SymbolKind変換
+**list_symbols:**
+- Added the executeWithLSP() method
+- LSP version: shows type information (for example `[Method] save: func save() throws`)
+- SwiftSyntax version: as before (fallback)
+- symbolKindToString() converts the LSP SymbolKind
 
-**get_type_hierarchy強化:**
-- executeWithLSP()メソッド追加
-- LSP版: Type Detail追加（例：`Type Detail: class ProjectMemory`）
-- SwiftSyntax版: 従来通り（フォールバック）
-- グレースフルデグレード完全実装
+**get_type_hierarchy:**
+- Added the executeWithLSP() method
+- LSP version: adds Type Detail (for example `Type Detail: class ProjectMemory`)
+- SwiftSyntax version: as before (fallback)
+- Graceful degradation fully implemented
 
-**実装完了:**
-- ✅ LSPClient拡張（documentSymbol, typeHierarchy）
-- ✅ 階層構造対応（children再帰処理）
-- ✅ 除外ディレクトリ対応（263ファイル完全一致）
-- ✅ Import空ファイル対応
-- ✅ ログJST表示
-- ✅ グレースフルデグレード完璧
+**Completed:**
+- LSPClient extensions (documentSymbol, typeHierarchy)
+- Hierarchical structures (recursive processing of children)
+- Excluded directories (263 files, exact match)
+- Files with no imports
+- Log timestamps in JST
+- Graceful degradation complete
 
-**テスト結果:**
-- ✅ ContactBプロジェクト: 全ツール完全一致検証
-- ✅ find_symbol_references: 動作
-- ✅ グレースフルデグレード完璧
+**Test results:**
+- ContactB project: every tool verified with exact matches
+- find_symbol_references: works
+- Graceful degradation complete
 
-**ツール総数:**
-- ビルド不可: 17個
-- ビルド可能: 18個
-- 強化ツール: 2個（list_symbols、get_type_hierarchy）
+**Total tools:**
+- Without a build: 17
+- With a build: 18
+- Enhanced tools: 2 (list_symbols, get_type_hierarchy)
 
-**詳細**: docs/CONVERSATION_HISTORY.md v0.5.4セクション参照
+**Details**: see the v0.5.4 section of docs/CONVERSATION_HISTORY.md
 
 ---
 
 ## v0.5.3 - 2025/10/24
 
-### LSP安定化とデバッグ機能
+### LSP stabilization and debugging features
 
-**LSP修正（find_symbol_references完全動作）:**
-- ✅ **initialized通知追加** - LSPプロトコル準拠
-- ✅ **textDocument/didOpen実装** - ファイルをLSPに通知
-- ✅ **initializeレスポンス読み捨て** - バッファクリア
-- ✅ **SIGPIPE対策** - signal(SIGPIPE, SIG_IGN)
-- ✅ **Content-Length計算修正** - 実際のJSON長を計算
-- ✅ **エラーハンドリング強化** - プロセス状態チェック、try-catch
+**LSP fixes (find_symbol_references fully working):**
+- **initialized notification**: added, for LSP protocol compliance
+- **textDocument/didOpen**: implemented, so files are announced to the LSP
+- **initialize response discarded**: clears the buffer
+- **SIGPIPE**: `signal(SIGPIPE, SIG_IGN)`
+- **Content-Length**: computed from the actual JSON length
+- **Error handling**: process state checks and try-catch
 
-**デバッグ機能:**
-- ✅ **FileLogHandler** - ファイルログ出力（~/.swift-selena/logs/server.log）
-- ✅ **DebugRunner** - プロセス内自動テストランナー（#if DEBUG、Xcodeデバッガ対応）
-- ✅ **LSPState診断機能** - getStatus()メソッド追加
+**Debugging features:**
+- **FileLogHandler**: writes logs to a file (`~/.swift-selena/logs/server.log`)
+- **DebugRunner**: in-process automatic test runner (`#if DEBUG`, works with the Xcode debugger)
+- **LSPState diagnostics**: added the getStatus() method
 
-**検証結果:**
-- find_symbol_references: 5回連続実行でクラッシュなし
-- LSPStateの参照: 3件検出成功
-- ProjectMemoryの参照: 34件検出成功
-- FindSymbolReferencesTool: 3件検出成功
+**Verification:**
+- find_symbol_references: no crash in 5 consecutive runs
+- References to LSPState: 3 found
+- References to ProjectMemory: 34 found
+- FindSymbolReferencesTool: 3 found
 
-**技術詳細:**
-- LSPプロトコル完全準拠（initialize → initialized → didOpen → requests）
-- 開いたファイルをキャッシュ（openedFiles）
-- publishDiagnostics通知を正しく処理
-- レスポンス解析の詳細ログ出力
+**Technical details:**
+- Full LSP protocol compliance (initialize → initialized → didOpen → requests)
+- Opened files are cached (openedFiles)
+- publishDiagnostics notifications are handled correctly
+- Detailed logging of response parsing
 
-**ツール総数:** 18個（変更なし、安定性向上）
+**Total tools:** 18 (unchanged; stability improved)
 
-**ドキュメント:**
-- README.md/README.ja.md: ログ監視方法を追記
-- docs/tool_design/DES-008: DebugRunner設計書
+**Documents:**
+- README.md / README.ja.md: added how to monitor the logs
+- docs/tool_design/DES-008: DebugRunner design document
 
-**詳細**: docs/tool_design/DES-008_DebugRunner_Design.md参照
+**Details**: see docs/tool_design/DES-008_DebugRunner_Design.md
 
 ---
 
 ## v0.5.2 - 2025/10/21
 
-### LSP機能実装
+### LSP features
 
-**新規ツール:**
-- ✅ **find_symbol_references** - シンボル参照検索（LSP版）
-  - 型情報ベースの正確な参照検索
-  - textDocument/referencesリクエスト使用
-  - ビルド可能時のみ利用可能（動的ツールリスト）
-  - LSP利用不可時: find_type_usages, search_code を代替として案内
+**New tool:**
+- **find_symbol_references**: symbol reference search (LSP)
+  - Accurate reference search based on type information
+  - Uses the textDocument/references request
+  - Available only when the project builds (dynamic tool list)
+  - When LSP is unavailable, find_type_usages and search_code are suggested instead
 
-**技術実装:**
-- FindSymbolReferencesTool.execute()にlspStateパラメータ追加
-- SwiftMCPServerからlspStateを渡す実装
-- MCPToolプロトコル準拠のためのラッパー実装
-- 0-indexed ↔ 1-indexed インデックス変換
+**Implementation:**
+- Added the lspState parameter to FindSymbolReferencesTool.execute()
+- SwiftMCPServer passes lspState to it
+- A wrapper keeps conformance to the MCPTool protocol
+- Conversion between 0-indexed and 1-indexed positions
 
-**ツール総数:**
-- ビルド不可: 17個（SwiftSyntaxのみ）
-- ビルド可能: 18個（+find_symbol_references）
+**Total tools:**
+- Without a build: 17 (SwiftSyntax only)
+- With a build: 18 (+find_symbol_references)
 
-**設計判断:**
-- list_symbols強化、get_type_hierarchy強化はv0.5.3に延期
-- 理由: LSP documentSymbol統合に追加実装時間が必要
-- v0.5.2は基本的なLSP機能（参照検索）に集中
+**Design decisions:**
+- The list_symbols and get_type_hierarchy enhancements are deferred to 0.5.3
+- Reason: integrating LSP documentSymbol needs more implementation time
+- 0.5.2 concentrates on the basic LSP feature (reference search)
 
-**削除した機能:**
-- ❌ get_tool_usage_stats（v0.8.0に延期）
-  - 後方互換性の問題
-  - 設計見直しが必要（ProjectMemory外で管理）
+**Removed:**
+- get_tool_usage_stats (deferred to 0.8.0)
+  - Backward compatibility problems
+  - Needs a design review (manage it outside ProjectMemory)
 
-**コミット:**
+**Commits:**
 - 7cfd60c: complete FindSymbolReferencesTool
 - cfdd1eb: add: FindSymbolReferencesTool
 
-**詳細**: docs/tool_design/PLAN.md v0.5.2セクション参照
+**Details**: see the v0.5.2 section of docs/tool_design/PLAN.md
 
 ---
 
 ## v0.5.1 - 2025/10/21
 
-### LSP基盤整備
+### LSP foundation
 
-**新規コンポーネント:**
-- LSPState Actor - LSP接続状態管理
-- LSPClient - SourceKit-LSP通信基盤（JSON-RPC over stdin/stdout）
-- 動的ツールリスト生成（LSP状態に応じてツール変更）
+**New components:**
+- LSPState actor: manages the LSP connection state
+- LSPClient: SourceKit-LSP communication (JSON-RPC over stdin/stdout)
+- Dynamic tool list (the tools change with the LSP state)
 
-**機能:**
-- バックグラウンドLSP接続（initialize_project時、非ブロッキング）
-- ビルド可能時のみLSP機能を提供（v0.5.2以降）
-- グレースフルデグレード（LSP失敗でもSwiftSyntax動作）
+**Features:**
+- Background LSP connection (at initialize_project, non-blocking)
+- LSP features offered only when the project builds (from 0.5.2)
+- Graceful degradation (SwiftSyntax keeps working when LSP fails)
 
-**設計判断:**
-- BuildChecker削除（直接LSP接続試行で十分）
-- Serenaと同じシンプルなアプローチ
-
----
-
-### ツール削減とクリーンアップ
-
-**削除したツール（-5個）:**
-- ❌ read_file → Claude標準Readで完全代替
-- ❌ read_lines → Claude標準Readで完全代替
-- ❌ read_function_body → read_symbolで代替
-- ❌ list_directory → Claude Bash（ls）で完全代替
-- ❌ get_project_stats → 価値が低い
-
-**削減理由:**
-
-**パフォーマンス分析:**
-- read_file: Swift-Selena = Claude Read（差なし）
-- read_lines: コンテキスト効率は限定的（結局全体を見る）
-- list_directory: ls コマンドと同じ（差なし）
-
-**正確性分析:**
-- 全て同じ結果（ファイルシステム操作）
-
-**代替可能性:**
-- read_file, read_lines, list_directory: Claude標準機能で100%代替
-- read_function_body: read_symbol(symbol_path: "Class/method")で代替
-- get_project_stats: search_notesで十分
-
-**結論:**
-- Claude標準機能との重複排除
-- Swift-Selenaは「Swift解析」に特化
-- メンテナンス負担削減
-
-**ツール総数**: 22個 → **17個**
+**Design decisions:**
+- BuildChecker removed (attempting the LSP connection directly is enough)
+- The same simple approach as Serena
 
 ---
 
-### 今後の方針転換
+### Tool reduction and cleanup
 
-**LSPツール追加の再考:**
+**Removed tools (5):**
+- read_file: fully replaced by Claude's standard Read
+- read_lines: fully replaced by Claude's standard Read
+- read_function_body: replaced by read_symbol
+- list_directory: fully replaced by Claude's Bash (`ls`)
+- get_project_stats: low value
 
-**従来の計画:**
-- LSPツール5個を新規追加（find_symbol_references, get_symbol_info等）
-- ツール総数: 22個 → 27個
+**Why:**
 
-**新しい方針:**
-- 既存ツールをLSPで強化（新規ツール追加を最小化）
-- list_symbols → LSP利用時は型情報付き
-- get_type_hierarchy → LSP利用時はfind_overrides情報も含む
+**Performance:**
+- read_file: Swift-Selena = Claude Read (no difference)
+- read_lines: limited context efficiency (the whole file ends up being read anyway)
+- list_directory: same as the `ls` command (no difference)
 
-**新規追加するのは:**
-- find_symbol_references のみ（既存機能にない）
+**Accuracy:**
+- All give the same results (file system operations)
 
-**最終ツール数**: 17個 → 18個（+1個のみ）
+**Replaceability:**
+- read_file, read_lines, list_directory: 100% replaced by Claude's standard features
+- read_function_body: replaced by read_symbol(symbol_path: "Class/method")
+- get_project_stats: search_notes is enough
 
-**詳細**: docs/tool_design/内の各設計書を参照
+**Conclusion:**
+- Remove the overlap with Claude's standard features
+- Swift-Selena specializes in Swift analysis
+- Less maintenance
+
+**Total tools**: 22 → **17**
+
+---
+
+### Change of direction
+
+**Rethinking the LSP tool additions:**
+
+**Previous plan:**
+- Add 5 new LSP tools (find_symbol_references, get_symbol_info, and others)
+- Total tools: 22 → 27
+
+**New direction:**
+- Enhance existing tools with LSP (add as few new tools as possible)
+- list_symbols: type information when LSP is used
+- get_type_hierarchy: also includes find_overrides information when LSP is used
+
+**Only new addition:**
+- find_symbol_references (no existing feature covers it)
+
+**Final tool count**: 17 → 18 (+1 only)
+
+**Details**: see the design documents in docs/tool_design/
 
 ---
 
 ## v0.5.0 - 2025/10/13
 
-### 新機能
+### New features
 
-**5つの新しいツールを追加（合計22個）:**
+**5 new tools (22 in total):**
 
-1. **set_analysis_mode** - 分析モード切り替え
-   - SwiftUI / Architecture / Testing / Refactoring / General モード
-   - モード別のツール使用ガイダンスを提供
-   - Serenaのモード機能を参考に実装
+1. **set_analysis_mode**: switches the analysis mode
+   - SwiftUI / Architecture / Testing / Refactoring / General modes
+   - Gives tool usage guidance per mode
+   - Modeled on Serena's mode feature
 
-2. **read_symbol** - シンボル単位読み取り
-   - ファイル全体を読まずに特定シンボルのみ取得
-   - 大規模ファイル（5000行以上）でコンテキスト効率を大幅改善
+2. **read_symbol**: reads one symbol
+   - Returns only the requested symbol instead of the whole file
+   - Much better context efficiency on large files (5000+ lines)
 
-3. **list_directory** - ディレクトリ一覧
-   - ファイルとディレクトリの一覧表示
-   - 再帰的検索オプション
+3. **list_directory**: lists a directory
+   - Lists files and directories
+   - Recursive option
 
-4. **read_file** - 汎用ファイル読み取り
-   - あらゆる種類のファイルを読み取り
-   - 設定ファイル、JSONファイル等に対応
+4. **read_file**: general file reading
+   - Reads files of any kind
+   - Configuration files, JSON files, and so on
 
-5. **think_about_analysis** - 思考促進ツール
-   - 分析の進捗確認を促すプロンプト
-   - 分析の質を向上
+5. **think_about_analysis**: a thinking prompt
+   - A prompt that encourages checking the progress of an analysis
+   - Improves analysis quality
 
-### 改善
+### Improvements
 
-- ツール総数: 17個 → 22個
-- モード機能により、タスクに応じた最適なツール使用をガイド
-- 大規模プロジェクト対応を強化
+- Total tools: 17 → 22
+- The mode feature guides the best tool usage for each task
+- Better support for large projects
 
-### 技術スタック
+### Technology stack
 
 - SwiftSyntax 602.0.0
 - MCP Swift SDK 0.10.2
@@ -508,89 +510,89 @@ Swift-Selenaのリリース履歴
 
 ## v0.4.2 - 2025/10/06
 
-### 機能
+### Features
 
-- **17個のツール提供**
-  - プロジェクト管理: 1個
-  - ファイル検索: 2個
-  - SwiftSyntax解析: 9個
-  - 効率的な読み取り: 2個
-  - プロジェクトメモ: 3個
+- **17 tools**
+  - Project management: 1
+  - File search: 2
+  - SwiftSyntax analysis: 9
+  - Efficient reading: 2
+  - Project notes: 3
 
-- **SwiftUI特化機能**
-  - Property Wrapper解析（@State, @Binding等）
-  - Protocol準拠と継承関係の解析
-  - Extension解析
+- **SwiftUI-specific features**
+  - Property wrapper analysis (@State, @Binding, and others)
+  - Protocol conformance and inheritance analysis
+  - Extension analysis
 
-- **キャッシュシステム（v0.4.0）**
-  - ファイル単位キャッシュ
-  - 自動ガベージコレクション
-  - ファイル変更検知による自動無効化
+- **Cache system (0.4.0)**
+  - Per-file cache
+  - Automatic garbage collection
+  - Automatic invalidation on file changes
 
-- **複数クライアント対応**
-  - MCP_CLIENT_IDによるデータ分離
-  - Claude CodeとClaude Desktopの同時使用
+- **Multiple clients**
+  - Data separated by MCP_CLIENT_ID
+  - Claude Code and Claude Desktop at the same time
 
-### 技術スタック
+### Technology stack
 
 - SwiftSyntax 602.0.0
 - MCP Swift SDK 0.10.2
-- CryptoKit（プロジェクトパスハッシュ）
+- CryptoKit (project path hash)
 - swift-log
 
-### アーキテクチャ
+### Architecture
 
-- ビルド不要で動作（SwiftSyntaxベース）
-- 完全ローカル実行
-- Stdioトランスポート
+- Works without a build (SwiftSyntax-based)
+- Runs entirely locally
+- Stdio transport
 
 ---
 
 ## v0.4.0 - 2025/10/04
 
-### 主な変更
+### Main changes
 
-- ✅ ファイル単位キャッシュシステム（Cache/ディレクトリ）
-- ✅ CacheManager, FileCacheEntry, CacheGarbageCollector実装
-- ✅ 自動ガベージコレクション（1時間 OR 100リクエスト）
-- ✅ ファイル変更検知による自動キャッシュ無効化
+- Per-file cache system (`Cache/` directory)
+- CacheManager, FileCacheEntry, and CacheGarbageCollector implemented
+- Automatic garbage collection (every hour OR every 100 requests)
+- Automatic cache invalidation on file changes
 
-### 破壊的変更
+### Breaking changes
 
-- キャッシュ形式の変更（memory.json → cache.json）
-- 既存キャッシュの再構築が必要
+- Cache format changed (memory.json → cache.json)
+- Existing caches must be rebuilt
 
 ---
 
 ## v0.3.0 - 2025/10/03
 
-### 主な変更
+### Main changes
 
-- ✅ 基本的なSwiftSyntax解析
-- ✅ SwiftUI特化機能
-  - Property Wrapper解析
-  - Protocol準拠解析
-  - Extension解析
-- ✅ ファイル/コード検索（除外ディレクトリ対応）
-- ✅ Import依存関係解析
-- ✅ 型の継承階層解析
-- ✅ XCTestケース検出
-- ✅ 型使用箇所の追跡（find_type_usages）
-- ✅ コードベースリファクタリング（ファイル分割）
-- ✅ 複数クライアント対応（プロジェクトパスハッシュ方式）
+- Basic SwiftSyntax analysis
+- SwiftUI-specific features
+  - Property wrapper analysis
+  - Protocol conformance analysis
+  - Extension analysis
+- File and code search (with excluded directories)
+- Import dependency analysis
+- Type inheritance hierarchy analysis
+- XCTest case detection
+- Tracking of type usages (find_type_usages)
+- Codebase refactoring (file splitting)
+- Multiple clients (project path hash)
 
-**提供ツール数**: 17個
-
----
-
-## 今後の開発計画
-
-詳細な開発計画については、以下のドキュメントを参照してください：
-
-**[Hybrid Architecture Plan](docs/Hybrid-Architecture-Plan.md)**
-- v0.5.0-0.5.4: LSP統合ロードマップ
-- ハイブリッドアーキテクチャの詳細設計
+**Tools**: 17
 
 ---
 
-**Last Updated**: 2026-03-11
+## Future plans
+
+For the detailed development plan, see:
+
+**Hybrid Architecture Plan** (the document is no longer in the repository)
+- 0.5.0 to 0.5.4: LSP integration roadmap
+- Detailed design of the hybrid architecture
+
+---
+
+**Last Updated**: 2026-10-30

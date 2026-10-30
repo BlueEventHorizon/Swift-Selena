@@ -1,10 +1,12 @@
+<!-- bilingual-docs: source=DEVELOPMENT.md sha256=88d2a12db55d -->
+
 # 開発ガイド
 
 Swift-Selena の開発者・メンテナ向けガイドです。**ビルド・テスト・デバッグ・ツールの追加・CI・リリース**を扱います。
 
-使い方と Homebrew でのインストールは [README.md](README.md) を参照してください。Issue・Pull Request を歓迎します。
+使い方と Homebrew でのインストールは [README.md](README.ja.md) を参照してください。Issue・Pull Request を歓迎します。
 
-English version: [DEVELOPMENT.md](DEVELOPMENT.md)
+[English](../DEVELOPMENT.md) | 日本語
 
 ## 目次
 
@@ -131,7 +133,7 @@ claude mcp add -s user swift-selena -- /path/to/Swift-Selena/.build/release/Swif
 }
 ```
 
-**Cursor** — `~/.cursor/mcp.json`、**Codex** — `~/.codex/config.toml` も、`command` を上のパスにすれば同じ要領で登録できます。書式は [README.md](README.md#mcp-クライアントへの登録) を参照してください。
+**Cursor** — `~/.cursor/mcp.json`、**Codex** — `~/.codex/config.toml` も、`command` を上のパスにすれば同じ要領で登録できます。書式は [README.md](README.ja.md#mcp-クライアントへの登録) を参照してください。
 
 ## プロジェクト構成
 
@@ -178,7 +180,7 @@ ProjectMemory（解析結果のキャッシュ）
 
 - **メタツールモード（既定）**: クライアントに公開するのは `initialize_project`・`list_available_tools`・`get_tool_schema`・`execute_tool` の 4 つです。解析ツールは `execute_tool` が名前で振り分けます
 - **レガシーモード**（`SWIFT_SELENA_LEGACY=1`）: 12 個のツールを直接公開します。`SwiftMCPServer.swift` の `ListTools` / `CallTool` が直接振り分けます
-- **静的解析が基本**: SwiftSyntax による解析を基本とし、LSP は補助的に使います（ビルド可能で、`.xcodeproj` を含まないプロジェクトのみ）
+- **静的解析が基本**: SwiftSyntax による解析を基本とし、LSP は補助的に使います（プロジェクトルート直下に `.xcodeproj` がある場合は無効。ビルド可否は判定しません）
 - **キャッシュ**: 解析結果は `ProjectMemory` が `~/.swift-selena/` に永続化します
 
 ## 新しいツールを追加する
@@ -191,7 +193,7 @@ ProjectMemory（解析結果のキャッシュ）
 4. **メタツールモードの振り分け**: `Sources/Tools/Meta/ExecuteToolTool.swift` の `switch` に追加します
 5. **レガシーモードの振り分け**: `Sources/SwiftMCPServer.swift` の `ListTools` と `CallTool` に追加します
 6. **テスト**: `Tests/` にテストを追加し、必要なら `Package.swift` にターゲットを登録します
-7. **ドキュメント**: [README.md](README.md) と [README_en.md](README_en.md) の「提供ツール」を更新します
+7. **ドキュメント**: [README.md](../README.md) と [ja/README.ja.md](README.ja.md) の「提供ツール」を更新します
 
 カテゴリは、既存の `Analysis` / `FileSystem` / `Symbols` / `SwiftUI` から選びます。
 
@@ -278,7 +280,7 @@ version の更新は、スキル `/forge:update-version` で行います。
 
 ## リリース手順（メンテナ向け）
 
-バージョン更新と Homebrew Formula の更新手順です。**正規かつ実行可能な手順は [CLAUDE.md](CLAUDE.md)**（release 運用順序のセクション）を出典とし、以下の図は理解補助です。
+バージョン更新と Homebrew Formula の更新手順です。**正規かつ実行可能な手順は [CLAUDE.md](CLAUDE.ja.md)**（release 運用順序のセクション）を出典とし、以下の図は理解補助です。
 
 > **3 つの肝**
 > 1. release tag は **`main` の第1親ライン**（main へマージした直後の merge commit / 先頭）に打つ。tag が main の本流に並ぶ
