@@ -969,7 +969,7 @@ sequenceDiagram
     Claude-->>Dev: Swift-Selena tools available
 ```
 
-**ソースビルド代替（開発者向け）**: `git clone` 後に `make build-release` でローカルビルドし、`make register-release` / `make register-debug` / `make register-desktop` でクライアントに登録する経路も維持される（リポジトリ `scripts/register-release.sh` 等を参照）。Homebrew 導線で十分なエンドユーザーは利用しなくてよい。
+**ソースビルド代替（開発者向け）**: `git clone` 後に `make build-release` でローカルビルドし、`make register-claude` / `make register-claude-app` / `make register-cursor` / `make register-codex` / `make register-claude-debug` でクライアントに登録する経路も維持される（リポジトリ `scripts/register-*.sh` を参照）。Homebrew 導線で十分なエンドユーザーは利用しなくてよい。
 
 ---
 

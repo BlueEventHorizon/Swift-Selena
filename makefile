@@ -1,4 +1,4 @@
-.PHONY: help build build-release connect_gemini disconnect_gemini register-release unregister-release register-debug unregister-debug register-desktop unregister-desktop register-cursor unregister-cursor register-codex unregister-codex clean
+.PHONY: help build build-release connect_gemini disconnect_gemini register-claude unregister-claude register-claude-app unregister-claude-app register-cursor unregister-cursor register-codex unregister-codex register-claude-debug unregister-claude-debug clean
 
 default: help
 
@@ -14,18 +14,18 @@ help:
 	@echo "  make disconnect_gemini       - Disconnect gemini-cli MCP server from Claude Code"
 	@echo ""
 	@echo "Register commands:"
-	@echo "  make register-release   - Register RELEASE version to Claude Code (prompts for path)"
-	@echo "  make register-debug     - Build & register DEBUG version to this project's Claude Code"
-	@echo "  make register-desktop   - Register to Claude Desktop"
-	@echo "  make register-cursor    - Register RELEASE version to Cursor (prompts for path; empty = all projects)"
-	@echo "  make register-codex     - Register RELEASE version to Codex"
+	@echo "  make register-claude        - Register RELEASE version to Claude Code (prompts for path)"
+	@echo "  make register-claude-app    - Register RELEASE version to Claude Desktop app"
+	@echo "  make register-cursor        - Register RELEASE version to Cursor (prompts for path; empty = all projects)"
+	@echo "  make register-codex         - Register RELEASE version to Codex"
+	@echo "  make register-claude-debug  - Build & register DEBUG version to this project's Claude Code"
 	@echo ""
 	@echo "Unregister commands:"
-	@echo "  make unregister-release - Unregister RELEASE version from Claude Code (prompts for path)"
-	@echo "  make unregister-debug   - Unregister DEBUG version from this project"
-	@echo "  make unregister-desktop - Unregister from Claude Desktop"
-	@echo "  make unregister-cursor  - Unregister from Cursor (prompts for path; empty = all projects)"
-	@echo "  make unregister-codex   - Unregister from Codex"
+	@echo "  make unregister-claude        - Unregister RELEASE version from Claude Code (prompts for path)"
+	@echo "  make unregister-claude-app    - Unregister from Claude Desktop app"
+	@echo "  make unregister-cursor        - Unregister from Cursor (prompts for path; empty = all projects)"
+	@echo "  make unregister-codex         - Unregister from Codex"
+	@echo "  make unregister-claude-debug  - Unregister DEBUG version from this project"
 	@echo ""
 
 # ビルド
@@ -42,7 +42,7 @@ build-release:
 
 clean:
 	swift package clean
-	
+
 connect_gemini:
 	@echo "Connecting gemini-cli MCP server to Claude Code..."
 	claude mcp add gemini-cli -s user -- npx -y gemini-mcp-tool
@@ -52,18 +52,11 @@ disconnect_gemini:
 	claude mcp remove gemini-cli
 
 # 登録コマンド
-register-release:
+register-claude:
 	@read -p "登録先プロジェクトのパスを入力してください: " target_path; \
 	./scripts/register-release.sh "$$target_path"
 
-unregister-release:
-	@read -p "登録解除するプロジェクトのパスを入力してください（空白でカレントディレクトリ）: " target_path; \
-	./scripts/unregister-release.sh "$$target_path"
-
-register-debug:
-	@./scripts/register-debug.sh
-
-register-desktop:
+register-claude-app:
 	@./scripts/register-desktop.sh
 
 register-cursor:
@@ -73,13 +66,15 @@ register-cursor:
 register-codex:
 	@./scripts/register-codex.sh
 
-# 登録解除コマンド
-unregister-debug:
-	@echo "Unregistering swift-selena-debug from Claude Code..."
-	@claude mcp remove swift-selena-debug 2>/dev/null || echo "swift-selena-debug was not registered"
-	@echo "Done. Restart Claude Code to apply changes."
+register-claude-debug:
+	@./scripts/register-debug.sh
 
-unregister-desktop:
+# 登録解除コマンド
+unregister-claude:
+	@read -p "登録解除するプロジェクトのパスを入力してください（空白でカレントディレクトリ）: " target_path; \
+	./scripts/unregister-release.sh "$$target_path"
+
+unregister-claude-app:
 	@./scripts/unregister-desktop.sh
 
 unregister-cursor:
@@ -88,3 +83,8 @@ unregister-cursor:
 
 unregister-codex:
 	@./scripts/unregister-codex.sh
+
+unregister-claude-debug:
+	@echo "Unregistering swift-selena-debug from Claude Code..."
+	@claude mcp remove swift-selena-debug 2>/dev/null || echo "swift-selena-debug was not registered"
+	@echo "Done. Restart Claude Code to apply changes."
