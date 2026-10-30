@@ -30,11 +30,13 @@
 ### Swift-Selena未接続時の代替手段
 
 **直接検索**:
+
 - **Grep**: `Grep("キーワード", path="Tools")` - Tools/Library内容検索
 - **Glob**: `Glob("Tools/**/*.swift")` - ファイル検索
 - **Read**: ファイル内容確認
 
 **検索例**:
+
 ```
 # 電話番号処理を探す
 Grep("PhoneNumber", path="Tools")
@@ -44,6 +46,7 @@ Grep("phone.*format", path="Library")
 ## Swift-Selena MCP活用パターン [MANDATORY]
 
 ### 実装前の確認（必須）
+
 - **類似実装検索**: `search_code` - 既存パターン確認
 - **型の影響範囲**: `search_code` + `find_symbol_definition` - テキスト参照検索と定義確認を組み合わせて影響範囲を把握
 - **シンボル一覧**: `list_symbols` - メソッド・プロパティ一覧
@@ -53,16 +56,19 @@ Grep("phone.*format", path="Library")
 ### 主要ユースケース
 
 #### 新規実装時
+
 - **Service**: `search_code`で既存Service → `list_symbols`でメソッド確認 → `search_code`でFactory登録・呼び出しパターン確認
 - **Entity**: `list_protocol_conformances`で必須プロトコル確認（Sendable等5つ） → `search_code`で使用箇所確認
 - **ViewModel**: `search_code`で@MainActor @Observable → `list_property_wrappers`で誤用チェック（0件が正常） → `search_code`でSharedData連携パターン確認
 
 #### リファクタリング時
+
 - **型変更**: `find_symbol_definition`で定義特定 → `search_code`で参照候補を全箇所確認 → `get_type_hierarchy`で継承確認 → 変更 → `search_code`で旧名0件確認
 - **関数変更**: `find_symbol_definition`で定義特定 → `search_code`で全呼び出し → 変更 → 0件確認
 - **削除**: `search_code`で参照候補0件を確認後に削除実行
 
 #### 検証時
+
 - **依存関係**: `analyze_imports` - Domain→Infrastructure、Tools→他層等の違反検出
 - **Mock**: `search_code("MockAssertion")`で全Mock確認
 - **テスト**: `find_test_cases`で既存パターン確認

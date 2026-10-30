@@ -11,6 +11,7 @@ flowchart DIRECTION
 ```
 
 **Direction options:**
+
 - `TD` / `TB` - Top to bottom
 - `BT` - Bottom to top
 - `LR` - Left to right
@@ -23,60 +24,70 @@ flowchart DIRECTION
 ## Node Shapes
 
 ### Rectangle
+
 ```mermaid
 flowchart LR
     A[Rectangle]
 ```
 
 ### Rounded Rectangle
+
 ```mermaid
 flowchart LR
     B(Rounded)
 ```
 
 ### Stadium
+
 ```mermaid
 flowchart LR
     C([Stadium])
 ```
 
 ### Subroutine
+
 ```mermaid
 flowchart LR
     D[[Subroutine]]
 ```
 
 ### Cylindrical
+
 ```mermaid
 flowchart LR
     E[(Database)]
 ```
 
 ### Circle
+
 ```mermaid
 flowchart LR
     F((Circle))
 ```
 
 ### Asymmetric
+
 ```mermaid
 flowchart LR
     G>Flag]
 ```
 
 ### Rhombus (Decision)
+
 ```mermaid
 flowchart LR
     H{Decision}
 ```
 
 ### Hexagon
+
 ```mermaid
 flowchart LR
     I{{Hexagon}}
 ```
 
 ### Parallelogram
+
 ```mermaid
 flowchart LR
     J[/Input/]
@@ -84,6 +95,7 @@ flowchart LR
 ```
 
 ### Trapezoid
+
 ```mermaid
 flowchart LR
     L[/Trapezoid\]
@@ -236,6 +248,7 @@ flowchart LR
 ```
 
 **Common entities:**
+
 - `:` → `&#58;`
 - `(` → `&#40;`
 - `)` → `&#41;`
@@ -274,10 +287,12 @@ flowchart TD
 ## Reserved Words to Avoid
 
 **Avoid as node IDs (or capitalize):**
+
 - `end` → `End` or `END`
 - `class` (in some contexts)
 
 **Safe alternatives:**
+
 - Use descriptive names: `EndProcess`, `FinalState`
 - Add prefix/suffix: `end_node`, `node_end`
 
@@ -288,6 +303,7 @@ flowchart TD
 ### Pitfall 1: Missing semicolons when needed
 
 If using semicolons as line separators:
+
 ```mermaid
 flowchart LR
     A-->B; B-->C; C-->D
@@ -296,12 +312,14 @@ flowchart LR
 ### Pitfall 2: Quotes inside quotes
 
 **Broken:**
+
 ```mermaid
 flowchart LR
     A["Say "Hello""]
 ```
 
 **Fixed:**
+
 ```mermaid
 flowchart LR
     A["Say Hello"]
@@ -311,6 +329,7 @@ flowchart LR
 ### Pitfall 3: Too many special chars
 
 **Best practice:** Keep labels simple
+
 - Good: `Process Data`
 - OK: `Process: Data`
 - Bad: `Process: [Data] (type: @string)`
@@ -352,11 +371,13 @@ Once basic version works, add complexity one element at a time.
 ### Fix 1: DES-101 System Architecture
 
 **Before (broken):**
+
 ```
 SwiftMCPServer: ListTools/CallTool
 ```
 
 **After (fixed):**
+
 ```
 SwiftMCPServer<br/>- ListTools<br/>- CallTool
 ```
@@ -366,11 +387,13 @@ SwiftMCPServer<br/>- ListTools<br/>- CallTool
 ### Fix 2: DES-102 LSP Protocol
 
 **Before (broken):**
+
 ```
 textDocument/references
 ```
 
 **After (fixed):**
+
 ```
 textDocument references
 ```
@@ -380,11 +403,13 @@ textDocument references
 ### Fix 3: DES-103 Class Structure
 
 **Before (broken):**
+
 ```
 requireProjectMemory(ProjectMemory?) ProjectMemory$
 ```
 
 **After (fixed):**
+
 ```
 requireProjectMemory(args) ProjectMemory$
 ```
@@ -393,13 +418,13 @@ requireProjectMemory(args) ProjectMemory$
 
 ## Quick Fix Reference
 
-| Error Message | Likely Cause | Quick Fix |
-|--------------|--------------|-----------|
-| Parse error on line X | Special char in label | Add double quotes |
-| Subgraph X not found | Missing ID | Add `subgraph ID["Title"]` |
-| Syntax error in graph | Reserved word "end" | Capitalize to `End` |
-| Unexpected token | Bracket/colon/parens | Remove or use `&#XX;` |
-| Note is not defined | Note in flowchart | Use sequenceDiagram or regular node |
+| Error Message         | Likely Cause          | Quick Fix                           |
+| --------------------- | --------------------- | ----------------------------------- |
+| Parse error on line X | Special char in label | Add double quotes                   |
+| Subgraph X not found  | Missing ID            | Add `subgraph ID["Title"]`          |
+| Syntax error in graph | Reserved word "end"   | Capitalize to `End`                 |
+| Unexpected token      | Bracket/colon/parens  | Remove or use `&#XX;`               |
+| Note is not defined   | Note in flowchart     | Use sequenceDiagram or regular node |
 
 ---
 

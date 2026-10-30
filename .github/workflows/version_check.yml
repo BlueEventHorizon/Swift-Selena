@@ -6,11 +6,11 @@ name: Version Consistency Check
 on:
   pull_request:
     paths:
-      - 'Sources/Constants.swift'
-      - '.version-config.yaml'
-      - 'CHANGELOG.md'
-      - 'scripts/verify_version_consistency.sh'
-      - '.github/workflows/version_check.yml'
+      - "Sources/Constants.swift"
+      - ".version-config.yaml"
+      - "CHANGELOG.md"
+      - "scripts/verify_version_consistency.sh"
+      - ".github/workflows/version_check.yml"
   push:
     branches:
       - main

@@ -57,25 +57,25 @@ The canonical version is `AppConstants.version`. Git tags have no `v` prefix. Re
 
 ## 3. Structure
 
-| Path | Role |
-| --- | --- |
-| `README.md` | Introduction for first-time users (English). The Japanese version is `ja/README.ja.md` |
-| `DEVELOPMENT.md` | Development guide: build, test, add a tool, CI, release procedure. Japanese version in `ja/DEVELOPMENT.ja.md` |
-| `CLAUDE.md` | Mandatory rules for the development AI. `AGENTS.md` is a symbolic link to it, and `GEMINI.md` only imports it |
-| `CHANGELOG.md` | Release history (English; Japanese version in `ja/CHANGELOG.ja.md`) |
-| `Sources/` | The server. `SwiftMCPServer.swift` (entry point), `Constants.swift`, `Logging/`, `Selena/` (analysis engine: `Core/`, `LSP/`, `Visitors/` with 8 visitors, `DebugRunner.swift`), `Tools/` (`Project/`, `FileSystem/`, `Symbols/`, `SwiftUI/`, `Analysis/`, `Meta/`, `ToolProtocol.swift`, `ResultEncoder.swift`) |
-| `Tests/` | Test targets and `Tests/Fixtures/` (sample code to analyze). Five targets are registered in `Package.swift` |
-| `scripts/`, `makefile`, `Formula/`, `.github/workflows/` | Client registration, version and tag verification, bottle merging, the Homebrew Formula, and CI |
-| `project/main/spec/` | Requirements `REQ-001` to `REQ-004`, and an index (`README.md`) |
-| `project/main/design/` | Designs `DES-004`, `DES-005`, `DES-006`, `DES-101` to `DES-104` |
-| `project/main/plan/` | Development plan (`main_plan.md`) |
-| `project/main/mcp-guide/` | General notes on MCP server development and the MCP Swift SDK (not specific to this project) |
-| `docs/rules/base/` | Development rules: project rule, coding rule, review criteria, principles of software development, rule for using agents and MCP |
-| `docs/format/` | Formats of spec, design, plan, and Code Header |
-| `docs/workflow/plan/` | Workflows for creating designs and plans |
-| `.claude/` | AI tooling of this repository: `agents/code-header-generator.md`, `commands/`, `skills/` (`mcp-test`, `merge-specs`, `mermaid-diagram`, `xcode-build`, `xcode-test`) |
-| `.doc_structure.yaml` | Declares `docs/` as rules and `project/*/{spec,design,plan,mcp-guide}/` as specifications |
-| `.claude/.doc-advisor/toc/` | Generated search index over those documents, used by `/forge:query-db-rules` and `/forge:query-db-specs`. Committed; regenerate with `/forge:update-db-rules` / `/forge:update-db-specs`, never edit by hand |
+| Path                                                     | Role                                                                                                                                                                                                                                                                                                             |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `README.md`                                              | Introduction for first-time users (English). The Japanese version is `ja/README.ja.md`                                                                                                                                                                                                                           |
+| `DEVELOPMENT.md`                                         | Development guide: build, test, add a tool, CI, release procedure. Japanese version in `ja/DEVELOPMENT.ja.md`                                                                                                                                                                                                    |
+| `CLAUDE.md`                                              | Mandatory rules for the development AI. `AGENTS.md` is a symbolic link to it, and `GEMINI.md` only imports it                                                                                                                                                                                                    |
+| `CHANGELOG.md`                                           | Release history (English; Japanese version in `ja/CHANGELOG.ja.md`)                                                                                                                                                                                                                                              |
+| `Sources/`                                               | The server. `SwiftMCPServer.swift` (entry point), `Constants.swift`, `Logging/`, `Selena/` (analysis engine: `Core/`, `LSP/`, `Visitors/` with 8 visitors, `DebugRunner.swift`), `Tools/` (`Project/`, `FileSystem/`, `Symbols/`, `SwiftUI/`, `Analysis/`, `Meta/`, `ToolProtocol.swift`, `ResultEncoder.swift`) |
+| `Tests/`                                                 | Test targets and `Tests/Fixtures/` (sample code to analyze). Five targets are registered in `Package.swift`                                                                                                                                                                                                      |
+| `scripts/`, `makefile`, `Formula/`, `.github/workflows/` | Client registration, version and tag verification, bottle merging, the Homebrew Formula, and CI                                                                                                                                                                                                                  |
+| `project/main/spec/`                                     | Requirements `REQ-001` to `REQ-004`, and an index (`README.md`)                                                                                                                                                                                                                                                  |
+| `project/main/design/`                                   | Designs `DES-004`, `DES-005`, `DES-006`, `DES-101` to `DES-104`                                                                                                                                                                                                                                                  |
+| `project/main/plan/`                                     | Development plan (`main_plan.md`)                                                                                                                                                                                                                                                                                |
+| `project/main/mcp-guide/`                                | General notes on MCP server development and the MCP Swift SDK (not specific to this project)                                                                                                                                                                                                                     |
+| `docs/rules/base/`                                       | Development rules: project rule, coding rule, review criteria, principles of software development, rule for using agents and MCP                                                                                                                                                                                 |
+| `docs/format/`                                           | Formats of spec, design, plan, and Code Header                                                                                                                                                                                                                                                                   |
+| `docs/workflow/plan/`                                    | Workflows for creating designs and plans                                                                                                                                                                                                                                                                         |
+| `.claude/`                                               | AI tooling of this repository: `agents/code-header-generator.md`, `commands/`, `skills/` (`mcp-test`, `merge-specs`, `mermaid-diagram`, `xcode-build`, `xcode-test`)                                                                                                                                             |
+| `.doc_structure.yaml`                                    | Declares `docs/` as rules and `project/*/{spec,design,plan,mcp-guide}/` as specifications                                                                                                                                                                                                                        |
+| `.claude/.doc-advisor/toc/`                              | Generated search index over those documents, used by `/forge:query-db-rules` and `/forge:query-db-specs`. Committed; regenerate with `/forge:update-db-rules` / `/forge:update-db-specs`, never edit by hand                                                                                                     |
 
 The project does not ship a plugin (no `.claude-plugin/plugin.json`). The `.claude/` directory holds the repository's own AI tooling.
 
@@ -83,33 +83,33 @@ The project does not ship a plugin (no `.claude-plugin/plugin.json`). The `.clau
 
 <!-- bilingual-docs: allow-ja:start -->
 
-| Japanese term | English rendering | Meaning and how it is used |
-| --- | --- | --- |
-| ビルド不要 | build-free | The analysis works without a successful build, because it uses SwiftSyntax. The first design principle |
-| 静的解析 | static analysis | Analysis of the syntax tree with SwiftSyntax, without compiling. The baseline of the tools |
-| メタツールモード | meta tool mode | Default mode (since v0.6.3). Only `initialize_project`, `list_available_tools`, `get_tool_schema`, and `execute_tool` are exposed; the others are called through `execute_tool` |
-| メタツール | meta tool | One of `list_available_tools`, `get_tool_schema`, `execute_tool`; they live in `Sources/Tools/Meta/` |
-| レガシーモード | legacy mode | Mode selected by `SWIFT_SELENA_LEGACY=1`; the twelve tools are exposed directly |
-| MCPツール | MCP tool | A tool implementation that conforms to the `MCPTool` protocol (13 of the 15 tool definitions; `InitializeProjectTool` and `ExecuteToolTool` do not) |
-| 解析ツール | analysis tool | One of the 11 tools called through `execute_tool`. `initialize_project` and the meta tools are not analysis tools |
-| ハイブリッドアーキテクチャ | hybrid architecture | SwiftSyntax as the baseline plus SourceKit-LSP as an optional enhancement |
-| グレースフルデグレード | graceful degradation | When LSP is unavailable or fails, the tool falls back to SwiftSyntax |
-| LSP統合 | LSP integration | Use of SourceKit-LSP for supported tools when `LSPState` enables it (no `.xcodeproj` at the project root); it does not check whether the project builds |
-| ProjectMemory | ProjectMemory | The persistent cache of analysis results (`memory.json`). Kept as the identifier |
-| クライアントID | client ID | The value of `MCP_CLIENT_ID`; it separates cached data per client (`default` when unset) |
-| Visitor（訪問者） | visitor | A `SyntaxVisitor` subclass in `Sources/Selena/Visitors/` that extracts one kind of information |
-| コードヘッダー | Code Header | The structured header comment of a Swift file, starting with `[Code Header Format]`. Format in `docs/format/code_header_format.md` |
-| Code Header DB | Code Header DB | Planned database and semantic search over Code Headers (REQ-004, DES-006). Kept as the name in the documents |
-| 要件定義書 | requirements document | A file in `project/{feature}/spec/`, ID prefix `REQ-`. It has the highest priority of all documents |
-| 設計書 | design document | A file in `project/{feature}/design/`, ID `DES-XXX`. It describes how a feature is implemented, not what it must do |
-| 計画書 | plan document | A file in `project/{feature}/plan/`, named `{feature}_plan.md` |
-| Feature | feature | A unit directory under `project/` (for example `main`) |
-| 仕様書 | specification (spec) | General word for requirements and design documents together. Indexed by `.doc_structure.yaml` |
-| ルール文書 | rule document | A file under `docs/` (rules, formats, workflows) |
-| リリースタグ | release tag | Git tag `MAJOR.MINOR.PATCH` without a `v` prefix, placed on the first-parent line of `main` |
-| 機能登場版マーカー | feature-introduction marker | A phrase such as "available since v0.6.3" in a README; it may keep the `v` |
-| Formula | Formula | The Homebrew recipe `Formula/swift-selena.rb`; it uses `tag:` and no `revision:` |
-| bottle | bottle | A prebuilt Homebrew binary built by CI when a tag is pushed |
+| Japanese term              | English rendering           | Meaning and how it is used                                                                                                                                                      |
+| -------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ビルド不要                 | build-free                  | The analysis works without a successful build, because it uses SwiftSyntax. The first design principle                                                                          |
+| 静的解析                   | static analysis             | Analysis of the syntax tree with SwiftSyntax, without compiling. The baseline of the tools                                                                                      |
+| メタツールモード           | meta tool mode              | Default mode (since v0.6.3). Only `initialize_project`, `list_available_tools`, `get_tool_schema`, and `execute_tool` are exposed; the others are called through `execute_tool` |
+| メタツール                 | meta tool                   | One of `list_available_tools`, `get_tool_schema`, `execute_tool`; they live in `Sources/Tools/Meta/`                                                                            |
+| レガシーモード             | legacy mode                 | Mode selected by `SWIFT_SELENA_LEGACY=1`; the twelve tools are exposed directly                                                                                                 |
+| MCPツール                  | MCP tool                    | A tool implementation that conforms to the `MCPTool` protocol (13 of the 15 tool definitions; `InitializeProjectTool` and `ExecuteToolTool` do not)                             |
+| 解析ツール                 | analysis tool               | One of the 11 tools called through `execute_tool`. `initialize_project` and the meta tools are not analysis tools                                                               |
+| ハイブリッドアーキテクチャ | hybrid architecture         | SwiftSyntax as the baseline plus SourceKit-LSP as an optional enhancement                                                                                                       |
+| グレースフルデグレード     | graceful degradation        | When LSP is unavailable or fails, the tool falls back to SwiftSyntax                                                                                                            |
+| LSP統合                    | LSP integration             | Use of SourceKit-LSP for supported tools when `LSPState` enables it (no `.xcodeproj` at the project root); it does not check whether the project builds                         |
+| ProjectMemory              | ProjectMemory               | The persistent cache of analysis results (`memory.json`). Kept as the identifier                                                                                                |
+| クライアントID             | client ID                   | The value of `MCP_CLIENT_ID`; it separates cached data per client (`default` when unset)                                                                                        |
+| Visitor（訪問者）          | visitor                     | A `SyntaxVisitor` subclass in `Sources/Selena/Visitors/` that extracts one kind of information                                                                                  |
+| コードヘッダー             | Code Header                 | The structured header comment of a Swift file, starting with `[Code Header Format]`. Format in `docs/format/code_header_format.md`                                              |
+| Code Header DB             | Code Header DB              | Planned database and semantic search over Code Headers (REQ-004, DES-006). Kept as the name in the documents                                                                    |
+| 要件定義書                 | requirements document       | A file in `project/{feature}/spec/`, ID prefix `REQ-`. It has the highest priority of all documents                                                                             |
+| 設計書                     | design document             | A file in `project/{feature}/design/`, ID `DES-XXX`. It describes how a feature is implemented, not what it must do                                                             |
+| 計画書                     | plan document               | A file in `project/{feature}/plan/`, named `{feature}_plan.md`                                                                                                                  |
+| Feature                    | feature                     | A unit directory under `project/` (for example `main`)                                                                                                                          |
+| 仕様書                     | specification (spec)        | General word for requirements and design documents together. Indexed by `.doc_structure.yaml`                                                                                   |
+| ルール文書                 | rule document               | A file under `docs/` (rules, formats, workflows)                                                                                                                                |
+| リリースタグ               | release tag                 | Git tag `MAJOR.MINOR.PATCH` without a `v` prefix, placed on the first-parent line of `main`                                                                                     |
+| 機能登場版マーカー         | feature-introduction marker | A phrase such as "available since v0.6.3" in a README; it may keep the `v`                                                                                                      |
+| Formula                    | Formula                     | The Homebrew recipe `Formula/swift-selena.rb`; it uses `tag:` and no `revision:`                                                                                                |
+| bottle                     | bottle                      | A prebuilt Homebrew binary built by CI when a tag is pushed                                                                                                                     |
 
 <!-- bilingual-docs: allow-ja:end -->
 

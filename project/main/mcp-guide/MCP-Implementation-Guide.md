@@ -23,6 +23,7 @@
 **Model Context Protocol (MCP)** は、AIアシスタント（Claude等）がローカルツールやサービスと通信するための標準プロトコルです。
 
 **公式ドキュメント**:
+
 - 📖 [MCP公式サイト](https://modelcontextprotocol.io/)
 - 📘 [Anthropic MCP ドキュメント](https://docs.anthropic.com/en/docs/build-with-claude/model-context-protocol)
 - 💻 [Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)
@@ -156,11 +157,11 @@ struct SwiftMCPServer {
 
 ### Server初期化パラメータ
 
-| パラメータ | 型 | 説明 |
-|-----------|---|------|
-| `name` | String | サーバー名（任意、識別用） |
-| `version` | String | サーバーバージョン |
-| `capabilities` | Server.Capabilities | サポートする機能 |
+| パラメータ     | 型                  | 説明                       |
+| -------------- | ------------------- | -------------------------- |
+| `name`         | String              | サーバー名（任意、識別用） |
+| `version`      | String              | サーバーバージョン         |
+| `capabilities` | Server.Capabilities | サポートする機能           |
 
 ### Capabilities設定
 
@@ -380,19 +381,20 @@ return CallTool.Result(content: [.text(result)])
 
 #### コードブロック付きレスポンス
 
-```swift
+````swift
 let result = """
 Function: \(functionName)
 Location: \(filePath)
 
 ```swift
 \(code)
-```
+````
+
 """
 
 return CallTool.Result(content: [.text(result)])
-```
 
+````
 ---
 
 ## トランスポート層
@@ -404,7 +406,7 @@ return CallTool.Result(content: [.text(result)])
 ```swift
 let transport = StdioTransport(logger: logger)
 try await server.start(transport: transport)
-```
+````
 
 **参考**: [MCP Transports](https://modelcontextprotocol.io/docs/concepts/transports)
 
@@ -788,6 +790,7 @@ npx @modelcontextprotocol/inspector swift run
 ```
 
 **参考**:
+
 - [MCP Inspector](https://github.com/modelcontextprotocol/inspector) - 公式インスペクタ
 - [Debugging Guide](https://modelcontextprotocol.io/docs/tools/debugging) - デバッグガイド
 

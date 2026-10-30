@@ -38,10 +38,10 @@ cd Swift-Selena
 
 ## ブランチ運用
 
-| ブランチ | 役割 |
-| --- | --- |
-| `main` | リリース済みの履歴。release tag は `main` の本流に打ちます |
-| `develop` | 開発の統合先。Pull Request の宛先です |
+| ブランチ     | 役割                                                               |
+| ------------ | ------------------------------------------------------------------ |
+| `main`       | リリース済みの履歴。release tag は `main` の本流に打ちます         |
+| `develop`    | 開発の統合先。Pull Request の宛先です                              |
 | 作業ブランチ | `develop` から切ります（例: `feature/xxx`、`fix/xxx`、`docs/xxx`） |
 
 1. `develop` から作業ブランチを作成して commit します
@@ -67,13 +67,13 @@ swift test            # テスト実行
 
 `Package.swift` に登録されているテストターゲット:
 
-| ターゲット | 対象 |
-| --- | --- |
-| `SymbolVisitorV2Tests` | `SymbolVisitorV2` の単体テスト |
-| `SearchCodeToolTests` | `search_code` ツール |
-| `FindSymbolDefinitionToolTests` | `find_symbol_definition` ツール |
-| `BackwardCompatibilityTests` | 後方互換（廃止パラメータの扱いなど） |
-| `TypeConformanceCacheTests` | 型準拠 / Import キャッシュの無効化（ファイルの変更・追加・削除への追従） |
+| ターゲット                      | 対象                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| `SymbolVisitorV2Tests`          | `SymbolVisitorV2` の単体テスト                                           |
+| `SearchCodeToolTests`           | `search_code` ツール                                                     |
+| `FindSymbolDefinitionToolTests` | `find_symbol_definition` ツール                                          |
+| `BackwardCompatibilityTests`    | 後方互換（廃止パラメータの扱いなど）                                     |
+| `TypeConformanceCacheTests`     | 型準拠 / Import キャッシュの無効化（ファイルの変更・追加・削除への追従） |
 
 解析対象のサンプルコードは `Tests/Fixtures/` にあります。新しいテストターゲットを追加する場合は、`Package.swift` への登録も必要です（`Package.swift` の変更は、依存の追加と同様に慎重に扱ってください）。
 
@@ -81,22 +81,22 @@ swift test            # テスト実行
 
 `make help` で全コマンドを表示できます。
 
-| コマンド | 対象 | 説明 |
-| --- | --- | --- |
-| `make build` | — | DEBUG ビルド |
-| `make build-release` | — | RELEASE ビルド |
-| `make clean` | — | ビルド成果物をクリーン |
-| `make register-claude` | Claude Code | RELEASE 版を登録（対象プロジェクトのパスを入力。空白なら全プロジェクト共通の user スコープ `-s user`） |
-| `make unregister-claude` | Claude Code | RELEASE 版の登録を解除（同じ入力。空白なら user スコープ） |
-| `make register-claude-app` | Claude Desktop | Claude Desktop アプリに登録 |
-| `make unregister-claude-app` | Claude Desktop | Claude Desktop アプリから解除 |
-| `make register-cursor` | Cursor | RELEASE 版を Cursor に登録（対象プロジェクトのパスを入力。空白なら全プロジェクト共通の `~/.cursor/mcp.json`） |
-| `make unregister-cursor` | Cursor | Cursor から解除（同じ入力） |
-| `make register-codex` | Codex | RELEASE 版を Codex に登録（`codex mcp add`、`~/.codex/config.toml`。Codex CLI にプロジェクト単位の指定は無く、常に全プロジェクト共通） |
-| `make unregister-codex` | Codex | Codex から解除（`codex mcp remove`） |
-| `make register-claude-debug` | Claude Code | DEBUG 版をビルドし、Swift-Selena プロジェクトに登録 |
-| `make unregister-claude-debug` | Claude Code | DEBUG 版を Swift-Selena プロジェクトから解除 |
-| `make connect_gemini` / `make disconnect_gemini` | Claude Code | gemini-cli MCP サーバーの接続 / 切断 |
+| コマンド                                         | 対象           | 説明                                                                                                                                   |
+| ------------------------------------------------ | -------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `make build`                                     | —              | DEBUG ビルド                                                                                                                           |
+| `make build-release`                             | —              | RELEASE ビルド                                                                                                                         |
+| `make clean`                                     | —              | ビルド成果物をクリーン                                                                                                                 |
+| `make register-claude`                           | Claude Code    | RELEASE 版を登録（対象プロジェクトのパスを入力。空白なら全プロジェクト共通の user スコープ `-s user`）                                 |
+| `make unregister-claude`                         | Claude Code    | RELEASE 版の登録を解除（同じ入力。空白なら user スコープ）                                                                             |
+| `make register-claude-app`                       | Claude Desktop | Claude Desktop アプリに登録                                                                                                            |
+| `make unregister-claude-app`                     | Claude Desktop | Claude Desktop アプリから解除                                                                                                          |
+| `make register-cursor`                           | Cursor         | RELEASE 版を Cursor に登録（対象プロジェクトのパスを入力。空白なら全プロジェクト共通の `~/.cursor/mcp.json`）                          |
+| `make unregister-cursor`                         | Cursor         | Cursor から解除（同じ入力）                                                                                                            |
+| `make register-codex`                            | Codex          | RELEASE 版を Codex に登録（`codex mcp add`、`~/.codex/config.toml`。Codex CLI にプロジェクト単位の指定は無く、常に全プロジェクト共通） |
+| `make unregister-codex`                          | Codex          | Codex から解除（`codex mcp remove`）                                                                                                   |
+| `make register-claude-debug`                     | Claude Code    | DEBUG 版をビルドし、Swift-Selena プロジェクトに登録                                                                                    |
+| `make unregister-claude-debug`                   | Claude Code    | DEBUG 版を Swift-Selena プロジェクトから解除                                                                                           |
+| `make connect_gemini` / `make disconnect_gemini` | Claude Code    | gemini-cli MCP サーバーの接続 / 切断                                                                                                   |
 
 ## ローカルビルドをクライアントに登録する
 
@@ -248,26 +248,26 @@ rm -rf ~/.swift-selena/
 
 ## ドキュメント
 
-| 場所 | 内容 |
-| --- | --- |
-| `project/main/spec/` | 要件定義書（`REQ-*`）。**すべてのドキュメントの中で最優先**です |
-| `project/main/design/` | 設計書（`DES-*`） |
-| `project/main/plan/` | 開発計画 |
-| `project/main/mcp-guide/` | MCP SDK の調査メモ |
-| `docs/` | 開発ルール・ドキュメントのフォーマット・ワークフロー |
-| `CHANGELOG.md` | リリース履歴 |
+| 場所                      | 内容                                                            |
+| ------------------------- | --------------------------------------------------------------- |
+| `project/main/spec/`      | 要件定義書（`REQ-*`）。**すべてのドキュメントの中で最優先**です |
+| `project/main/design/`    | 設計書（`DES-*`）                                               |
+| `project/main/plan/`      | 開発計画                                                        |
+| `project/main/mcp-guide/` | MCP SDK の調査メモ                                              |
+| `docs/`                   | 開発ルール・ドキュメントのフォーマット・ワークフロー            |
+| `CHANGELOG.md`            | リリース履歴                                                    |
 
 仕様を変更したときは、対応するドキュメントも更新してください。
 
 ## CI
 
-| ワークフロー | トリガー | 内容 |
-| --- | --- | --- |
-| `version_check.yml`（Version Consistency Check） | PR、`main` / `develop` への push | `Sources/Constants.swift` を正として、CHANGELOG・`.version-config.yaml` の version 表記の一致を検証します（`scripts/verify_version_consistency.sh`） |
-| `release_tag_check.yml`（Release Tag Consistency Check） | tag の push | tag が `main` の本流にあり、Constants・Formula の version と一致することを検証します（`scripts/verify_release_tag.sh`） |
-| `bottle.yml`（Build Bottles） | tag の push、手動実行 | Apple Silicon（macOS 15 / macOS 26）向けの Homebrew bottle をビルドし、GitHub Release に添付します |
-| `close-issues-on-develop.yaml` | `develop` への PR の merge | PR 本文の `Closes #N` の Issue をクローズします |
-| `claude.yml`（Claude Code） | Issue・PR のコメントなど | Claude Code による支援です |
+| ワークフロー                                             | トリガー                         | 内容                                                                                                                                                 |
+| -------------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version_check.yml`（Version Consistency Check）         | PR、`main` / `develop` への push | `Sources/Constants.swift` を正として、CHANGELOG・`.version-config.yaml` の version 表記の一致を検証します（`scripts/verify_version_consistency.sh`） |
+| `release_tag_check.yml`（Release Tag Consistency Check） | tag の push                      | tag が `main` の本流にあり、Constants・Formula の version と一致することを検証します（`scripts/verify_release_tag.sh`）                              |
+| `bottle.yml`（Build Bottles）                            | tag の push、手動実行            | Apple Silicon（macOS 15 / macOS 26）向けの Homebrew bottle をビルドし、GitHub Release に添付します                                                   |
+| `close-issues-on-develop.yaml`                           | `develop` への PR の merge       | PR 本文の `Closes #N` の Issue をクローズします                                                                                                      |
+| `claude.yml`（Claude Code）                              | Issue・PR のコメントなど         | Claude Code による支援です                                                                                                                           |
 
 ローカルでの検証:
 
@@ -291,6 +291,7 @@ version の更新は、スキル `/forge:update-version` で行います。
 バージョン更新と Homebrew Formula の更新手順です。**正規かつ実行可能な手順は [CLAUDE.md](CLAUDE.ja.md)**（release 運用順序のセクション）を出典とし、以下の図は理解補助です。
 
 > **3 つの肝**
+>
 > 1. release tag は **`main` の第1親ライン**（main へマージした直後の merge commit / 先頭）に打つ。tag が main の本流に並ぶ
 > 2. Formula には **`revision:` を書かず `tag:` のみ**にする。tag commit は Formula 自身を含むため、その SHA を Formula に書くことは原理的にできない（循環）。`revision` を持たなければ「tag と revision の不一致」（Issue #38）は起き得ない
 > 3. main へのマージ後、**速やかに tag を打つ**（それまで Formula の `tag:` は未作成の tag を指す）

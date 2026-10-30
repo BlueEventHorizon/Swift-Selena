@@ -189,6 +189,7 @@ Swift-Selenaのリリース履歴
 ### メタツールモード・Swift対応強化・スクリプト整理
 
 **新機能 - メタツールモード（2025-12-15）:**
+
 - ✅ **MetaToolRegistry** - 全解析ツールをレジストリで動的管理
 - ✅ **list_available_tools** - 利用可能なツール一覧と説明を表示
 - ✅ **get_tool_schema** - 特定ツールのJSONスキーマを取得
@@ -197,22 +198,27 @@ Swift-Selenaのリリース履歴
 - Claudeへの公開ツールを4つに削減、コンテキストウィンドウ消費を最小化
 
 **Swift Version対応（2025-12-15）:**
+
 - ✅ **SymbolVisitor 強化** - 新しい Swift バージョンの構文に対応
 
 **Swift Testing 強化（2025-12-17）:**
+
 - ✅ **SwiftTestingVisitor 新規追加** - `@Test` / `@Suite` マクロを専用 Visitor で検出
 - ✅ **FindTestCasesTool 改善** - XCTest と Swift Testing の両方を統合的に解析
 
 **バグ修正 - Protocol認識（2026-01-06）:**
+
 - ✅ **TypeConformanceVisitor 大幅改修** - Protocol vs Class の認識精度を大幅改善
   - `list_protocol_conformances` で Protocol がクラスとして誤認識される問題を修正
   - Protocol宣言の専用検出ロジックを追加
   - ProjectMemory への保存形式を整理
 
 **その他（2026-01-06）:**
+
 - ✅ **MIT LICENSE ファイル追加** - ライセンス明示
 
 **スクリプト整理・Makefile一元化（2026-03-11）:**
+
 - ✅ **scripts/ ディレクトリ新設** - 全 shell script を集約
   - `register-release.sh`, `unregister-release.sh`, `register-debug.sh`, `register-desktop.sh`
 - ✅ **ルートの .sh を削除** - `register-selena-to-claude-code.sh` 等を廃止
@@ -220,14 +226,14 @@ Swift-Selenaのリリース履歴
 
 **Makefile - 登録コマンド一覧:**
 
-| コマンド | 対象 | 説明 |
-|---------|------|------|
-| `make register-release` | Claude Code | RELEASE版を登録（パスを対話入力） |
-| `make unregister-release` | Claude Code | RELEASE版の登録を解除（パスを対話入力） |
-| `make register-debug` | Claude Code | DEBUG版をビルド＆登録 |
-| `make unregister-debug` | Claude Code | DEBUG版を登録解除 |
-| `make register-desktop` | Claude Desktop | Claude Desktopに登録 |
-| `make unregister-desktop` | Claude Desktop | Claude Desktopから解除 |
+| コマンド                  | 対象           | 説明                                    |
+| ------------------------- | -------------- | --------------------------------------- |
+| `make register-release`   | Claude Code    | RELEASE版を登録（パスを対話入力）       |
+| `make unregister-release` | Claude Code    | RELEASE版の登録を解除（パスを対話入力） |
+| `make register-debug`     | Claude Code    | DEBUG版をビルド＆登録                   |
+| `make unregister-debug`   | Claude Code    | DEBUG版を登録解除                       |
+| `make register-desktop`   | Claude Desktop | Claude Desktopに登録                    |
+| `make unregister-desktop` | Claude Desktop | Claude Desktopから解除                  |
 
 **ツール総数:** 15個（`initialize_project` 1個 + メタツール 3個 + 解析ツール 11個）
 
@@ -238,6 +244,7 @@ Swift-Selenaのリリース履歴
 ### ビルド・登録システムのリファクタリング
 
 **Makefile導入:**
+
 - ✅ **make build** - DEBUGビルド
 - ✅ **make build-release** - RELEASEビルド
 - ✅ **make register-debug** - DEBUG版をこのプロジェクトに登録
@@ -245,11 +252,13 @@ Swift-Selenaのリリース履歴
 - ✅ **make install-client-makefile TARGET=/path** - クライアント用Makefile配布
 
 **ファイル構成変更:**
+
 - `register-*.sh` → `Tools/Scripts/` に移動
 - `Makefile`（クライアント用） → `Tools/Client/` に移動
 - 新規 `Makefile` でビルド・登録を一元管理
 
 **バグ修正:**
+
 - ✅ **DebugRunner パス修正** - ハードコードされたパスを動的検出に変更
   - `detectProjectPath()` メソッド追加
 
@@ -262,12 +271,14 @@ Swift-Selenaのリリース履歴
 ### LSP安定化、MCP基盤修正、新ツール実装
 
 **新機能:**
+
 - ✅ **search_files_without_pattern** - grep -L相当、「ないものを探す」検索
   - Code Header未作成ファイルの検出
   - Import未記述ファイルの発見
   - 統計情報表示（Files checked、Files without pattern、割合）
 
 **重要なバグ修正（6件）:**
+
 1. ✅ **正規表現マルチラインモード** - `.anchorsMatchLines`追加、`^import`が各行にマッチ
 2. ✅ **ゾンビプロセス** - `server.waitUntilCompleted()`でEOF正常終了、無限ループ削除
 3. ✅ **本番環境汚染** - `swift-selena-debug`別名登録で開発版と本番版を完全分離
@@ -276,18 +287,21 @@ Swift-Selenaのリリース履歴
 6. ✅ **initialize_projectバックグラウンド** - 同期待機、LSP接続完了後にreturn
 
 **find_symbol_references削除:**
+
 - 調査結果: Swift Package（✅動作）、Xcodeプロジェクト（❌常に0件）
 - 原因: SourceKit-LSP Issue #730（Xcodeプロジェクト未サポート）
 - 決断: 削除（約270行）、代替手段（find_type_usages）を推奨
 - 理由: 全プロジェクトタイプで動作する構成を優先
 
 **ドキュメント整備:**
+
 - CLAUDE.md: 言語設定、失敗パターンと対策、チェックリスト、ドキュメント更新ルール追加
 - PLAN.md: v0.5.5の実装内容を反映
 - LATEST_CONVERSATION_HISTORY.md: v0.5.5サマリー作成
 - MCP_LSP_LEARNINGS.md: 重要な知見を追加
 
 **重要な知見:**
+
 - MCP仕様: `server.waitUntilCompleted()`必須、無限ループは不要
 - LSP制限: Xcodeプロジェクトでは参照検索不可、documentSymbol/typeHierarchyは動作
 - 開発版と本番版の完全分離: 別名登録で本番環境汚染を防止
@@ -303,23 +317,27 @@ Swift-Selenaのリリース履歴
 ### list_symbols、get_type_hierarchyにLSP型情報を統合
 
 **LSPClient拡張:**
+
 - ✅ **documentSymbol()** - textDocument/documentSymbol API実装
 - ✅ **typeHierarchy()** - textDocument/prepareTypeHierarchy API実装
 - LSPDocumentSymbol、LSPTypeHierarchy構造体追加
 
 **list_symbols強化:**
+
 - executeWithLSP()メソッド追加
 - LSP版: 型情報付き表示（例：`[Method] save: func save() throws`）
 - SwiftSyntax版: 従来通り（フォールバック）
 - symbolKindToString()でLSP SymbolKind変換
 
 **get_type_hierarchy強化:**
+
 - executeWithLSP()メソッド追加
 - LSP版: Type Detail追加（例：`Type Detail: class ProjectMemory`）
 - SwiftSyntax版: 従来通り（フォールバック）
 - グレースフルデグレード完全実装
 
 **実装完了:**
+
 - ✅ LSPClient拡張（documentSymbol, typeHierarchy）
 - ✅ 階層構造対応（children再帰処理）
 - ✅ 除外ディレクトリ対応（263ファイル完全一致）
@@ -328,11 +346,13 @@ Swift-Selenaのリリース履歴
 - ✅ グレースフルデグレード完璧
 
 **テスト結果:**
+
 - ✅ ContactBプロジェクト: 全ツール完全一致検証
 - ✅ find_symbol_references: 動作
 - ✅ グレースフルデグレード完璧
 
 **ツール総数:**
+
 - ビルド不可: 17個
 - ビルド可能: 18個
 - 強化ツール: 2個（list_symbols、get_type_hierarchy）
@@ -346,6 +366,7 @@ Swift-Selenaのリリース履歴
 ### LSP安定化とデバッグ機能
 
 **LSP修正（find_symbol_references完全動作）:**
+
 - ✅ **initialized通知追加** - LSPプロトコル準拠
 - ✅ **textDocument/didOpen実装** - ファイルをLSPに通知
 - ✅ **initializeレスポンス読み捨て** - バッファクリア
@@ -354,17 +375,20 @@ Swift-Selenaのリリース履歴
 - ✅ **エラーハンドリング強化** - プロセス状態チェック、try-catch
 
 **デバッグ機能:**
+
 - ✅ **FileLogHandler** - ファイルログ出力（~/.swift-selena/logs/server.log）
 - ✅ **DebugRunner** - プロセス内自動テストランナー（#if DEBUG、Xcodeデバッガ対応）
 - ✅ **LSPState診断機能** - getStatus()メソッド追加
 
 **検証結果:**
+
 - find_symbol_references: 5回連続実行でクラッシュなし
 - LSPStateの参照: 3件検出成功
 - ProjectMemoryの参照: 34件検出成功
 - FindSymbolReferencesTool: 3件検出成功
 
 **技術詳細:**
+
 - LSPプロトコル完全準拠（initialize → initialized → didOpen → requests）
 - 開いたファイルをキャッシュ（openedFiles）
 - publishDiagnostics通知を正しく処理
@@ -373,6 +397,7 @@ Swift-Selenaのリリース履歴
 **ツール総数:** 18個（変更なし、安定性向上）
 
 **ドキュメント:**
+
 - README.md/README.ja.md: ログ監視方法を追記
 - docs/tool_design/DES-008: DebugRunner設計書
 
@@ -385,6 +410,7 @@ Swift-Selenaのリリース履歴
 ### LSP機能実装
 
 **新規ツール:**
+
 - ✅ **find_symbol_references** - シンボル参照検索（LSP版）
   - 型情報ベースの正確な参照検索
   - textDocument/referencesリクエスト使用
@@ -392,26 +418,31 @@ Swift-Selenaのリリース履歴
   - LSP利用不可時: find_type_usages, search_code を代替として案内
 
 **技術実装:**
+
 - FindSymbolReferencesTool.execute()にlspStateパラメータ追加
 - SwiftMCPServerからlspStateを渡す実装
 - MCPToolプロトコル準拠のためのラッパー実装
 - 0-indexed ↔ 1-indexed インデックス変換
 
 **ツール総数:**
+
 - ビルド不可: 17個（SwiftSyntaxのみ）
 - ビルド可能: 18個（+find_symbol_references）
 
 **設計判断:**
+
 - list_symbols強化、get_type_hierarchy強化はv0.5.3に延期
 - 理由: LSP documentSymbol統合に追加実装時間が必要
 - v0.5.2は基本的なLSP機能（参照検索）に集中
 
 **削除した機能:**
+
 - ❌ get_tool_usage_stats（v0.8.0に延期）
   - 後方互換性の問題
   - 設計見直しが必要（ProjectMemory外で管理）
 
 **コミット:**
+
 - 7cfd60c: complete FindSymbolReferencesTool
 - cfdd1eb: add: FindSymbolReferencesTool
 
@@ -424,16 +455,19 @@ Swift-Selenaのリリース履歴
 ### LSP基盤整備
 
 **新規コンポーネント:**
+
 - LSPState Actor - LSP接続状態管理
 - LSPClient - SourceKit-LSP通信基盤（JSON-RPC over stdin/stdout）
 - 動的ツールリスト生成（LSP状態に応じてツール変更）
 
 **機能:**
+
 - バックグラウンドLSP接続（initialize_project時、非ブロッキング）
 - ビルド可能時のみLSP機能を提供（v0.5.2以降）
 - グレースフルデグレード（LSP失敗でもSwiftSyntax動作）
 
 **設計判断:**
+
 - BuildChecker削除（直接LSP接続試行で十分）
 - Serenaと同じシンプルなアプローチ
 
@@ -442,6 +476,7 @@ Swift-Selenaのリリース履歴
 ### ツール削減とクリーンアップ
 
 **削除したツール（-5個）:**
+
 - ❌ read_file → Claude標準Readで完全代替
 - ❌ read_lines → Claude標準Readで完全代替
 - ❌ read_function_body → read_symbolで代替
@@ -451,19 +486,23 @@ Swift-Selenaのリリース履歴
 **削減理由:**
 
 **パフォーマンス分析:**
+
 - read_file: Swift-Selena = Claude Read（差なし）
 - read_lines: コンテキスト効率は限定的（結局全体を見る）
 - list_directory: ls コマンドと同じ（差なし）
 
 **正確性分析:**
+
 - 全て同じ結果（ファイルシステム操作）
 
 **代替可能性:**
+
 - read_file, read_lines, list_directory: Claude標準機能で100%代替
 - read_function_body: read_symbol(symbol_path: "Class/method")で代替
 - get_project_stats: search_notesで十分
 
 **結論:**
+
 - Claude標準機能との重複排除
 - Swift-Selenaは「Swift解析」に特化
 - メンテナンス負担削減
@@ -477,15 +516,18 @@ Swift-Selenaのリリース履歴
 **LSPツール追加の再考:**
 
 **従来の計画:**
+
 - LSPツール5個を新規追加（find_symbol_references, get_symbol_info等）
 - ツール総数: 22個 → 27個
 
 **新しい方針:**
+
 - 既存ツールをLSPで強化（新規ツール追加を最小化）
 - list_symbols → LSP利用時は型情報付き
 - get_type_hierarchy → LSP利用時はfind_overrides情報も含む
 
 **新規追加するのは:**
+
 - find_symbol_references のみ（既存機能にない）
 
 **最終ツール数**: 17個 → 18個（+1個のみ）
@@ -617,6 +659,7 @@ Swift-Selenaのリリース履歴
 詳細な開発計画については、以下のドキュメントを参照してください：
 
 **Hybrid Architecture Plan**（この文書は現在リポジトリにありません）
+
 - v0.5.0-0.5.4: LSP統合ロードマップ
 - ハイブリッドアーキテクチャの詳細設計
 

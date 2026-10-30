@@ -15,18 +15,21 @@
 DES-005で各Swiftファイルに生成されたCode Headerフォーマットが存在するが、現状では以下の問題がある：
 
 **現状の問題**:
+
 - Code Headerを検索するには`search_code`で全ファイルを正規表現検索する必要がある
 - 検索速度が遅い（200ファイルで5分）
 - 検索精度が低い（完全一致のみ、同義語を理解できない）
 - ノイズが多い（実装コードもヒットする）
 
 **解決方法**:
+
 - Code HeaderをパースしてDB化（ProjectMemory内）
 - NLEmbedding（Apple Intelligence）を使ったセマンティック検索
 - 高速検索（0.1秒以内）
 - 高精度検索（80-90%）
 
 **具体例**:
+
 ```
 Before（search_code使用）:
 User: 「電話番号をフォーマットする機能はどこ？」
@@ -51,16 +54,19 @@ Claude: search_code_headers("電話番号を綺麗に表示")
 ### 2.1 既存ツールの限界
 
 **search_code（既存）**:
+
 - ❌ 正規表現のみ（完全一致）
 - ❌ 全ファイル走査（遅い）
 - ❌ 実装コードもヒット（ノイズ多い）
 - ❌ 同義語を理解できない
 
 **find_files（既存）**:
+
 - ❌ ファイル名検索のみ
 - ❌ Code Header内容を検索できない
 
 **find_symbol_definition（既存）**:
+
 - ❌ シンボル名検索のみ
 - ❌ 目的・機能では検索できない
 
@@ -87,22 +93,27 @@ Claude: search_code_headers("電話番号を綺麗に表示")
 #### FR-004-001: Code Header DB構築
 
 **要件:**
+
 - 全SwiftファイルのCode Headerをパースし、内部DBに格納する
 - 各Code Headerの埋め込みベクトル（NLEmbedding）を生成してキャッシュ
 - ProjectMemoryに永続化
 
 **入力:**
+
 - プロジェクトパス
 
 **出力:**
+
 - `codeHeaderCache: [String: CodeHeaderInfo]`（ファイルパス → Code Header情報 + 埋め込みベクトル）
 
 **条件:**
+
 - `[Code Header Format]`マーカーが存在するファイルのみ対象
 - マーカーがないファイルは無視（エラーにしない）
 - 埋め込みベクトルはキャッシュ（再生成しない）
 
 **受け入れ基準:**
+
 - 200ファイルのDB構築が15秒以内に完了
 - 埋め込みベクトルがキャッシュに保存される
 - 再起動後もキャッシュが保持される
@@ -112,32 +123,38 @@ Claude: search_code_headers("電話番号を綺麗に表示")
 #### FR-004-002: セマンティック検索（search_code_headers）
 
 **要件:**
+
 - 自然言語クエリでCode Headerを検索
 - NLEmbeddingによるセマンティックマッチング
 - スコア順（類似度順）に結果を返す
 
 **入力:**
+
 - `query`: 検索クエリ（自然言語、例: "電話番号を綺麗に表示"）
 - `section`: 検索対象セクション（all/purpose/feature/type、オプション）
 - `layer`: レイヤーフィルタ（Tools/Library/Domain等、オプション）
 - `threshold`: 類似度閾値（0.0-1.0、デフォルト: 0.6）
 
 **出力:**
+
 - 検索結果リスト（ファイルパス、スコア、マッチしたセクション）
 - スコア降順にソート
 
 **条件:**
+
 - DB未構築時は自動構築（初回のみ10-15秒）
 - クエリの埋め込みベクトルを生成
 - キャッシュ済み埋め込みとコサイン類似度を計算
 - 閾値以上のファイルのみ返す
 
 **受け入れ基準:**
+
 - 検索が0.1秒以内に完了（DB構築後）
 - 同義語を理解する（「綺麗に表示」≈「フォーマット」）
 - 検索精度80%以上（実データでテスト）
 
 **検索精度の定義:**
+
 ```
 精度 = 期待する結果が含まれていた検索数 / 全検索数
 
@@ -150,13 +167,16 @@ Claude: search_code_headers("電話番号を綺麗に表示")
 #### FR-004-003: 統計情報取得（get_code_header_stats）
 
 **要件:**
+
 - Code Header DB統計情報を表示
 - 適用率、層別統計、未適用ファイルリスト
 
 **入力:**
+
 - なし
 
 **出力:**
+
 ```
 📊 Code Header DB Statistics
 
@@ -182,10 +202,12 @@ DB情報:
 ```
 
 **条件:**
+
 - DB未構築時は自動構築
 - 層別統計は自動判定（ファイルパスから）
 
 **受け入れ基準:**
+
 - 統計情報が正確
 - 実行が1秒以内
 
@@ -194,14 +216,17 @@ DB情報:
 #### FR-004-004: DB自動更新
 
 **要件:**
+
 - ファイル変更検知で自動的にキャッシュ無効化
 - 変更されたファイルのみ再パース・再埋め込み
 
 **条件:**
+
 - `lastModified`（最終更新日時）でファイル変更を検知
 - 変更ファイルのみ更新（全体再構築しない）
 
 **受け入れ基準:**
+
 - ファイル変更後、次回検索で自動更新
 - 変更されていないファイルは再処理しない
 
@@ -212,11 +237,13 @@ DB情報:
 #### NFR-004-001: パフォーマンス
 
 **要件:**
+
 - DB構築時間: 200ファイル < 15秒
 - 検索時間: < 0.1秒（DB構築後）
 - メモリ使用量: < 50MB（DB + 埋め込みキャッシュ）
 
 **測定方法:**
+
 ```swift
 // ベンチマーク
 let start = Date()
@@ -230,13 +257,16 @@ assert(elapsed < 0.1)
 #### NFR-004-002: 検索精度
 
 **要件:**
+
 - 検索精度: 80%以上
 
 **測定方法:**
+
 - 実際のプロジェクト（ContactB等）で10-20回検索
 - 期待する結果が上位3件に含まれる割合を測定
 
 **テストクエリ例:**
+
 ```
 1. "電話番号のフォーマット" → 期待: PhoneNumber+Format.swift
 2. "バリデーション機能" → 期待: ValidationRule.swift
@@ -249,6 +279,7 @@ assert(elapsed < 0.1)
 #### NFR-004-003: スケーラビリティ
 
 **要件:**
+
 - 1000ファイルプロジェクトでも動作
 - DB構築時間: < 1分
 - 検索時間: < 0.5秒
@@ -258,11 +289,13 @@ assert(elapsed < 0.1)
 #### NFR-004-004: 互換性
 
 **要件:**
+
 - macOS 15+ (Sequoia)
 - Apple Silicon (M1+)
 - NLEmbedding日本語対応必須
 
 **確認方法:**
+
 ```swift
 guard let embedding = NLEmbedding.wordEmbedding(for: .japanese) else {
     throw CodeHeaderError.embeddingUnavailable
@@ -274,6 +307,7 @@ guard let embedding = NLEmbedding.wordEmbedding(for: .japanese) else {
 #### NFR-004-005: データ永続性
 
 **要件:**
+
 - 埋め込みベクトルをProjectMemoryに永続化
 - 再起動後も保持
 - ファイル変更検知で自動更新
@@ -285,10 +319,12 @@ guard let embedding = NLEmbedding.wordEmbedding(for: .japanese) else {
 #### C-004-001: NLEmbedding依存
 
 **制約:**
+
 - NLEmbedding（日本語）が利用可能な環境でのみ動作
 - macOS 15未満ではエラー
 
 **対応:**
+
 - エラーメッセージで要件を明示
 - 将来的にフォールバック（形態素解析）を検討（v0.6.1+）
 
@@ -297,9 +333,11 @@ guard let embedding = NLEmbedding.wordEmbedding(for: .japanese) else {
 #### C-004-002: Code Header必須
 
 **制約:**
+
 - Code Headerが適用されていないファイルは検索対象外
 
 **対応:**
+
 - get_code_header_statsで未適用ファイルを表示
 - DES-005のCode Header生成を推奨
 
@@ -308,9 +346,11 @@ guard let embedding = NLEmbedding.wordEmbedding(for: .japanese) else {
 #### C-004-003: 日本語のみサポート
 
 **制約:**
+
 - 英語プロジェクトには対応しない（v0.6.0時点）
 
 **対応:**
+
 - 将来的に英語対応を検討（v0.7.0+）
 
 ---
@@ -324,6 +364,7 @@ guard let embedding = NLEmbedding.wordEmbedding(for: .japanese) else {
 **説明**: Search Code Header Format with natural language (semantic search using Apple Intelligence)
 
 **パラメータ:**
+
 ```json
 {
   "type": "object",
@@ -339,7 +380,15 @@ guard let embedding = NLEmbedding.wordEmbedding(for: .japanese) else {
     },
     "layer": {
       "type": "string",
-      "enum": ["all", "Tools", "Library", "Domain", "App", "Infrastructure", "DI"],
+      "enum": [
+        "all",
+        "Tools",
+        "Library",
+        "Domain",
+        "App",
+        "Infrastructure",
+        "DI"
+      ],
       "description": "Filter by layer (optional, default: all)"
     },
     "threshold": {
@@ -352,6 +401,7 @@ guard let embedding = NLEmbedding.wordEmbedding(for: .japanese) else {
 ```
 
 **出力例:**
+
 ```
 🔍 Search Results for "電話番号のフォーマット"
 
@@ -383,6 +433,7 @@ Found 2 files (0.07s):
 **説明**: Get Code Header database statistics and coverage
 
 **パラメータ:**
+
 ```json
 {
   "type": "object",
@@ -475,6 +526,7 @@ Found 2 files (0.07s):
 **影響**: DB構築時間が15秒を超える
 
 **対策**:
+
 - 実装前にベンチマークテスト実施
 - 並行処理で高速化
 - プログレス表示でUX改善
@@ -486,6 +538,7 @@ Found 2 files (0.07s):
 **影響**: ユーザー満足度低下
 
 **対策**:
+
 - 閾値調整
 - v0.6.1で類義語辞書追加
 - フィードバックベースの改善
@@ -497,6 +550,7 @@ Found 2 files (0.07s):
 **影響**: 検索対象ファイルが少ない
 
 **対策**:
+
 - get_code_header_statsで可視化
 - Code Header生成を推奨
 - 未適用ファイルへの警告

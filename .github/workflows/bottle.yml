@@ -9,15 +9,15 @@ name: Build Bottles
 on:
   push:
     tags:
-      - '*'
+      - "*"
   workflow_dispatch:
     inputs:
       tag:
-        description: 'bottle を作成する tag（例: 0.6.11）'
+        description: "bottle を作成する tag（例: 0.6.11）"
         required: true
 
 permissions:
-  contents: write   # Release への添付のみ。リポジトリへの push は行わない
+  contents: write # Release への添付のみ。リポジトリへの push は行わない
 
 env:
   TAG: ${{ github.event.inputs.tag || github.ref_name }}
@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main   # Formula は tag commit ではなく main 上にある
+          ref: main # Formula は tag commit ではなく main 上にある
 
       - name: Tap this repository
         run: brew tap blueeventhorizon/swift-selena "$GITHUB_WORKSPACE"

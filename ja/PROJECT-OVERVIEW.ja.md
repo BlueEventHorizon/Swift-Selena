@@ -59,25 +59,25 @@ spec と design の文書は v0.5.x から v0.6.x にかけて段階的に書か
 
 ## 3. 構成
 
-| パス | 役割 |
-| --- | --- |
-| `README.md` | 初めて使う人向けの紹介（英語）。日本語版は `ja/README.ja.md` |
-| `DEVELOPMENT.md` | 開発ガイド。ビルド、テスト、ツール追加、CI、リリース手順。日本語版は `ja/DEVELOPMENT.ja.md` |
-| `CLAUDE.md` | 開発 AI が守る必須事項。`AGENTS.md` はこれへのシンボリックリンク、`GEMINI.md` は読み込むだけ |
-| `CHANGELOG.md` | リリース履歴（英語。日本語版は `ja/CHANGELOG.ja.md`） |
-| `Sources/` | サーバー本体。`SwiftMCPServer.swift`（エントリーポイント）、`Constants.swift`、`Logging/`、`Selena/`（解析エンジン: `Core/`、`LSP/`、`Visitors/`（visitor 8 個）、`DebugRunner.swift`）、`Tools/`（`Project/`、`FileSystem/`、`Symbols/`、`SwiftUI/`、`Analysis/`、`Meta/`、`ToolProtocol.swift`、`ResultEncoder.swift`） |
-| `Tests/` | テストターゲットと `Tests/Fixtures/`（解析対象のサンプルコード）。`Package.swift` に登録されているのは 5 ターゲット |
-| `scripts/`, `makefile`, `Formula/`, `.github/workflows/` | クライアント登録、version と tag の検証、bottle の反映、Homebrew Formula、CI |
-| `project/main/spec/` | 要件定義書 `REQ-001`〜`REQ-004` と索引（`README.md`） |
-| `project/main/design/` | 設計書 `DES-004`、`DES-005`、`DES-006`、`DES-101`〜`DES-104` |
-| `project/main/plan/` | 開発計画（`main_plan.md`） |
-| `project/main/mcp-guide/` | MCP サーバー開発と MCP Swift SDK の一般的なメモ（このプロジェクト固有ではない） |
-| `docs/rules/base/` | 開発ルール。プロジェクトルール、コーディングルール、レビュー観点、ソフトウェア開発の原則、Agent / MCP 活用ルール |
-| `docs/format/` | 要件定義書、設計書、計画書、Code Header のフォーマット |
-| `docs/workflow/plan/` | 設計書と計画書を作るワークフロー |
-| `.claude/` | このリポジトリ自身の AI 用設定。`agents/code-header-generator.md`、`commands/`、`skills/`（`mcp-test`、`merge-specs`、`mermaid-diagram`、`xcode-build`、`xcode-test`） |
-| `.doc_structure.yaml` | `docs/` をルール、`project/*/{spec,design,plan,mcp-guide}/` を仕様書として宣言 |
-| `.claude/.doc-advisor/toc/` | 上記文書の検索インデックス（生成物）。`/forge:query-db-rules` と `/forge:query-db-specs` が使う。commit 対象。更新は `/forge:update-db-rules` / `/forge:update-db-specs` で行い、手で編集しない |
+| パス                                                     | 役割                                                                                                                                                                                                                                                                                                                      |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `README.md`                                              | 初めて使う人向けの紹介（英語）。日本語版は `ja/README.ja.md`                                                                                                                                                                                                                                                              |
+| `DEVELOPMENT.md`                                         | 開発ガイド。ビルド、テスト、ツール追加、CI、リリース手順。日本語版は `ja/DEVELOPMENT.ja.md`                                                                                                                                                                                                                               |
+| `CLAUDE.md`                                              | 開発 AI が守る必須事項。`AGENTS.md` はこれへのシンボリックリンク、`GEMINI.md` は読み込むだけ                                                                                                                                                                                                                              |
+| `CHANGELOG.md`                                           | リリース履歴（英語。日本語版は `ja/CHANGELOG.ja.md`）                                                                                                                                                                                                                                                                     |
+| `Sources/`                                               | サーバー本体。`SwiftMCPServer.swift`（エントリーポイント）、`Constants.swift`、`Logging/`、`Selena/`（解析エンジン: `Core/`、`LSP/`、`Visitors/`（visitor 8 個）、`DebugRunner.swift`）、`Tools/`（`Project/`、`FileSystem/`、`Symbols/`、`SwiftUI/`、`Analysis/`、`Meta/`、`ToolProtocol.swift`、`ResultEncoder.swift`） |
+| `Tests/`                                                 | テストターゲットと `Tests/Fixtures/`（解析対象のサンプルコード）。`Package.swift` に登録されているのは 5 ターゲット                                                                                                                                                                                                       |
+| `scripts/`, `makefile`, `Formula/`, `.github/workflows/` | クライアント登録、version と tag の検証、bottle の反映、Homebrew Formula、CI                                                                                                                                                                                                                                              |
+| `project/main/spec/`                                     | 要件定義書 `REQ-001`〜`REQ-004` と索引（`README.md`）                                                                                                                                                                                                                                                                     |
+| `project/main/design/`                                   | 設計書 `DES-004`、`DES-005`、`DES-006`、`DES-101`〜`DES-104`                                                                                                                                                                                                                                                              |
+| `project/main/plan/`                                     | 開発計画（`main_plan.md`）                                                                                                                                                                                                                                                                                                |
+| `project/main/mcp-guide/`                                | MCP サーバー開発と MCP Swift SDK の一般的なメモ（このプロジェクト固有ではない）                                                                                                                                                                                                                                           |
+| `docs/rules/base/`                                       | 開発ルール。プロジェクトルール、コーディングルール、レビュー観点、ソフトウェア開発の原則、Agent / MCP 活用ルール                                                                                                                                                                                                          |
+| `docs/format/`                                           | 要件定義書、設計書、計画書、Code Header のフォーマット                                                                                                                                                                                                                                                                    |
+| `docs/workflow/plan/`                                    | 設計書と計画書を作るワークフロー                                                                                                                                                                                                                                                                                          |
+| `.claude/`                                               | このリポジトリ自身の AI 用設定。`agents/code-header-generator.md`、`commands/`、`skills/`（`mcp-test`、`merge-specs`、`mermaid-diagram`、`xcode-build`、`xcode-test`）                                                                                                                                                    |
+| `.doc_structure.yaml`                                    | `docs/` をルール、`project/*/{spec,design,plan,mcp-guide}/` を仕様書として宣言                                                                                                                                                                                                                                            |
+| `.claude/.doc-advisor/toc/`                              | 上記文書の検索インデックス（生成物）。`/forge:query-db-rules` と `/forge:query-db-specs` が使う。commit 対象。更新は `/forge:update-db-rules` / `/forge:update-db-specs` で行い、手で編集しない                                                                                                                           |
 
 このプロジェクトはプラグインを同梱していません（`.claude-plugin/plugin.json` がありません）。`.claude/` はこのリポジトリ自身の AI 用設定です。
 
@@ -85,33 +85,33 @@ spec と design の文書は v0.5.x から v0.6.x にかけて段階的に書か
 
 <!-- bilingual-docs: allow-ja:start -->
 
-| 日本語 | 英語表記 | 意味と使い方 |
-| --- | --- | --- |
-| ビルド不要 | build-free | ビルドが成功していなくても解析できること。SwiftSyntax を使うため。第一の設計原則 |
-| 静的解析 | static analysis | コンパイルせずに SwiftSyntax で構文木を解析すること。各ツールのベースライン |
-| メタツールモード | meta tool mode | 既定のモード（v0.6.3 以降）。`initialize_project`、`list_available_tools`、`get_tool_schema`、`execute_tool` だけを公開し、ほかは `execute_tool` 経由で呼ぶ |
-| メタツール | meta tool | `list_available_tools`、`get_tool_schema`、`execute_tool` のいずれか。`Sources/Tools/Meta/` にある |
-| レガシーモード | legacy mode | `SWIFT_SELENA_LEGACY=1` で選ぶモード。12 個のツールを直接公開する |
-| MCPツール | MCP tool | `MCPTool` プロトコルに準拠するツールの実装（15 個のツール定義のうち 13 個。`InitializeProjectTool` と `ExecuteToolTool` は準拠しない） |
-| 解析ツール | analysis tool | `execute_tool` 経由で呼ぶ 11 個のツール。`initialize_project` とメタツールは解析ツールではない |
-| ハイブリッドアーキテクチャ | hybrid architecture | SwiftSyntax をベースラインとし、SourceKit-LSP をオプションの強化とする構成 |
-| グレースフルデグレード | graceful degradation | LSP が使えない、または失敗したときに SwiftSyntax へフォールバックすること |
-| LSP統合 | LSP integration | `LSPState` が有効にしたとき（プロジェクトルート直下に `.xcodeproj` がないとき）、対応ツールに SourceKit-LSP を使うこと。ビルドできるかは調べない |
-| ProjectMemory | ProjectMemory | 解析結果の永続キャッシュ（`memory.json`）。識別子としてそのまま使う |
-| クライアントID | client ID | `MCP_CLIENT_ID` の値。クライアントごとにキャッシュを分ける（未設定は `default`） |
-| Visitor（訪問者） | visitor | `Sources/Selena/Visitors/` にある `SyntaxVisitor` のサブクラス。1 種類の情報を抽出する |
-| コードヘッダー | Code Header | `[Code Header Format]` で始まる Swift ファイルの構造化ヘッダーコメント。形式は `docs/format/code_header_format.md` |
-| Code Header DB | Code Header DB | Code Header を対象とする、計画中のデータベースとセマンティック検索（REQ-004、DES-006）。文書上の名前のまま使う |
-| 要件定義書 | requirements document | `project/{feature}/spec/` のファイル。ID 接頭辞は `REQ-`。すべての文書より優先する |
-| 設計書 | design document | `project/{feature}/design/` のファイル。ID は `DES-XXX`。何を作るかでなく、どう作るかを書く |
-| 計画書 | plan document | `project/{feature}/plan/` のファイル。名前は `{feature}_plan.md` |
-| Feature | feature | `project/` 直下の単位ディレクトリ（たとえば `main`） |
-| 仕様書 | specification (spec) | 要件定義書と設計書をまとめて指す一般的な語。`.doc_structure.yaml` が索引化する |
-| ルール文書 | rule document | `docs/` 配下のファイル（ルール、フォーマット、ワークフロー） |
-| リリースタグ | release tag | `v` なしの `MAJOR.MINOR.PATCH` 形式の git tag。`main` の第 1 親ライン上に打つ |
-| 機能登場版マーカー | feature-introduction marker | README の「v0.6.3 以降で利用可能」のような表記。`v` を付けてよい |
-| Formula | Formula | Homebrew のレシピ `Formula/swift-selena.rb`。`tag:` を使い、`revision:` は書かない |
-| bottle | bottle | tag の push 時に CI がビルドする、Homebrew のビルド済みバイナリ |
+| 日本語                     | 英語表記                    | 意味と使い方                                                                                                                                                |
+| -------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ビルド不要                 | build-free                  | ビルドが成功していなくても解析できること。SwiftSyntax を使うため。第一の設計原則                                                                            |
+| 静的解析                   | static analysis             | コンパイルせずに SwiftSyntax で構文木を解析すること。各ツールのベースライン                                                                                 |
+| メタツールモード           | meta tool mode              | 既定のモード（v0.6.3 以降）。`initialize_project`、`list_available_tools`、`get_tool_schema`、`execute_tool` だけを公開し、ほかは `execute_tool` 経由で呼ぶ |
+| メタツール                 | meta tool                   | `list_available_tools`、`get_tool_schema`、`execute_tool` のいずれか。`Sources/Tools/Meta/` にある                                                          |
+| レガシーモード             | legacy mode                 | `SWIFT_SELENA_LEGACY=1` で選ぶモード。12 個のツールを直接公開する                                                                                           |
+| MCPツール                  | MCP tool                    | `MCPTool` プロトコルに準拠するツールの実装（15 個のツール定義のうち 13 個。`InitializeProjectTool` と `ExecuteToolTool` は準拠しない）                      |
+| 解析ツール                 | analysis tool               | `execute_tool` 経由で呼ぶ 11 個のツール。`initialize_project` とメタツールは解析ツールではない                                                              |
+| ハイブリッドアーキテクチャ | hybrid architecture         | SwiftSyntax をベースラインとし、SourceKit-LSP をオプションの強化とする構成                                                                                  |
+| グレースフルデグレード     | graceful degradation        | LSP が使えない、または失敗したときに SwiftSyntax へフォールバックすること                                                                                   |
+| LSP統合                    | LSP integration             | `LSPState` が有効にしたとき（プロジェクトルート直下に `.xcodeproj` がないとき）、対応ツールに SourceKit-LSP を使うこと。ビルドできるかは調べない            |
+| ProjectMemory              | ProjectMemory               | 解析結果の永続キャッシュ（`memory.json`）。識別子としてそのまま使う                                                                                         |
+| クライアントID             | client ID                   | `MCP_CLIENT_ID` の値。クライアントごとにキャッシュを分ける（未設定は `default`）                                                                            |
+| Visitor（訪問者）          | visitor                     | `Sources/Selena/Visitors/` にある `SyntaxVisitor` のサブクラス。1 種類の情報を抽出する                                                                      |
+| コードヘッダー             | Code Header                 | `[Code Header Format]` で始まる Swift ファイルの構造化ヘッダーコメント。形式は `docs/format/code_header_format.md`                                          |
+| Code Header DB             | Code Header DB              | Code Header を対象とする、計画中のデータベースとセマンティック検索（REQ-004、DES-006）。文書上の名前のまま使う                                              |
+| 要件定義書                 | requirements document       | `project/{feature}/spec/` のファイル。ID 接頭辞は `REQ-`。すべての文書より優先する                                                                          |
+| 設計書                     | design document             | `project/{feature}/design/` のファイル。ID は `DES-XXX`。何を作るかでなく、どう作るかを書く                                                                 |
+| 計画書                     | plan document               | `project/{feature}/plan/` のファイル。名前は `{feature}_plan.md`                                                                                            |
+| Feature                    | feature                     | `project/` 直下の単位ディレクトリ（たとえば `main`）                                                                                                        |
+| 仕様書                     | specification (spec)        | 要件定義書と設計書をまとめて指す一般的な語。`.doc_structure.yaml` が索引化する                                                                              |
+| ルール文書                 | rule document               | `docs/` 配下のファイル（ルール、フォーマット、ワークフロー）                                                                                                |
+| リリースタグ               | release tag                 | `v` なしの `MAJOR.MINOR.PATCH` 形式の git tag。`main` の第 1 親ライン上に打つ                                                                               |
+| 機能登場版マーカー         | feature-introduction marker | README の「v0.6.3 以降で利用可能」のような表記。`v` を付けてよい                                                                                            |
+| Formula                    | Formula                     | Homebrew のレシピ `Formula/swift-selena.rb`。`tag:` を使い、`revision:` は書かない                                                                          |
+| bottle                     | bottle                      | tag の push 時に CI がビルドする、Homebrew のビルド済みバイナリ                                                                                             |
 
 <!-- bilingual-docs: allow-ja:end -->
 

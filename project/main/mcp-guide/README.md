@@ -8,11 +8,11 @@ Swift-Selena固有の内容ではなく、他のMCPサーバープロジェク�
 
 ## ドキュメント一覧
 
-| ファイル | 内容 | 対象者 |
-|---------|------|--------|
-| [MCP-Implementation-Guide.md](MCP-Implementation-Guide.md) | MCP実装の詳細ガイド | 初めてMCPサーバーを作る人 |
-| [MCP-SDK-Deep-Dive.md](MCP-SDK-Deep-Dive.md) | Swift MCP SDKの詳細解説 | SDKの内部動作を理解したい人 |
-| [MCP-Best-Practices.md](MCP-Best-Practices.md) | 開発で得たベストプラクティス | 実装で躓いた人 |
+| ファイル                                                   | 内容                         | 対象者                      |
+| ---------------------------------------------------------- | ---------------------------- | --------------------------- |
+| [MCP-Implementation-Guide.md](MCP-Implementation-Guide.md) | MCP実装の詳細ガイド          | 初めてMCPサーバーを作る人   |
+| [MCP-SDK-Deep-Dive.md](MCP-SDK-Deep-Dive.md)               | Swift MCP SDKの詳細解説      | SDKの内部動作を理解したい人 |
+| [MCP-Best-Practices.md](MCP-Best-Practices.md)             | 開発で得たベストプラクティス | 実装で躓いた人              |
 
 ---
 
