@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=DEVELOPMENT.md sha256=88d2a12db55d -->
+<!-- bilingual-docs: source=DEVELOPMENT.md sha256=eb556e68ae52 -->
 
 # 開発ガイド
 
@@ -86,12 +86,16 @@ swift test            # テスト実行
 | `make build` | — | DEBUG ビルド |
 | `make build-release` | — | RELEASE ビルド |
 | `make clean` | — | ビルド成果物をクリーン |
-| `make register-debug` | Claude Code | DEBUG 版をビルドし、Swift-Selena プロジェクトに登録 |
-| `make unregister-debug` | Claude Code | DEBUG 版を Swift-Selena プロジェクトから解除 |
-| `make register-release` | Claude Code | RELEASE 版を登録（対象プロジェクトのパスを入力） |
-| `make unregister-release` | Claude Code | RELEASE 版の登録を解除（対象プロジェクトのパスを入力） |
-| `make register-desktop` | Claude Desktop | Claude Desktop に登録 |
-| `make unregister-desktop` | Claude Desktop | Claude Desktop から解除 |
+| `make register-claude` | Claude Code | RELEASE 版を登録（対象プロジェクトのパスを入力。空白なら全プロジェクト共通の user スコープ `-s user`） |
+| `make unregister-claude` | Claude Code | RELEASE 版の登録を解除（同じ入力。空白なら user スコープ） |
+| `make register-claude-app` | Claude Desktop | Claude Desktop アプリに登録 |
+| `make unregister-claude-app` | Claude Desktop | Claude Desktop アプリから解除 |
+| `make register-cursor` | Cursor | RELEASE 版を Cursor に登録（対象プロジェクトのパスを入力。空白なら全プロジェクト共通の `~/.cursor/mcp.json`） |
+| `make unregister-cursor` | Cursor | Cursor から解除（同じ入力） |
+| `make register-codex` | Codex | RELEASE 版を Codex に登録（`codex mcp add`、`~/.codex/config.toml`。Codex CLI にプロジェクト単位の指定は無く、常に全プロジェクト共通） |
+| `make unregister-codex` | Codex | Codex から解除（`codex mcp remove`） |
+| `make register-claude-debug` | Claude Code | DEBUG 版をビルドし、Swift-Selena プロジェクトに登録 |
+| `make unregister-claude-debug` | Claude Code | DEBUG 版を Swift-Selena プロジェクトから解除 |
 | `make connect_gemini` / `make disconnect_gemini` | Claude Code | gemini-cli MCP サーバーの接続 / 切断 |
 
 ## ローカルビルドをクライアントに登録する
@@ -101,12 +105,16 @@ Homebrew のリリース版ではなく、手元でビルドしたバイナリ�
 ### make を使う（推奨）
 
 ```bash
-make register-desktop     # Claude Desktop
-make register-release    # Claude Code — 対象プロジェクトのパスを入力
-make register-debug       # Claude Code — DEBUG ビルドを Swift-Selena プロジェクト自体に登録
+make register-claude        # Claude Code — 対象プロジェクトのパスを入力（空白なら全プロジェクト共通 = user スコープ）
+make register-claude-app    # Claude Desktop アプリ
+make register-cursor        # Cursor — 対象プロジェクトのパスを入力（空白なら ~/.cursor/mcp.json）
+make register-codex         # Codex — codex mcp add（~/.codex/config.toml）
+make register-claude-debug  # Claude Code — DEBUG ビルドを作って Swift-Selena プロジェクト自体に登録
 ```
 
-解除は `make unregister-desktop` / `make unregister-release` / `make unregister-debug` です。
+`register-claude-debug` 以外はすべて RELEASE ビルド（`make build-release` で作る `.build/release/Swift-Selena`）を登録します。Cursor と Codex への登録では `MCP_CLIENT_ID` を `cursor` / `codex` に設定するので、キャッシュは Claude 側と分離されます。
+
+解除は `make unregister-claude` / `make unregister-claude-app` / `make unregister-cursor` / `make unregister-codex` / `make unregister-claude-debug` です。
 
 ### 手動で登録する
 

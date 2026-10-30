@@ -84,12 +84,16 @@ Sample code to analyze lives in `Tests/Fixtures/`. A new test target also needs 
 | `make build` | — | DEBUG build |
 | `make build-release` | — | RELEASE build |
 | `make clean` | — | Clean build artifacts |
-| `make register-debug` | Claude Code | Build the DEBUG version and register it with the Swift-Selena project |
-| `make unregister-debug` | Claude Code | Unregister the DEBUG version from the Swift-Selena project |
-| `make register-release` | Claude Code | Register the RELEASE version (prompts for the target project path) |
-| `make unregister-release` | Claude Code | Unregister the RELEASE version (prompts for the target project path) |
-| `make register-desktop` | Claude Desktop | Register with Claude Desktop |
-| `make unregister-desktop` | Claude Desktop | Unregister from Claude Desktop |
+| `make register-claude` | Claude Code | Register the RELEASE version (asks for a project path; leave empty to register for all projects, `-s user`) |
+| `make unregister-claude` | Claude Code | Unregister the RELEASE version (same prompt; empty = user scope) |
+| `make register-claude-app` | Claude Desktop | Register with the Claude Desktop app |
+| `make unregister-claude-app` | Claude Desktop | Unregister from the Claude Desktop app |
+| `make register-cursor` | Cursor | Register the RELEASE version with Cursor (asks for a project path; leave empty for `~/.cursor/mcp.json`, all projects) |
+| `make unregister-cursor` | Cursor | Unregister from Cursor (same prompt) |
+| `make register-codex` | Codex | Register the RELEASE version with Codex (`codex mcp add`, `~/.codex/config.toml`; the Codex CLI has no per-project option, so this always applies to all projects) |
+| `make unregister-codex` | Codex | Unregister from Codex (`codex mcp remove`) |
+| `make register-claude-debug` | Claude Code | Build the DEBUG version and register it with the Swift-Selena project |
+| `make unregister-claude-debug` | Claude Code | Unregister the DEBUG version from the Swift-Selena project |
 | `make connect_gemini` / `make disconnect_gemini` | Claude Code | Connect / disconnect the gemini-cli MCP server |
 
 ## Registering a Local Build with a Client
@@ -99,12 +103,16 @@ Register a binary you built yourself (instead of the Homebrew release). **The MC
 ### With make (recommended)
 
 ```bash
-make register-desktop     # Claude Desktop
-make register-release    # Claude Code — prompts for the target project path
-make register-debug       # Claude Code — registers the DEBUG build with the Swift-Selena project itself
+make register-claude        # Claude Code — asks for a project path; leave empty for all projects (user scope)
+make register-claude-app    # Claude Desktop app
+make register-cursor        # Cursor — asks for a project path; leave empty for ~/.cursor/mcp.json
+make register-codex         # Codex — codex mcp add (~/.codex/config.toml)
+make register-claude-debug  # Claude Code — builds and registers the DEBUG build with the Swift-Selena project itself
 ```
 
-To unregister: `make unregister-desktop` / `make unregister-release` / `make unregister-debug`.
+All of these register the RELEASE build (`.build/release/Swift-Selena`, built with `make build-release`) except `register-claude-debug`. The Cursor and Codex registrations set `MCP_CLIENT_ID` to `cursor` / `codex`, so their caches are separate from Claude's.
+
+To unregister: `make unregister-claude` / `make unregister-claude-app` / `make unregister-cursor` / `make unregister-codex` / `make unregister-claude-debug`.
 
 ### Manually
 
