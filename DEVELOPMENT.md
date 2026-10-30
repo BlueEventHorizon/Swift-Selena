@@ -24,7 +24,7 @@ For usage and Homebrew installation, see [README_en.md](README_en.md). Issues an
 ## Environment
 
 - macOS 13.0 or later
-- Swift 5.9 or later (verified on macOS 26 / Xcode 27.1, Swift 6.4)
+- Swift 6.1 (Xcode 16.3) or later (verified on macOS 26 / Xcode 27.1, Swift 6.4). `Package.swift` declares `swift-tools-version: 6.1` because the pinned dependencies (swift-nio 2.98.0, swift-log 1.12.0) require it; the language mode stays at Swift 5 (`swiftLanguageModes: [.v5]`)
 - Dependencies (pinned in `Package.swift` with `exact`, so updates are deliberate):
   - [MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk) 0.12.0
   - [SwiftSyntax](https://github.com/apple/swift-syntax) 602.0.0
