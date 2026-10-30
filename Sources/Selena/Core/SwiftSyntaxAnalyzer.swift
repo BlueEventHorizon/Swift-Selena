@@ -261,12 +261,10 @@ enum SwiftSyntaxAnalyzer {
         return fileImports
     }
 
-    /// 型の継承階層を取得（キャッシュ利用）
+    /// 型の継承階層を取得（キャッシュ利用。変更・追加・削除されたファイルぶんだけ再解析する）
     static func getTypeHierarchy(typeName: String, projectPath: String, projectMemory: ProjectMemory, logger: Logger? = nil) async throws -> TypeHierarchy? {
-        // キャッシュを構築（必要な場合のみ）
-        if await projectMemory.getAllTypeConformances().isEmpty {
-            try await buildTypeConformanceCache(projectPath: projectPath, projectMemory: projectMemory, logger: logger)
-        }
+        // キャッシュを最新化（変更のないファイルは再解析しない）
+        try await refreshTypeConformanceCache(projectPath: projectPath, projectMemory: projectMemory, logger: logger)
 
         // キャッシュから型情報を取得
         guard let cachedType = await projectMemory.getCachedTypeConformance(typeName: typeName) else {
@@ -305,18 +303,24 @@ enum SwiftSyntaxAnalyzer {
         )
     }
 
-    /// 型情報キャッシュを構築
-    private static func buildTypeConformanceCache(projectPath: String, projectMemory: ProjectMemory, logger: Logger? = nil) async throws {
+    /// 型情報キャッシュを最新化
+    ///
+    /// - プロジェクトから消えたファイル由来のエントリを削除する
+    /// - 未キャッシュのファイルと、キャッシュ時点から更新されたファイルだけを再解析して差し替える
+    /// - 変更があったときだけ classDefinitions を作り直して保存する
+    private static func refreshTypeConformanceCache(projectPath: String, projectMemory: ProjectMemory, logger: Logger? = nil) async throws {
         let swiftFiles = try FileSearcher.findFiles(in: projectPath, pattern: "*.swift")
 
-        // Class定義をクリアして再収集
-        await projectMemory.clearClassDefinitions()
+        var changed = await projectMemory.pruneTypeConformances(keepingFiles: Set(swiftFiles))
 
         for file in swiftFiles {
+            guard await projectMemory.isTypeConformanceCacheStale(filePath: file) else {
+                continue
+            }
             do {
                 let conformances = try listTypeConformances(filePath: file)
-                for conformance in conformances {
-                    let cacheData = ProjectMemory.Memory.TypeConformanceInfo(
+                let cacheData = conformances.map { conformance in
+                    ProjectMemory.Memory.TypeConformanceInfo(
                         typeName: conformance.typeName,
                         typeKind: conformance.typeKind,
                         filePath: file,
@@ -324,18 +328,20 @@ enum SwiftSyntaxAnalyzer {
                         superclass: conformance.superclass,
                         protocols: conformance.protocols
                     )
-                    await projectMemory.cacheTypeConformance(typeName: conformance.typeName, typeInfo: cacheData)
-
-                    // Class定義を収集
-                    if conformance.typeKind == "Class" {
-                        await projectMemory.addClassDefinition(conformance.typeName)
-                    }
                 }
+                await projectMemory.cacheTypeConformances(filePath: file, types: cacheData)
+                changed = true
             } catch {
                 // ファイル読み込みエラーをスキップ
                 continue
             }
         }
+
+        guard changed else {
+            return
+        }
+
+        await projectMemory.rebuildClassDefinitions()
 
         // メモリを保存（失敗しても解析結果は返す）
         do {
