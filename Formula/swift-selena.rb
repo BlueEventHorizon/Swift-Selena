@@ -15,12 +15,13 @@ class SwiftSelena < Formula
   desc "MCP Server for Swift code analysis"
   homepage "https://github.com/BlueEventHorizon/Swift-Selena"
   url "https://github.com/BlueEventHorizon/Swift-Selena.git",
-      tag: "0.6.12"
+      tag: "0.6.13"
   license "MIT"
 
   # macOS 13.0+ requirement matches Package.swift's .macOS(.v13).
   # `depends_on xcode` is intentionally omitted: the build is a plain SwiftPM
-  # CLI build and Command Line Tools providing Swift 5.9+ should suffice.
+  # CLI build and Command Line Tools providing Swift 6.1+ (Package.swift's
+  # swift-tools-version) should suffice.
   # If a CLT-only build is shown to fail, re-add `depends_on xcode: ["15.0", :build]`.
   depends_on macos: :ventura
 

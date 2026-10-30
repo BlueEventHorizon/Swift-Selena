@@ -2,7 +2,9 @@
 
 # Swift Selena (RELEASE) をClaude Codeに登録するスクリプト
 # 本番用
-# Usage: ./scripts/register-release.sh <target-project-directory>
+# Usage: ./scripts/register-release.sh [target-project-directory]
+#        引数なし: 全プロジェクト共通（user スコープ、claude mcp add -s user）に登録
+#        引数あり: 対象プロジェクトのみ（local スコープ）に登録
 
 set -e
 
@@ -10,19 +12,6 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
-
-# 引数チェック
-if [ $# -ne 1 ]; then
-    echo -e "${RED}エラー: ターゲットプロジェクトディレクトリを指定してください${NC}"
-    echo ""
-    echo "使い方:"
-    echo "  $0 <target-project-directory>"
-    echo ""
-    echo "例:"
-    echo "  $0 /path/to/your/project"
-    echo "  $0 ~/projects/MyApp"
-    exit 1
-fi
 
 echo -e "${YELLOW}Swift Selena (RELEASE) → Claude Code 登録${NC}"
 echo "=========================================="
@@ -48,32 +37,42 @@ echo "  パス: $EXECUTABLE_PATH"
 BUILD_TIME=$(stat -f "%Sm" "$EXECUTABLE_PATH")
 echo "  ビルド日時: $BUILD_TIME"
 
-# ターゲットプロジェクト（~ を $HOME に展開）
-TARGET_PROJECT="${1/#\~/$HOME}"
-if [ ! -d "$TARGET_PROJECT" ]; then
-    echo -e "${RED}エラー: ターゲットディレクトリが見つかりません${NC}"
-    echo "パス: $TARGET_PROJECT"
-    exit 1
+# 登録スコープ（引数があれば対象プロジェクトの local、なければ全プロジェクト共通の user）
+if [ $# -ge 1 ] && [ -n "$1" ]; then
+    # ~ を $HOME に展開
+    TARGET_PROJECT="${1/#\~/$HOME}"
+    if [ ! -d "$TARGET_PROJECT" ]; then
+        echo -e "${RED}エラー: ターゲットディレクトリが見つかりません${NC}"
+        echo "パス: $TARGET_PROJECT"
+        exit 1
+    fi
+    TARGET_PROJECT_ABS="$( cd "$TARGET_PROJECT" && pwd )"
+    echo ""
+    echo "登録先: $TARGET_PROJECT_ABS（local スコープ）"
+    echo ""
+    echo "Claude Code MCP設定に登録中..."
+
+    # ターゲットプロジェクトに移動して登録（既存の設定は削除してから追加）
+    pushd "$TARGET_PROJECT_ABS" > /dev/null
+    claude mcp remove -s local swift-selena 2>/dev/null || true
+    set +e
+    claude mcp add swift-selena -- "$EXECUTABLE_PATH"
+    RESULT=$?
+    set -e
+    popd > /dev/null
+else
+    echo ""
+    echo "登録先: 全プロジェクト共通（user スコープ）"
+    echo ""
+    echo "Claude Code MCP設定に登録中..."
+
+    # 既存の user スコープ設定は削除してから追加
+    claude mcp remove -s user swift-selena 2>/dev/null || true
+    set +e
+    claude mcp add -s user swift-selena -- "$EXECUTABLE_PATH"
+    RESULT=$?
+    set -e
 fi
-
-TARGET_PROJECT_ABS="$( cd "$TARGET_PROJECT" && pwd )"
-echo ""
-echo "登録先: $TARGET_PROJECT_ABS"
-
-# ターゲットプロジェクトに移動して登録
-echo ""
-echo "Claude Code MCP設定に登録中..."
-
-pushd "$TARGET_PROJECT_ABS" > /dev/null
-
-# 既存の設定を削除（存在する場合）
-claude mcp remove swift-selena 2>/dev/null || true
-
-# 新しい設定を追加
-claude mcp add swift-selena "$EXECUTABLE_PATH"
-RESULT=$?
-
-popd > /dev/null
 
 if [ $RESULT -eq 0 ]; then
     echo ""
@@ -82,7 +81,7 @@ if [ $RESULT -eq 0 ]; then
     echo -e "${YELLOW}=== RELEASE版として登録されました ===${NC}"
     echo ""
     echo "次のステップ:"
-    echo "1. 登録したプロジェクトでClaude Codeを再起動"
+    echo "1. Claude Codeを再起動（local スコープの場合は登録したプロジェクトで）"
     echo "2. swift-selenaツールが利用可能になります"
 else
     echo ""

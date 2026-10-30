@@ -687,13 +687,13 @@ final class BackwardCompatibilityTests: XCTestCase {
             "v3→最新 のバージョン不一致は破損ではないため cacheWarning は立たない"
         )
 
-        // 検証 (d): 永続化された memory.json が最新版（v5）で再書き込みされている
+        // 検証 (d): 永続化された memory.json が最新版（v6）で再書き込みされている
         let reloadedData = try Data(contentsOf: memoryFileURL)
         let reloadedRoot = try JSONSerialization.jsonObject(with: reloadedData) as? [String: Any]
         XCTAssertEqual(
             reloadedRoot?["cacheVersion"] as? Int,
-            5,
-            "再保存された memory.json は最新の cacheVersion=5 に更新される"
+            6,
+            "再保存された memory.json は最新の cacheVersion=6 に更新される"
         )
     }
 
@@ -770,13 +770,13 @@ final class BackwardCompatibilityTests: XCTestCase {
             "v4→v5 のバージョン不一致は破損ではないため cacheWarning は立たない"
         )
 
-        // 検証 (d): memory.json が v5 で再書き込みされている
+        // 検証 (d): memory.json が最新版（v6）で再書き込みされている
         let reloadedData = try Data(contentsOf: memoryFileURL)
         let reloadedRoot = try JSONSerialization.jsonObject(with: reloadedData) as? [String: Any]
         XCTAssertEqual(
             reloadedRoot?["cacheVersion"] as? Int,
-            5,
-            "再保存された memory.json は cacheVersion=5 に更新される"
+            6,
+            "再保存された memory.json は最新の cacheVersion=6 に更新される"
         )
     }
 

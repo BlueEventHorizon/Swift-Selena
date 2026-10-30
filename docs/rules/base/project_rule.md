@@ -38,7 +38,7 @@
 | 項目 | 説明 |
 |------|------|
 | `platforms` | 対象プラットフォーム（macOS 13.0+） |
-| `swift-tools-version` | Swiftバージョン（5.9） |
+| `swift-tools-version` | Swiftバージョン（6.1。言語モードは `swiftLanguageModes: [.v5]` で Swift 5） |
 
 ### 3.5 プロジェクト構成
 

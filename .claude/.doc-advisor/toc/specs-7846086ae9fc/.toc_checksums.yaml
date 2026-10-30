@@ -1,12 +1,12 @@
 # ToC checksums for key: specs
 # Auto-generated - do not edit
-generated_at: 2026-06-07T03:15:54Z
+generated_at: 2026-10-30T07:27:53Z
 file_count: 17
 checksums:
   project/main/design/DES-004_swift_toc_generation_design.md: d863ce7363ef23ee3616b1e32aaabe0bbd9a0801bc7e81c4c2becebec2c618da
   project/main/design/DES-005_code_header_generation_design.md: ab2712503ca33eeb62f71d2350d38b2123a54f69fa77b2dc5772f65d2f8ccac0
   project/main/design/DES-006_code_header_db_design_v2.md: 8aa4b6bb6eee91b7172b441207bbeb95aa9896a49b041c6330dc07f3747b2dca
-  project/main/design/DES-101_System_Architecture.md: 1a3b7429415c7112bb77bb37451235d2eabcb2326c6c7bf2f449814d2d001ff8
+  project/main/design/DES-101_System_Architecture.md: 7cedbbd3a287c4dac6b7859a5012c24371e7c57b58983a1aa70f23a430c3b5a2
   project/main/design/DES-102_LSP_Integration_Design.md: a619e9b0c15478a1d32c0f9b6092fb1c2aa49ca67bcd20478024cdcc66e3e7a7
   project/main/design/DES-103_Tool_Implementation_Design.md: 94e6837a5b92d4e940ff1ec00a767d80c1552f049cbe41567c6cd15ca8957cc1
   project/main/design/DES-104_search_symbol_tools_enhancement_design.md: 6940b73cbeec18bd77a9945fbdd77db8d9900e823434c544e893a0175c9c0f16
