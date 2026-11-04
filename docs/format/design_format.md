@@ -36,6 +36,7 @@
 ### 判断基準
 
 **迷ったら「実装者がこれで実装できるか？」で判断**
+
 - **Yes** → 設計書に記載
 - **No** → より詳細化が必要、または要件定義書の領域
 
@@ -47,11 +48,12 @@
 
 各設計には以下の体系で一意のIDを付与します：
 
-| プレフィックス | 説明 | 例 |
-|--------------|------|-----|
-| DES- | Design（設計） | DES-001 |
+| プレフィックス | 説明           | 例      |
+| -------------- | -------------- | ------- |
+| DES-           | Design（設計） | DES-001 |
 
 **ID付与ルール**:
+
 - 001から連番
 - 一度付与したIDは変更しない
 - 削除された設計のIDは欠番とする
@@ -60,6 +62,7 @@
 ## ファイル命名規則
 
 ### 基本ルール
+
 - **設計IDをファイル名の先頭に付与**: `DES-001_user_list_design.md`
 - **スネークケース**使用: `{設計ID}_{設計対象名}_design.md`
 - 末尾に`_design.md`を必ず付与
@@ -69,7 +72,7 @@
 
 ### 基本テンプレート構造
 
-```markdown
+````markdown
 # [設計名] 設計書
 
 **設計ID**: DES-XXX
@@ -78,19 +81,19 @@
 
 ## メタデータ
 
-| 項目 | 値 |
-|-----|-----|
-| 設計ID | DES-XXX |
-| 関連要件 | [カンマ区切りで関連要件IDを列挙、例: SCR-001, CMP-001, BL-001] |
-| 実装層 | UI層 / Domain層 / Infrastructure層 / DI層（該当するものを列挙） |
-| 主要モジュール | |
-| - Entity | [Entity名列挙、例: Contact, Group] |
-| - Service | [Service名列挙、例: ContactService, GroupService] |
-| - DataStore | [DataStore名列挙、例: ContactDataStore] |
-| - Repository | [Repository名列挙、例: ContactRepository] |
-| - View | [View名列挙、例: ContactListView] |
-| - ViewModel | [ViewModel名列挙、例: ContactListViewModel] |
-| - Component | [Component名列挙、例: ContactListItem] |
+| 項目           | 値                                                              |
+| -------------- | --------------------------------------------------------------- |
+| 設計ID         | DES-XXX                                                         |
+| 関連要件       | [カンマ区切りで関連要件IDを列挙、例: SCR-001, CMP-001, BL-001]  |
+| 実装層         | UI層 / Domain層 / Infrastructure層 / DI層（該当するものを列挙） |
+| 主要モジュール |                                                                 |
+| - Entity       | [Entity名列挙、例: Contact, Group]                              |
+| - Service      | [Service名列挙、例: ContactService, GroupService]               |
+| - DataStore    | [DataStore名列挙、例: ContactDataStore]                         |
+| - Repository   | [Repository名列挙、例: ContactRepository]                       |
+| - View         | [View名列挙、例: ContactListView]                               |
+| - ViewModel    | [ViewModel名列挙、例: ContactListViewModel]                     |
+| - Component    | [Component名列挙、例: ContactListItem]                          |
 
 **目的**: AI検索とトレーサビリティ追跡、実装層・モジュール特定のためのメタ情報。
 
@@ -112,6 +115,7 @@
 [モジュール一覧表]
 
 ### 3.2 [主要モジュール1の詳細]
+
 ### 3.3 [主要モジュール2の詳細]
 
 [H3見出しはproject/project_toc.mdの「主なトピック」として抽出される]
@@ -121,6 +125,7 @@
 **目的**: データがシステム内をどのように流れるかを設計する。
 
 **記載内容**:
+
 - **データの流れ**
   - Repository → Service → DataStore → ViewModel → View
   - 各層での処理内容
@@ -132,29 +137,32 @@
   - 外部イベント（プッシュ通知等）
 
 **例**:
+
 ```markdown
 ### 連絡先データのフロー
 
 Repository（ContactRepository）
-  ↓ fetchContacts()
+↓ fetchContacts()
 Service（ContactService）
-  ↓ processContacts()
-  ↓ updateItems()
+↓ processContacts()
+↓ updateItems()
 DataStore（ContactDataStore）
-  ↓ StreamManager.broadcast()
-  ↓ AsyncStream
+↓ StreamManager.broadcast()
+↓ AsyncStream
 ViewModel（ContactListViewModel）
-  ↓ handleUpdate()
-  ↓ items更新
+↓ handleUpdate()
+↓ items更新
 View（ContactListView）
-  ↓ 自動再描画
+↓ 自動再描画
 ```
+````
 
 ## 5. 処理フロー設計
 
 **目的**: ビジネスロジックやアルゴリズムの詳細な実装方法を設計する。
 
 **記載内容**:
+
 - **アルゴリズム設計**
   - 処理の詳細ステップ
   - 条件分岐とループ
@@ -167,6 +175,7 @@ View（ContactListView）
   - 依存関係
 
 **例**:
+
 ```markdown
 ### 連絡先検索の処理フロー
 
@@ -187,6 +196,7 @@ View（ContactListView）
 **目的**: UI状態やアプリケーション状態の管理方法を設計する。
 
 **記載内容**:
+
 - **ViewState設計**
   - 使用する状態の種類（.none, .loading, .loaded, .error）
   - 状態遷移図
@@ -199,21 +209,25 @@ View（ContactListView）
   - StreamManagerの使用方法
 
 **例**:
+
 ```markdown
 ### ContactListViewModelの状態管理
 
 ViewState:
+
 - .none: 初期状態
 - .loading: 連絡先読み込み中
 - .loaded: 連絡先表示中
 - .error: エラー表示中
 
 管理プロパティ:
+
 - viewState: ViewState
 - contacts: [Contact]
 - errorMessage: String?
 
 AsyncStream購読:
+
 - subscriptionTask: Task<Void, Never>?
 - start()でDataStore購読開始
 - stop()でTask cancel
@@ -228,6 +242,7 @@ AsyncStream購読:
 **目的**: Unit Test、Integration Testで実施するテストケースを設計する。
 
 **記載内容**:
+
 - **正常系テストケース**
   - 期待される正常な動作
   - テスト条件と期待結果
@@ -239,21 +254,25 @@ AsyncStream購読:
   - エッジケースの処理
 
 **例**:
+
 ```markdown
 ### ContactServiceのテストケース
 
 正常系:
+
 - @Test("データ取得成功時、DataStoreが更新される")
   - mockRepository.dataToReturn = [testContact]
   - service.loadContacts()実行
   - dataStore.getCurrentContacts()で検証
 
 異常系:
+
 - @Test("ネットワークエラー時、ServiceErrorをスローする")
   - mockRepository.errorToThrow = .networkError
   - service.loadContacts()がエラーをスロー
 
 境界値:
+
 - @Test("データが空の場合、空配列を返す")
   - mockRepository.dataToReturn = []
   - service.loadContacts()実行
@@ -263,8 +282,8 @@ AsyncStream購読:
 ## 9. その他
 
 [追加の設計情報]
-```
 
+````
 ### 設計書テンプレート例
 
 ```markdown
@@ -315,13 +334,14 @@ AsyncStream購読:
 ### 3.4 Infrastructure層モジュール詳細
 
 [詳細設計]
-```
+````
 
 ## メタデータ記載のガイドライン
 
 ### 実装層の判定
 
 **判定基準**:
+
 - **UI層**: View、ViewModel、Componentが含まれる
 - **Domain層**: Service、Entity、DataStore Protocol、Repository Protocolが含まれる
 - **Infrastructure層**: DataStore実装、Repository実装が含まれる
@@ -332,6 +352,7 @@ AsyncStream購読:
 ### 主要モジュールの記載
 
 **記載する項目**:
+
 - **Entity**: ビジネスエンティティ（例: Contact, Group, Settings）
 - **Service**: ビジネスロジック（例: ContactService, GroupService）
 - **DataStore**: データ保持とStream配信（例: ContactDataStore）
@@ -341,6 +362,7 @@ AsyncStream購読:
 - **Component**: 再利用可能UIコンポーネント（例: ContactListItem）
 
 **記載しない項目**:
+
 - 補助的なEnum、ValueObject
 - 内部的なヘルパークラス
 - Extension
@@ -348,6 +370,7 @@ AsyncStream購読:
 ### 関連要件の記載
 
 **記載方法**:
+
 - この設計が実現する要件IDを全て列挙
 - カンマ区切り（例: SCR-001, CMP-001, BL-001）
 - 要件トレーサビリティマトリクスと一致させる
@@ -359,11 +382,13 @@ AsyncStream購読:
 #### Mermaid図（推奨）
 
 **よく使う図の種類**:
+
 - **フローチャート**: アーキテクチャ図、処理フロー
 - **クラス図**: モジュール構造、型関係
 - **シーケンス図**: ユースケース、データフロー
 
 **例（フローチャート）**:
+
 ```mermaid
 flowchart TB
     A[View] --> B[ViewModel]
@@ -371,6 +396,7 @@ flowchart TB
 ```
 
 **構文リファレンス**:
+
 - [Flowchart](https://mermaid.js.org/syntax/flowchart.html) - アーキテクチャ図、処理フロー
 - [Class Diagram](https://mermaid.js.org/syntax/classDiagram.html) - モジュール構造、型関係
 - [Sequence Diagram](https://mermaid.js.org/syntax/sequenceDiagram.html) - ユースケース、データフロー
@@ -380,6 +406,7 @@ flowchart TB
 ### コード例の記載
 
 実装例を示す場合はコードブロックを使用：
+
 ```swift
 // 実装例
 public actor ContactService {
@@ -400,10 +427,10 @@ public actor ContactService {
 ```markdown
 ## 改定履歴
 
-| 日付 | バージョン | 作成者 | 変更内容 |
-|------|-----------|--------|----------|
-| 2025-01-01 | 1.0 | Claude | 初版作成 |
-| 2025-01-15 | 1.1 | Claude | モジュール追加 |
+| 日付       | バージョン | 作成者 | 変更内容       |
+| ---------- | ---------- | ------ | -------------- |
+| 2025-01-01 | 1.0        | Claude | 初版作成       |
+| 2025-01-15 | 1.1        | Claude | モジュール追加 |
 ```
 
 ## 関連文書

@@ -62,15 +62,9 @@ struct FileLogHandler: LogHandler {
         set { metadata[key] = newValue }
     }
 
-    func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
+    func log(event: LogEvent) {
+        let level = event.level
+        let message = event.message
         // v0.5.4: 日本時間（JST）でタイムスタンプ表示
         // DateFormatterはスレッドセーフでないため、呼び出し毎にローカル生成
         let formatter = DateFormatter()

@@ -64,7 +64,7 @@ enum AnalyzeImportsTool: MCPTool {
         let fileImports = try await SwiftSyntaxAnalyzer.analyzeImports(projectPath: memory.projectPath, projectMemory: memory, logger: logger)
 
         if fileImports.isEmpty {
-            return CallTool.Result(content: [.text("No imports found in project")])
+            return CallTool.Result(content: [.text(text: "No imports found in project", annotations: nil, _meta: nil)])
         }
 
         var result = "Import Dependencies Analysis:\n\n"
@@ -97,6 +97,6 @@ enum AnalyzeImportsTool: MCPTool {
             result += "... and \(fileImports.count - 20) more files\n"
         }
 
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     }
 }

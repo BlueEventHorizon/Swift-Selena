@@ -155,6 +155,12 @@ actor ProjectMemory {
         // メモリをロードまたは初期化
         let memoryFile = memoryDir.appendingPathComponent("memory.json")
 
+        // actor の nonisolated init からは隔離メソッド（save）を呼べないため、
+        // ローカル変数で確定させてから代入し、static ヘルパーで書き出す
+        var loaded: Memory
+        var warning = false
+        var needsSave = false
+
         if FileManager.default.fileExists(atPath: memoryFile.path) {
             do {
                 let data = try Data(contentsOf: memoryFile)
@@ -163,21 +169,27 @@ actor ProjectMemory {
                 // 旧スキーマはフィールド構成が異なり全体デコードに失敗しうるため、先に cacheVersion だけを読む
                 let probe = try JSONDecoder().decode(VersionProbe.self, from: data)
                 if probe.cacheVersion != Self.cacheVersion {
-                    self.memory = Self.createEmptyMemory()
-                    try save()
+                    loaded = Self.createEmptyMemory()
+                    needsSave = true
                 } else {
-                    self.memory = try JSONDecoder().decode(Memory.self, from: data)
+                    loaded = try JSONDecoder().decode(Memory.self, from: data)
                 }
             } catch {
                 // §8.2: デコード失敗時は空メモリへ復旧し警告フラグを立てる（部分デコードによる notes 保持はしない）
-                self.memory = Self.createEmptyMemory()
-                self.cacheWarning = true
-                try save()
+                loaded = Self.createEmptyMemory()
+                warning = true
+                needsSave = true
             }
         } else {
-            self.memory = Self.createEmptyMemory()
-            try save()
+            loaded = Self.createEmptyMemory()
+            needsSave = true
         }
+
+        if needsSave {
+            try Self.write(&loaded, to: memoryFile)
+        }
+        self.memory = loaded
+        self.cacheWarning = warning
     }
 
     /// DES-104 §8.2: 構造化結果の cache_warning 伝達用に外部から参照する
@@ -386,16 +398,19 @@ actor ProjectMemory {
     
     /// メモリを保存
     func save() throws {
+        try Self.write(&memory, to: memoryDir.appendingPathComponent("memory.json"))
+    }
+
+    /// Memory を JSON として書き出す（lastAnalyzed を更新する。init からも呼べるよう static）
+    private static func write(_ memory: inout Memory, to file: URL) throws {
         memory.lastAnalyzed = Date()
-        
+
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(memory)
-        
-        let memoryFile = memoryDir.appendingPathComponent("memory.json")
-        try data.write(to: memoryFile)
+        try data.write(to: file)
     }
-    
+
     /// キャッシュをクリア
     func clearCache() throws {
         memory.fileSymbolCache.removeAll()

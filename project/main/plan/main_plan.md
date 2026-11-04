@@ -26,6 +26,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 ### v0.5.0（✅ 完了 - 2025/10/13）
 
 **新機能:**
+
 - 5つの新ツール（合計22ツール）
   - set_analysis_mode（分析モード切り替え）
   - read_symbol（シンボル単位読み取り）
@@ -34,11 +35,13 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
   - think_about_analysis（思考促進）
 
 **リファクタリング:**
+
 - SwiftMCPServer.swift: 1,123行 → 250行（78%削減）
 - ツールファイル分割（22ツール、10カテゴリ）
 - MCPToolプロトコル導入
 
 **バグ修正:**
+
 - find_files パターンマッチング修正
 
 **詳細**: CHANGELOG.md、project/design/DES-103_Tool_Implementation_Design.md参照
@@ -48,15 +51,18 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 ### v0.5.1（✅ 完了 - 2025/10/21）
 
 **LSP基盤整備:**
+
 - LSPState Actor、LSPClient実装
 - 動的ツールリスト生成
 - バックグラウンドLSP接続（非ブロッキング）
 
 **ツール削減:**
+
 - 22個 → 17個（-5個）
 - Claude標準機能との重複排除
 
 **設計判断:**
+
 - BuildChecker削除（直接LSP接続試行で十分）
 - Serenaと同じシンプルなアプローチ
 
@@ -75,6 +81,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
    - LSP利用不可時: 代替ツール（find_type_usages, search_code）を案内
 
 **技術詳細:**
+
 - FindSymbolReferencesTool.execute()にlspStateパラメータ追加
 - SwiftMCPServerからlspStateを渡す
 - LSPClient経由でtextDocument/referencesリクエスト送信
@@ -82,10 +89,12 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 - MCPToolプロトコル準拠のためのラッパー実装
 
 **ツール総数:**
+
 - ビルド不可: 17個（SwiftSyntaxのみ）
 - ビルド可能: 18個（+find_symbol_references）
 
 **設計判断:**
+
 - list_symbols強化、get_type_hierarchy強化はv0.5.3に延期
 - 理由: LSP documentSymbol統合に追加実装時間が必要（1-2時間）
 - v0.5.2は基本的なLSP機能（参照検索）に集中
@@ -120,10 +129,12 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
    - LSPState診断機能
 
 **検証結果:**
+
 - find_symbol_references: 安定動作、参照検出成功（3-34件）
 - 5回連続実行でクラッシュなし
 
 **設計判断:**
+
 - list_symbols強化、get_type_hierarchy強化はv0.5.4に延期
 - 理由: LSP基盤の安定化を優先
 
@@ -157,6 +168,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
    - グレースフルデグレード完全実装
 
 **実装完了:**
+
 - ✅ LSPClient拡張（documentSymbol, typeHierarchy）
 - ✅ 階層構造対応（children再帰処理）
 - ✅ 除外ディレクトリ対応（263ファイル完全一致）
@@ -165,16 +177,19 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 - ✅ グレースフルデグレード完璧
 
 **既知の問題（v0.5.5に延期）:**
+
 - △ LSP非同期通知混入（publishDiagnostics）
 - △ documentSymbol/typeHierarchy不安定（フォールバック動作）
 - ✅ 実害なし（SwiftSyntax版で完全動作）
 
 **テスト結果:**
+
 - ✅ ContactBプロジェクト: 全ツール完全一致検証
 - ✅ find_symbol_references: 動作
 - ✅ グレースフルデグレード完璧
 
 **ツール総数:**
+
 - ビルド不可: 17個
 - ビルド可能: 18個
 - 強化ツール: 2個（実装済み、v0.5.5で安定化）
@@ -212,11 +227,13 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
    - 理由: 動作環境が限定的、全プロジェクトタイプで動作する構成を優先
 
 **重要な知見:**
+
 - MCP仕様: `server.waitUntilCompleted()`必須、無限ループは不要
 - LSP制限: Xcodeプロジェクトでは参照検索不可、documentSymbol/typeHierarchyは動作
 - 開発版と本番版の完全分離: 別名登録で本番環境汚染を防止
 
 **ツール総数:**
+
 - ビルド不可: 17個
 - ビルド可能: 18個（find_symbol_references削除により減少）
 
@@ -254,11 +271,13 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
    - 未適用ファイルリスト
 
 **検索精度:**
+
 - Phase 1: 70-80%（形態素解析）
 - Phase 2: 80-85%（類義語辞書、v0.6.1）
 - Phase 3: 90%+（ベクトル検索、v0.7.0、要検証）
 
 **Apple Foundation Models使用:**
+
 - NaturalLanguage: 形態素解析、品詞タグ付け
 - CreateML: ベクトル埋め込み（Phase 3、検証後）
 
@@ -387,6 +406,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **目標**: 意味的類似度検索の実現（精度90%+）
 
 **前提条件:**
+
 - CreateMLの日本語埋め込み精度検証
 - 精度が不十分ならPhase 2（類義語辞書）で停止
 
@@ -402,6 +422,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
    - 類似度スコア表示
 
 **代替案（CreateML精度不足の場合）:**
+
 - Apple Intelligence API（M1+）
 - ローカルLLM（Ollama）の埋め込みAPI
 
@@ -488,6 +509,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **目的**: ビルド可能なプロジェクトで型情報ベースの高度な機能を提供
 
 **段階:**
+
 - v0.5.1: 基盤整備（LSPState, LSPClient）✅
 - v0.5.2: find_symbol_references新規実装 ✅
 - v0.5.3: list_symbols/get_type_hierarchy強化
@@ -495,6 +517,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 - v0.5.5: 最適化（レスポンスパース、エラーハンドリング、パフォーマンス）
 
 **最終ツール数**:
+
 - ビルド不可: 17個（SwiftSyntaxのみ）
 - ビルド可能: 19-20個（+2-3個のLSPツール）
 - 強化ツール: 2個（list_symbols, get_type_hierarchy）
@@ -508,6 +531,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **目的**: Code Headerを内部DB化し、高速な意図ベース検索を実現
 
 **段階:**
+
 - v0.6.0: DB構築、search_code_headers実装
 - v0.6.1: 類義語辞書で精度向上
 
@@ -523,6 +547,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **目的**: 分析モード機能を正しいMCP Prompts実装に移行
 
 **変更:**
+
 - Tools/Prompts/ の2ツールを削除
 - MCP Prompts Capabilityで再実装
 
@@ -535,6 +560,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **目的**: SwiftSyntax Triviaによる正確なコメント検索
 
 **実装:**
+
 - search_comments ツール
 - TODO/FIXME/MARK専用検索
 - 複数行コメント対応
@@ -550,6 +576,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **前提**: CreateMLの日本語精度検証
 
 **実装:**
+
 - Apple NLEmbedding使用
 - コサイン類似度検索
 
@@ -562,6 +589,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **目的**: コード品質メトリクスとツール使用統計
 
 **実装:**
+
 - get_tool_usage_stats（設計見直し後）
 - コード品質メトリクス
 - 依存関係分析
@@ -573,21 +601,21 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 
 ### 現在（v0.5.1）
 
-| 技術 | 用途 |
-|------|------|
-| Swift 5.9+ | 実装言語 |
-| SwiftSyntax 602.0.0 | 構文解析 |
-| MCP Swift SDK 0.10.2 | MCPプロトコル |
-| CryptoKit | プロジェクトパスハッシュ |
-| swift-log | ロギング |
-| SourceKit-LSP | 型情報ベース解析（v0.5.1+） |
+| 技術                 | 用途                        |
+| -------------------- | --------------------------- |
+| Swift 5.9+           | 実装言語                    |
+| SwiftSyntax 602.0.0  | 構文解析                    |
+| MCP Swift SDK 0.10.2 | MCPプロトコル               |
+| CryptoKit            | プロジェクトパスハッシュ    |
+| swift-log            | ロギング                    |
+| SourceKit-LSP        | 型情報ベース解析（v0.5.1+） |
 
 ### 追加予定
 
-| 技術 | バージョン | 用途 |
-|------|----------|------|
-| NaturalLanguage | macOS標準 | v0.6.0: 形態素解析 |
-| CreateML | macOS標準 | v0.7.0: ベクトル検索（検証後） |
+| 技術            | バージョン | 用途                           |
+| --------------- | ---------- | ------------------------------ |
+| NaturalLanguage | macOS標準  | v0.6.0: 形態素解析             |
+| CreateML        | macOS標準  | v0.7.0: ベクトル検索（検証後） |
 
 ---
 
@@ -635,30 +663,30 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 
 ### v0.5.x系（LSP統合）
 
-| 指標 | 目標値 |
-|------|--------|
-| ビルド可能プロジェクトでの機能数 | 19-20ツール |
-| ビルド不可でも動作 | 17ツール |
-| 参照検索精度（LSP） | 95%+ |
-| グレースフルデグレード | 100%（LSP失敗でも動作） |
+| 指標                             | 目標値                  |
+| -------------------------------- | ----------------------- |
+| ビルド可能プロジェクトでの機能数 | 19-20ツール             |
+| ビルド不可でも動作               | 17ツール                |
+| 参照検索精度（LSP）              | 95%+                    |
+| グレースフルデグレード           | 100%（LSP失敗でも動作） |
 
 ### v0.6.x系（Code Header DB）
 
-| 指標 | 目標値 |
-|------|--------|
-| 検索速度 | <0.1秒 |
-| 検索精度 | 80-85% |
-| Code Header適用率 | 80%+ |
-| ノイズ削減率 | 95%+ |
+| 指標              | 目標値 |
+| ----------------- | ------ |
+| 検索速度          | <0.1秒 |
+| 検索精度          | 80-85% |
+| Code Header適用率 | 80%+   |
+| ノイズ削減率      | 95%+   |
 
 ### v1.0.0（安定版）
 
-| 指標 | 目標値 |
-|------|--------|
-| テストカバレッジ | 80%+ |
-| 1000ファイルプロジェクト処理時間 | <10秒 |
-| メモリ使用量 | <100MB |
-| クラッシュ率 | 0% |
+| 指標                             | 目標値 |
+| -------------------------------- | ------ |
+| テストカバレッジ                 | 80%+   |
+| 1000ファイルプロジェクト処理時間 | <10秒  |
+| メモリ使用量                     | <100MB |
+| クラッシュ率                     | 0%     |
 
 ---
 
@@ -669,6 +697,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **発生確率**: 中
 **影響度**: 大
 **対策**:
+
 - 段階的実装（v0.5.1-0.5.4）
 - グレースフルデグレード必須
 - SwiftSyntax機能は常に動作
@@ -680,6 +709,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **発生確率**: 中（未検証）
 **影響度**: 中
 **対策**:
+
 - v0.7.0実装前に検証プロジェクト
 - 精度不足なら類義語辞書で停止（85%でも十分）
 - Apple Intelligence等の代替案検討
@@ -691,6 +721,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **発生確率**: 中（運用依存）
 **影響度**: 中
 **対策**:
+
 - 新規ファイル追加時のチェックリスト
 - get_code_header_statsで可視化
 - CI/CDでの自動チェック
@@ -702,6 +733,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **発生確率**: 中
 **影響度**: 低
 **対策**:
+
 - 段階的リリース（機能ごとにバージョンアップ）
 - 優先度による柔軟な調整
 - v1.0.0は機能完成度より安定性重視
@@ -715,6 +747,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **現状**: 1人での開発
 
 **対策**:
+
 - 段階的実装（1機能ずつ）
 - 徹底したテスト
 - ドキュメント優先
@@ -722,6 +755,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 ### Claude Code / Serenaの活用
 
 **開発支援:**
+
 - Swift-Selena自身を使った開発
 - Serena（汎用）との併用
 - ドッグフーディング
@@ -788,6 +822,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **決定**: SwiftSyntax（ベースライン）+ LSP（オプション強化）
 
 **理由**:
+
 - ビルド不要の原則を維持
 - ビルド可能時は型情報で強化
 - グレースフルデグレード
@@ -799,6 +834,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **決定**: ToCファイル（DES-004）を廃止、Code Headerフォーマット（DES-005）を採用
 
 **理由**:
+
 - AI推論精度: 40% → 100%
 - ファイルとの自動同期
 - 更新忘れなし
@@ -810,6 +846,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **決定**: NaturalLanguage、CreateML（検証後）を使用
 
 **理由**:
+
 - オンデバイス実行
 - プライバシー保護
 - 追加コストゼロ
@@ -822,6 +859,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **決定**: 6ツール提案 → 2ツール実装
 
 **理由**:
+
 - 過剰なAPI追加を避ける
 - 統合ツールの方が柔軟
 - メンテナンス負担削減
@@ -833,6 +871,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **決定**: initialize_project時ではなく、初回検索時にDB構築
 
 **理由**:
+
 - 起動高速化
 - 必要な時だけコスト発生
 - ユーザー体験向上
@@ -844,6 +883,7 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 **決定**: v0.5.2から削除、v0.8.0で再設計後に実装
 
 **理由**:
+
 - 後方互換性の問題（既存memory.jsonとの衝突）
 - 統計記録の侵襲性（メインフローへの混入）
 - MCPプロトコルの役割逸脱（クライアント側の責務）
@@ -856,33 +896,43 @@ Swift-SelenaのSwiftSyntaxベースの静的解析に、LSP統合とCode Header 
 Swift-Selenaは以下の進化を遂げる：
 
 **v0.5.0（✅ 完了）**:
+
 - SwiftSyntaxベース、22ツール、ビルド不要
 
 **v0.5.1（✅ 完了）**:
+
 - LSP基盤整備、17ツール、動的ツールリスト
 
 **v0.5.2（✅ 完了）**:
+
 - find_symbol_references実装、18ツール（LSP時）
 
 **v0.5.3（✅ 完了）**:
+
 - LSP安定化、デバッグ機能、参照検索動作確認
 
 **v0.5.4（✅ 完了）**:
+
 - list_symbols/get_type_hierarchy強化、LSP型情報統合
 
 **v0.5.5（✅ 完了）**:
+
 - search_files_without_pattern実装、6つの重要バグ修正、find_symbol_references削除
 
 **v0.5.x系完了（2025 Q4）**:
+
 - SwiftSyntax + LSP、18ツール、ハイブリッド、全プロジェクトタイプ対応
 
 **v0.6.x系（2026 Q1）**:
+
 - Code Header DB、意図ベース検索、精度80-85%
 
 **v0.7.0（2026 Q2）**:
+
 - ベクトル検索、精度90%+（検証次第）
 
 **v1.0.0（2026 Q2）**:
+
 - 安定版、本番環境対応、エコシステム統合
 
 **最終目標**: 大規模プロジェクト（1000+ファイル）でも実用的な、プライバシー保護されたSwift解析ツールの完成

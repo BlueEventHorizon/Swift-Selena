@@ -8,13 +8,13 @@
 
 ## メタデータ
 
-| 項目 | 値 |
-|-----|-----|
-| 設計ID | DES-102 |
-| 対象バージョン | v0.5.1〜v0.5.5 |
-| 関連要件 | REQ-002（LSP統合要件） |
-| 主要コンポーネント | LSPState, LSPClient, FileLogHandler, DebugRunner |
-| LSP API | initialize, initialized, didOpen, findReferences, documentSymbol, typeHierarchy |
+| 項目               | 値                                                                              |
+| ------------------ | ------------------------------------------------------------------------------- |
+| 設計ID             | DES-102                                                                         |
+| 対象バージョン     | v0.5.1〜v0.5.5                                                                  |
+| 関連要件           | REQ-002（LSP統合要件）                                                          |
+| 主要コンポーネント | LSPState, LSPClient, FileLogHandler, DebugRunner                                |
+| LSP API            | initialize, initialized, didOpen, findReferences, documentSymbol, typeHierarchy |
 
 ---
 
@@ -50,6 +50,7 @@ graph TB
 ```
 
 **設計判断:**
+
 - SwiftSyntax = ベースライン（削除しない）
 - LSP = オプション強化
 - ビルド非依存性の原則を維持
@@ -94,6 +95,7 @@ stateDiagram-v2
 ```
 
 **保証:**
+
 - どのケースでも結果を返す
 - エラーで終わらない
 - 代替案を提示
@@ -287,12 +289,12 @@ classDiagram
 
 ### 4.2 LSP APIメソッド一覧
 
-| メソッド | LSP Method | 入力 | 出力 | バージョン |
-|---------|-----------|------|------|-----------|
-| findReferences | textDocument/references | filePath, line, column | [LSPLocation] | v0.5.2 |
-| documentSymbol | textDocument/documentSymbol | filePath | [LSPDocumentSymbol] | v0.5.4（計画） |
-| typeHierarchy | textDocument/prepareTypeHierarchy | filePath, line, column | LSPTypeHierarchy? | v0.5.4（計画） |
-| callHierarchy | textDocument/prepareCallHierarchy | filePath, line, column | CallHierarchyItem? | v0.5.5（将来） |
+| メソッド       | LSP Method                        | 入力                   | 出力                | バージョン     |
+| -------------- | --------------------------------- | ---------------------- | ------------------- | -------------- |
+| findReferences | textDocument/references           | filePath, line, column | [LSPLocation]       | v0.5.2         |
+| documentSymbol | textDocument/documentSymbol       | filePath               | [LSPDocumentSymbol] | v0.5.4（計画） |
+| typeHierarchy  | textDocument/prepareTypeHierarchy | filePath, line, column | LSPTypeHierarchy?   | v0.5.4（計画） |
+| callHierarchy  | textDocument/prepareCallHierarchy | filePath, line, column | CallHierarchyItem?  | v0.5.5（将来） |
 
 ---
 
@@ -487,6 +489,7 @@ graph LR
 ```
 
 **ログ形式:**
+
 ```
 [2025-10-24T09:30:49Z] ℹ️ [info] Starting Swift MCP Server...
 [2025-10-24T09:30:51Z] ℹ️ [info] Attempting LSP connection...
@@ -529,6 +532,7 @@ graph TB
 ```
 
 **利点:**
+
 - 本番と同じLSPState共有
 - Xcodeデバッガでブレークポイント設定可能
 - 自動テストシーケンス
@@ -565,6 +569,7 @@ graph TD
 ```
 
 **採用方式（v0.5.3）:**
+
 - find_symbol_referencesを常にツールリストに含める
 - 実行時にLSP利用可能性をチェック
 - 利用不可ならエラーメッセージで代替案提示
@@ -706,6 +711,7 @@ sequenceDiagram
 ```
 
 **実際のログ:**
+
 ```
 LSP typeHierarchy response (length=196)
 ---START---
@@ -716,6 +722,7 @@ Using SwiftSyntax for list_symbols
 ```
 
 **影響範囲:**
+
 - find_symbol_references: ✅ 当時は動作（非同期通知が少ない）。現行では削除済み
 - documentSymbol: ❌ 不安定（フォールバック）
 - typeHierarchy: ❌ 不安定（フォールバック）
@@ -725,16 +732,19 @@ Using SwiftSyntax for list_symbols
 ### 11.2 根本原因
 
 **現状の実装（receiveResponse）:**
+
 ```swift
 let data = try? handle.availableData  // 全バッファ取得
 ```
 
 **問題点:**
+
 1. 複数メッセージが混在する
 2. 非同期通知が先に読まれる
 3. 実際のレスポンスを読めない
 
 **正しい実装（v0.5.5）:**
+
 ```swift
 1. Content-Lengthヘッダー読み取り
 2. 指定バイト数だけ読み取り
@@ -771,6 +781,7 @@ graph TD
 ```
 
 **実装方針:**
+
 1. ResponseBufferクラス作成
 2. Content-Length正確解析
 3. メッセージ種別判定（id有無）
@@ -880,12 +891,12 @@ sequenceDiagram
 
 ### 13.2 検証結果（v0.5.3）
 
-| テスト | 結果 |
-|--------|------|
-| LSPState actor | ✅ 3件検出 |
-| ProjectMemory class | ✅ 34件検出 |
-| FindSymbolReferencesTool | ✅ 3件検出 |
-| 5回連続実行 | ✅ クラッシュなし |
+| テスト                   | 結果              |
+| ------------------------ | ----------------- |
+| LSPState actor           | ✅ 3件検出        |
+| ProjectMemory class      | ✅ 34件検出       |
+| FindSymbolReferencesTool | ✅ 3件検出        |
+| 5回連続実行              | ✅ クラッシュなし |
 
 ---
 
@@ -893,21 +904,22 @@ sequenceDiagram
 
 **Swift-Selena自身（Swift Package）:**
 
-| API | 接続 | レスポンス取得 | パース | 動作 |
-|-----|------|---------------|--------|------|
-| find_symbol_references | ✅ | ✅ | ✅ | ✅ 当時は完全動作（現行では削除済み） |
-| documentSymbol | ✅ | ✅ (16KB) | ❌ 非同期通知混入 | △ フォールバック |
-| typeHierarchy | ✅ | ✅ (196byte) | ❌ 非同期通知混入 | △ フォールバック |
+| API                    | 接続 | レスポンス取得 | パース            | 動作                                  |
+| ---------------------- | ---- | -------------- | ----------------- | ------------------------------------- |
+| find_symbol_references | ✅   | ✅             | ✅                | ✅ 当時は完全動作（現行では削除済み） |
+| documentSymbol         | ✅   | ✅ (16KB)      | ❌ 非同期通知混入 | △ フォールバック                      |
+| typeHierarchy          | ✅   | ✅ (196byte)   | ❌ 非同期通知混入 | △ フォールバック                      |
 
 **ContactBプロジェクト（Xcodeプロジェクト）:**
 
-| ツール | LSP接続 | LSP動作 | SwiftSyntax版 | 結果 |
-|--------|---------|---------|---------------|------|
-| list_symbols | ✅ | ❌ | ✅ | ✅ 263ファイル完全一致 |
-| analyze_imports | - | - | ✅ | ✅ 263ファイル完全一致 |
-| find_files | - | - | ✅ | ✅ 263ファイル完全一致 |
+| ツール          | LSP接続 | LSP動作 | SwiftSyntax版 | 結果                   |
+| --------------- | ------- | ------- | ------------- | ---------------------- |
+| list_symbols    | ✅      | ❌      | ✅            | ✅ 263ファイル完全一致 |
+| analyze_imports | -       | -       | ✅            | ✅ 263ファイル完全一致 |
+| find_files      | -       | -       | ✅            | ✅ 263ファイル完全一致 |
 
 **結論:**
+
 - グレースフルデグレード完璧 ✅
 - SwiftSyntax版で全機能動作 ✅
 - LSP版は v0.5.5 で安定化予定
@@ -919,6 +931,7 @@ sequenceDiagram
 ### 14.1 達成事項
 
 **完全実装:**
+
 - ✅ LSPClient API追加（documentSymbol, typeHierarchy）
 - ✅ 階層構造対応（children再帰、90倍改善）
 - ✅ 除外ディレクトリ（重大バグ修正）
@@ -926,16 +939,19 @@ sequenceDiagram
 - ✅ ログJST表示
 
 **部分実装:**
+
 - △ LSP版動作（非同期通知問題、v0.5.5で完成）
 
 ### 14.2 v0.5.5への引継ぎ
 
 **必須課題:**
+
 1. ResponseBuffer実装（最優先）
 2. documentSymbol/typeHierarchy安定化
 3. 非同期通知処理
 
 **期待効果:**
+
 - LSP版が完全動作
 - 型情報表示（detailフィールドがあれば）
 
@@ -944,13 +960,16 @@ sequenceDiagram
 ## 15. 参照
 
 **要件定義:**
+
 - REQ-002: LSP統合要件
 
 **設計書:**
+
 - DES-101: システムアーキテクチャ
 - DES-103: ツール実装設計
 
 **履歴:**
+
 - CONVERSATION_HISTORY.md: v0.5.2/v0.5.3開発経緯
 
 ---
@@ -960,7 +979,8 @@ sequenceDiagram
 **Last Updated**: 2025-10-26
 **Status**: 承認待ち
 **Changes**:
+
 - v0.5.4実装完了、検証結果追加
 - LSP非同期通知問題を記載
 - v0.5.5への引継ぎ事項明確化
-**Supersedes**: DES-007, DES-008 DebugRunner, DES-009, Hybrid-Architecture-Plan.md（LSP部分）
+  **Supersedes**: DES-007, DES-008 DebugRunner, DES-009, Hybrid-Architecture-Plan.md（LSP部分）

@@ -11,13 +11,14 @@
 
 ## 変更履歴
 
-| バージョン | 日付 | 変更内容 |
-|----------|------|---------|
-| 1.0 | 2025-10-21 | 初版（形態素解析版） |
-| 2.0 | 2025-10-21 | 経緯削除、最新設計のみ |
-| 3.0 | 2024-12-28 | NLEmbedding版に全面改訂 |
+| バージョン | 日付       | 変更内容                |
+| ---------- | ---------- | ----------------------- |
+| 1.0        | 2025-10-21 | 初版（形態素解析版）    |
+| 2.0        | 2025-10-21 | 経緯削除、最新設計のみ  |
+| 3.0        | 2024-12-28 | NLEmbedding版に全面改訂 |
 
 **主な変更**:
+
 - 形態素解析 → NLEmbedding（Apple Intelligence）
 - 正規表現検索 → セマンティック検索
 - 検索精度目標: 70-80% → 80-90%
@@ -34,15 +35,18 @@ DES-005で生成されたCode Headerフォーマットを読み取り、**Apple 
 ### 1.2 背景
 
 **DES-005の成果:**
+
 - Code Headerフォーマット生成（100%精度）
 - 各ファイルに目的・機能が記載
 
 **現状の課題:**
+
 - search_codeでの検索は可能だが遅い（全ファイル走査、5分）
 - 正規表現のみ（完全一致、同義語を理解できない）
 - ノイズが多い（実装コードもヒットする）
 
 **解決アプローチ（改訂）:**
+
 - Code Headerを構造化データとして内部DB化
 - **NLEmbedding（Apple Intelligence）**で埋め込みベクトル生成
 - セマンティック検索で高速・高精度な検索（<0.1秒、80-90%）
@@ -426,14 +430,15 @@ extension ProjectMemory {
 
 ### 6.2 パフォーマンス目標
 
-| 項目 | 目標値 | 実測方法 |
-|-----|--------|---------|
-| DB構築時間（200ファイル） | < 15秒 | ベンチマーク |
-| DB構築時間（1000ファイル） | < 60秒 | ベンチマーク |
-| 検索時間 | < 0.1秒 | ベンチマーク |
-| メモリ使用量 | < 50MB | Instruments |
+| 項目                       | 目標値  | 実測方法     |
+| -------------------------- | ------- | ------------ |
+| DB構築時間（200ファイル）  | < 15秒  | ベンチマーク |
+| DB構築時間（1000ファイル） | < 60秒  | ベンチマーク |
+| 検索時間                   | < 0.1秒 | ベンチマーク |
+| メモリ使用量               | < 50MB  | Instruments  |
 
 **実測コード**:
+
 ```swift
 let start = Date()
 try await projectMemory.buildCodeHeaderDB(projectPath: projectPath)
@@ -448,6 +453,7 @@ logger.info("DB構築時間: \(elapsed)秒")
 ### 7.1 search_code_headers
 
 **実装:**
+
 ```swift
 // Sources/Tools/CodeHeader/SearchCodeHeadersTool.swift
 
@@ -537,6 +543,7 @@ struct SearchCodeHeadersTool: MCPTool {
 ### 7.2 get_code_header_stats
 
 **実装:**
+
 ```swift
 // Sources/Tools/CodeHeader/GetCodeHeaderStatsTool.swift
 

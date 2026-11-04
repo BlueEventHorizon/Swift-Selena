@@ -9,12 +9,14 @@ Based on 76 diagram corrections in Swift-Selena project (2025-10-24〜26).
 ### Error: "Parse error" with colons
 
 **Broken:**
+
 ```mermaid
 flowchart LR
     A[Function: process()]
 ```
 
 **Fixed:**
+
 ```mermaid
 flowchart LR
     A["Function process"]
@@ -27,12 +29,14 @@ flowchart LR
 ### Error: Brackets in labels
 
 **Broken:**
+
 ```mermaid
 flowchart LR
     A[Array [1,2,3]]
 ```
 
 **Fixed:**
+
 ```mermaid
 flowchart LR
     A["Array 1 2 3"]
@@ -45,12 +49,14 @@ flowchart LR
 ### Error: Parentheses in method names
 
 **Broken:**
+
 ```mermaid
 flowchart LR
     A[method(param)]
 ```
 
 **Fixed:**
+
 ```mermaid
 flowchart LR
     A["method with param"]
@@ -66,12 +72,14 @@ flowchart LR
 ### Error: Lowercase "end"
 
 **Broken:**
+
 ```mermaid
 flowchart TD
     Start --> end
 ```
 
 **Fixed:**
+
 ```mermaid
 flowchart TD
     Start --> End
@@ -84,6 +92,7 @@ flowchart TD
 ### Error: "o" at edge start creates circle
 
 **Broken:**
+
 ```mermaid
 flowchart LR
     A---oB
@@ -92,6 +101,7 @@ flowchart LR
 **Result:** Circle edge `o` appears
 
 **Fixed:**
+
 ```mermaid
 flowchart LR
     A--- oB
@@ -106,6 +116,7 @@ flowchart LR
 ### Error: Subgraph without ID
 
 **Broken:**
+
 ```mermaid
 flowchart TD
     subgraph "My Group"
@@ -114,6 +125,7 @@ flowchart TD
 ```
 
 **Fixed:**
+
 ```mermaid
 flowchart TD
     subgraph GRP["My Group"]
@@ -130,6 +142,7 @@ flowchart TD
 ### Error: Note in flowchart
 
 **Broken:**
+
 ```mermaid
 flowchart TD
     A[Node]
@@ -137,6 +150,7 @@ flowchart TD
 ```
 
 **Fixed (Option A):**
+
 ```mermaid
 flowchart TD
     A[Node]
@@ -144,6 +158,7 @@ flowchart TD
 ```
 
 **Fixed (Option B):**
+
 ```mermaid
 sequenceDiagram
     participant A
@@ -159,6 +174,7 @@ sequenceDiagram
 ### Error: Undefined node reference
 
 **Broken:**
+
 ```mermaid
 classDiagram
     Animal <|-- Dog
@@ -169,6 +185,7 @@ classDiagram
 ```
 
 **Fixed:**
+
 ```mermaid
 classDiagram
     class Animal {
@@ -186,6 +203,7 @@ classDiagram
 ### Error: Method syntax
 
 **Broken:**
+
 ```mermaid
 classDiagram
     class MyClass {
@@ -194,6 +212,7 @@ classDiagram
 ```
 
 **Fixed:**
+
 ```mermaid
 classDiagram
     class MyClass {
@@ -210,12 +229,14 @@ classDiagram
 ### Error: Edge label with special chars
 
 **Broken:**
+
 ```mermaid
 flowchart LR
     A -->|process()| B
 ```
 
 **Fixed:**
+
 ```mermaid
 flowchart LR
     A -->|process| B
@@ -243,16 +264,19 @@ flowchart LR
 ## Prevention Strategy
 
 **Before creating:**
+
 1. Check for special chars in content
 2. Check for reserved words
 3. Plan subgraph structure with IDs
 
 **While creating:**
+
 1. Use double quotes liberally
 2. Test with simple version first
 3. Add complexity incrementally
 
 **After creating:**
+
 1. Validate syntax (paste in mermaid live editor)
 2. Check rendering
 3. Fix any errors immediately
@@ -264,12 +288,14 @@ flowchart LR
 ### Example 1: DES-101
 
 **Broken (line 158):**
+
 ```mermaid
 flowchart TD
     SMCP[SwiftMCPServer: ListTools/CallTool]
 ```
 
 **Fixed:**
+
 ```mermaid
 flowchart TD
     SMCP["SwiftMCPServer<br/>- ListTools<br/>- CallTool"]
@@ -280,12 +306,14 @@ flowchart TD
 ### Example 2: DES-102
 
 **Broken (line 689):**
+
 ```mermaid
 sequenceDiagram
     Client->>LSP: textDocument/documentSymbol
 ```
 
 **Fixed:**
+
 ```mermaid
 sequenceDiagram
     Client->>LSP: textDocument documentSymbol
@@ -296,6 +324,7 @@ sequenceDiagram
 ### Example 3: DES-103
 
 **Broken (line 485):**
+
 ```mermaid
 classDiagram
     class ToolHelpers {
@@ -304,6 +333,7 @@ classDiagram
 ```
 
 **Fixed:**
+
 ```mermaid
 classDiagram
     class ToolHelpers {
@@ -317,6 +347,7 @@ classDiagram
 ## Reference
 
 For complete syntax details:
+
 - [Mermaid Official Docs](https://mermaid.js.org/)
 - [flowchart-reference.md](flowchart-reference.md)
 - [sequence-reference.md](sequence-reference.md)

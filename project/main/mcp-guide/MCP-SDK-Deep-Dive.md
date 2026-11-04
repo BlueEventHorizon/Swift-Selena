@@ -195,16 +195,16 @@ public protocol RequestMethod: Sendable {
 
 MCP Swift SDKが提供する主要な型とその役割：
 
-| 型 | カテゴリ | 役割 | 主要メソッド/プロパティ |
-|----|---------|------|----------------------|
-| **Server** | サーバー | MCPサーバーのコア実装 | `start()`, `withMethodHandler()` |
-| **Transport** | 通信 | 通信層の抽象化 | `send()`, `receive()` |
-| **RequestMethod** | プロトコル | MCPメソッドの型定義 | `Params`, `Result`, `method` |
-| **Capabilities** | 設定 | サーバー機能の定義 | `tools`, `resources`, `prompts` |
-| **JSONValue** | データ | 動的型の表現 | `.string()`, `.number()`, `.object()` |
-| **Tool** | ツール | ツール定義 | `name`, `description`, `inputSchema` |
-| **Content** | レスポンス | ツール結果の表現 | `.text()`, `.image()`, `.resource()` |
-| **MCPError** | エラー | MCP標準エラー | `.invalidParams()`, `.internalError()` |
+| 型                | カテゴリ   | 役割                  | 主要メソッド/プロパティ                |
+| ----------------- | ---------- | --------------------- | -------------------------------------- |
+| **Server**        | サーバー   | MCPサーバーのコア実装 | `start()`, `withMethodHandler()`       |
+| **Transport**     | 通信       | 通信層の抽象化        | `send()`, `receive()`                  |
+| **RequestMethod** | プロトコル | MCPメソッドの型定義   | `Params`, `Result`, `method`           |
+| **Capabilities**  | 設定       | サーバー機能の定義    | `tools`, `resources`, `prompts`        |
+| **JSONValue**     | データ     | 動的型の表現          | `.string()`, `.number()`, `.object()`  |
+| **Tool**          | ツール     | ツール定義            | `name`, `description`, `inputSchema`   |
+| **Content**       | レスポンス | ツール結果の表現      | `.text()`, `.image()`, `.resource()`   |
+| **MCPError**      | エラー     | MCP標準エラー         | `.invalidParams()`, `.internalError()` |
 
 ### 型の関係図
 
@@ -269,12 +269,12 @@ MCPでは、サーバーとクライアントが**互いにサポートする機
 
 #### Capabilitiesの種類と用途
 
-| Capability | 目的 | 有効化されるメソッド | 使用例 |
-|-----------|------|------------------|--------|
-| **tools** | 外部ツールの実行 | `ListTools`, `CallTool` | コード解析、ファイル検索、計算処理 |
-| **resources** | リソースへのアクセス | `ListResources`, `ReadResource`, `Subscribe` | ファイル読み取り、DB接続、APIアクセス |
-| **prompts** | プロンプトテンプレート | `ListPrompts`, `GetPrompt` | 定型質問、対話テンプレート |
-| **logging** | 構造化ロギング | `SetLogLevel` | サーバーログの動的制御 |
+| Capability    | 目的                   | 有効化されるメソッド                         | 使用例                                |
+| ------------- | ---------------------- | -------------------------------------------- | ------------------------------------- |
+| **tools**     | 外部ツールの実行       | `ListTools`, `CallTool`                      | コード解析、ファイル検索、計算処理    |
+| **resources** | リソースへのアクセス   | `ListResources`, `ReadResource`, `Subscribe` | ファイル読み取り、DB接続、APIアクセス |
+| **prompts**   | プロンプトテンプレート | `ListPrompts`, `GetPrompt`                   | 定型質問、対話テンプレート            |
+| **logging**   | 構造化ロギング         | `SetLogLevel`                                | サーバーログの動的制御                |
 
 #### なぜOptionalなのか？
 
@@ -312,6 +312,7 @@ let resourceServer = Server(
 ```
 
 **利点:**
+
 - サーバーの責務を明確にできる
 - 不要な機能を実装しなくて良い
 - クライアントは利用可能な機能のみを使用
@@ -330,14 +331,15 @@ public struct ToolCapabilities: Codable, Sendable {
 }
 ```
 
-| 項目 | 説明 |
-|------|------|
-| **有効化されるメソッド** | `ListTools`, `CallTool` |
-| **主な用途** | コマンド実行、コード解析、データ処理、計算 |
-| **Swift-Selenaでの使用** | ✅ 使用中（17個のツールを提供） |
-| **設定オプション** | なし（有効/無効のみ） |
+| 項目                     | 説明                                       |
+| ------------------------ | ------------------------------------------ |
+| **有効化されるメソッド** | `ListTools`, `CallTool`                    |
+| **主な用途**             | コマンド実行、コード解析、データ処理、計算 |
+| **Swift-Selenaでの使用** | ✅ 使用中（17個のツールを提供）            |
+| **設定オプション**       | なし（有効/無効のみ）                      |
 
 **実装例:**
+
 ```swift :実装例
 capabilities: .init(
     tools: .init()  // ツール機能を有効化
@@ -359,15 +361,16 @@ public struct ResourceCapabilities: Codable, Sendable {
 }
 ```
 
-| 項目 | 説明 |
-|------|------|
+| 項目                     | 説明                                                        |
+| ------------------------ | ----------------------------------------------------------- |
 | **有効化されるメソッド** | `ListResources`, `ReadResource`, `Subscribe`, `Unsubscribe` |
-| **主な用途** | ファイル読み取り、データベース接続、API統合 |
-| **Swift-Selenaでの使用** | ❌ 未使用（ツール機能で代替） |
-| **subscribe** | `true`: リソース変更の通知を受け取る |
-| **listChanged** | `true`: リソースリスト変更時に通知 |
+| **主な用途**             | ファイル読み取り、データベース接続、API統合                 |
+| **Swift-Selenaでの使用** | ❌ 未使用（ツール機能で代替）                               |
+| **subscribe**            | `true`: リソース変更の通知を受け取る                        |
+| **listChanged**          | `true`: リソースリスト変更時に通知                          |
 
 **実装例:**
+
 ```swift :実装例
 capabilities: .init(
     resources: .init(
@@ -391,14 +394,15 @@ public struct PromptCapabilities: Codable, Sendable {
 }
 ```
 
-| 項目 | 説明 |
-|------|------|
-| **有効化されるメソッド** | `ListPrompts`, `GetPrompt` |
-| **主な用途** | 定型質問、対話フロー、テンプレート管理 |
-| **Swift-Selenaでの使用** | ❌ 未使用 |
-| **listChanged** | `true`: プロンプトリスト変更時に通知 |
+| 項目                     | 説明                                   |
+| ------------------------ | -------------------------------------- |
+| **有効化されるメソッド** | `ListPrompts`, `GetPrompt`             |
+| **主な用途**             | 定型質問、対話フロー、テンプレート管理 |
+| **Swift-Selenaでの使用** | ❌ 未使用                              |
+| **listChanged**          | `true`: プロンプトリスト変更時に通知   |
 
 **実装例:**
+
 ```swift :実装例
 capabilities: .init(
     prompts: .init(
@@ -408,6 +412,7 @@ capabilities: .init(
 ```
 
 **使用シーン:**
+
 - ユーザーに質問パターンを提示
 - 複数ステップの対話フロー
 - コンテキストに応じたプロンプト切り替え
@@ -424,14 +429,15 @@ public struct LoggingCapabilities: Codable, Sendable {
 }
 ```
 
-| 項目 | 説明 |
-|------|------|
-| **有効化されるメソッド** | `SetLogLevel` |
-| **主な用途** | デバッグ時のログレベル変更、本番環境での動的ログ制御 |
-| **Swift-Selenaでの使用** | ❌ 未使用（静的なログレベル設定） |
-| **設定オプション** | なし（有効/無効のみ） |
+| 項目                     | 説明                                                 |
+| ------------------------ | ---------------------------------------------------- |
+| **有効化されるメソッド** | `SetLogLevel`                                        |
+| **主な用途**             | デバッグ時のログレベル変更、本番環境での動的ログ制御 |
+| **Swift-Selenaでの使用** | ❌ 未使用（静的なログレベル設定）                    |
+| **設定オプション**       | なし（有効/無効のみ）                                |
 
 **実装例:**
+
 ```swift :実装例
 capabilities: .init(
     logging: .init()  // ロギング制御を有効化
@@ -446,30 +452,37 @@ capabilities: .init(
 #### Capabilitiesの選択ガイド
 
 **最小構成（ツールのみ）:**
+
 ```swift :実装例
 // Swift-Selenaの構成
 capabilities: .init(tools: .init())
 ```
+
 → シンプルなツール提供サーバー
 
 **リソース重視:**
+
 ```swift :実装例
 capabilities: .init(
     resources: .init(subscribe: true)
 )
 ```
+
 → ファイルサーバー、データソース
 
 **対話重視:**
+
 ```swift :実装例
 capabilities: .init(
     tools: .init(),
     prompts: .init()
 )
 ```
+
 → 対話型アシスタント
 
 **フルスタック:**
+
 ```swift :実装例
 capabilities: .init(
     tools: .init(),
@@ -478,6 +491,7 @@ capabilities: .init(
     logging: .init()
 )
 ```
+
 → 全機能を提供する包括的サーバー
 
 ---
@@ -519,6 +533,7 @@ public func withMethodHandler<Method: RequestMethod>(
 ```
 
 **仕組み:**
+
 - Associated Typeを使って、パラメータ型と戻り値型を静的に決定
 - コンパイル時に型チェックが行われる
 - ランタイムエラーを大幅に削減
@@ -949,6 +964,7 @@ await server.withMethodHandler(CallTool.self) { params in
 ```
 
 **ポイント**:
+
 - `withMethodHandler`は非同期（`await`）
 - ハンドラクロージャは`@Sendable`（並行処理の安全性）
 - パラメータ型と戻り値型は`RequestMethod`で定義（型安全）
@@ -986,6 +1002,7 @@ public final class StdioTransport: Transport {
 ```
 
 **特徴:**
+
 - プロセスのstdin/stdoutを使用
 - プロセス間通信に適している
 - シンプルで実装が容易
@@ -1054,20 +1071,22 @@ try await server.start(transport: transport)
 
        return message
    }
-   ```
+```
 
 2. **パース**: JSON-RPCメッセージをデコード
+
 ```swift :SDK
-   // JSONRPCMessage の構造
-   enum JSONRPCMessage {
-       case request(id: JSONValue, method: String, params: JSONValue?)
-       case response(id: JSONValue, result: JSONValue)
-       case error(id: JSONValue?, error: JSONRPCError)
-       case notification(method: String, params: JSONValue?)
-   }
-   ```
+// JSONRPCMessage の構造
+enum JSONRPCMessage {
+    case request(id: JSONValue, method: String, params: JSONValue?)
+    case response(id: JSONValue, result: JSONValue)
+    case error(id: JSONValue?, error: JSONRPCError)
+    case notification(method: String, params: JSONValue?)
+}
+```
 
 3. **ルーティング**: メソッド名に応じてハンドラを呼び出し
+
 ```swift :SDK内部
    // Server内部の疑似コード
    switch message {
@@ -1083,7 +1102,7 @@ try await server.start(transport: transport)
        // レスポンスを作成
        return .response(id: id, result: result)
    }
-   ```
+```
 
 4. **送信**: `FileHandle.standardOutput`に結果を書き込み
    ```
@@ -1110,9 +1129,10 @@ try await server.start(transport: transport)
        print(jsonString)  // print() は自動的に改行を追加
        fflush(stdout)     // バッファをフラッシュして即座に送信
    }
-   ```
+```
 
 **重要な注意点:**
+
 - **ログはstderrに出力**: stdoutはMCP通信専用のため、ログは必ずstderrに出力
 - **改行区切り**: 各JSON-RPCメッセージは改行で区切られる
 - **ブロッキングI/O**: 同期的に読み書きを行う
@@ -1149,6 +1169,7 @@ public final class HTTPTransport: Transport {
 ```
 
 **特徴:**
+
 - HTTP/HTTPSプロトコルを使用
 - ネットワーク越しの通信に適している
 - カスタムHTTPヘッダーをサポート
@@ -1221,7 +1242,7 @@ try await server.start(transport: transport)
            "size": .stringConvertible(responseData.count)
        ])
    }
-   ```
+```
 
 2. **受信**: HTTPレスポンスボディからJSON-RPCレスポンスを取得
    ```
@@ -1239,15 +1260,17 @@ try await server.start(transport: transport)
 
        return message
    }
-   ```
+```
 
 **適用例:**
+
 - マイクロサービス間の通信
 - 分散システムでのMCP連携
 - クラウドサービスとの統合
 - プロキシやゲートウェイ経由の通信
 
 **SDK実装状態（v0.10.2）:**
+
 - ⚠️ 実験的実装のため、将来のバージョンでAPIが変更される可能性
 - 基本的な送受信は動作するが、エラーハンドリングは限定的
 - 認証方式はHTTPヘッダーベースのみ（OAuth等は未対応）
@@ -1273,6 +1296,7 @@ public final class InMemoryTransport: Transport {
 ```
 
 **特徴:**
+
 - 実際のI/Oなし、全てメモリ上で処理
 - 最速のパフォーマンス
 - 送受信履歴の追跡が可能
@@ -1363,6 +1387,7 @@ final class ServerTests: XCTestCase {
 **内部動作:**
 
 1. **メッセージキュー**: 送受信メッセージを内部キューで管理
+
 ```swift :SDK内部
    // InMemoryTransport内部の疑似コード
    class InMemoryTransport: Transport {
@@ -1373,9 +1398,10 @@ final class ServerTests: XCTestCase {
        // 送受信履歴（デバッグ用）
        private var history: [(direction: String, message: JSONRPCMessage)] = []
    }
-   ```
+```
 
 2. **同期的処理**: I/O待機なしで即座にレスポンスを返す
+
 ```swift :SDK内部
    func send(_ message: JSONRPCMessage) async throws {
        // メッセージをキューに追加するだけ（I/Oなし）
@@ -1400,9 +1426,10 @@ final class ServerTests: XCTestCase {
 
        return message
    }
-   ```
+```
 
 3. **デバッグ機能**: 送受信履歴の記録
+
 ```swift :SDK
    // テスト用のヘルパーメソッド（InMemoryTransport専用）
    func getHistory() -> [(direction: String, message: JSONRPCMessage)] {
@@ -1419,9 +1446,10 @@ final class ServerTests: XCTestCase {
        let received = history.filter { $0.direction == "receive" }.count
        return (sent, received)
    }
-   ```
+```
 
 **適用例:**
+
 - ユニットテスト（XCTest等）
 - 統合テスト
 - MCPサーバーのロジック検証
@@ -1465,17 +1493,17 @@ func testMultipleRequests() async throws {
 
 ### Transportの比較
 
-| 特徴 | StdioTransport | HTTPTransport | InMemoryTransport |
-|------|----------------|---------------|-------------------|
-| **通信方式** | stdin/stdout | HTTP/HTTPS | メモリ |
-| **通信特性** | プロセス間通信 | ネットワーク通信 | プロセス内通信 |
-| **I/O** | あり（ブロッキング） | あり（非同期） | なし |
-| **パフォーマンス** | 高速 | ネットワーク依存 | 最速 |
-| **セットアップ** | シンプル | 複雑（エンドポイント設定） | 最もシンプル |
-| **デバッグ** | 中（ログで確認） | 難（ネットワークツール必要） | 簡単（メモリ内で完結） |
-| **適用例** | CLIツール、デスクトップアプリ統合 | マイクロサービス、API連携 | ユニットテスト、統合テスト |
-| **認証方式** | プロセス権限 | HTTPヘッダー | 不要 |
-| **SDK実装状態** | 安定版 | 実験的（API変更の可能性） | 安定版 |
+| 特徴               | StdioTransport                    | HTTPTransport                | InMemoryTransport          |
+| ------------------ | --------------------------------- | ---------------------------- | -------------------------- |
+| **通信方式**       | stdin/stdout                      | HTTP/HTTPS                   | メモリ                     |
+| **通信特性**       | プロセス間通信                    | ネットワーク通信             | プロセス内通信             |
+| **I/O**            | あり（ブロッキング）              | あり（非同期）               | なし                       |
+| **パフォーマンス** | 高速                              | ネットワーク依存             | 最速                       |
+| **セットアップ**   | シンプル                          | 複雑（エンドポイント設定）   | 最もシンプル               |
+| **デバッグ**       | 中（ログで確認）                  | 難（ネットワークツール必要） | 簡単（メモリ内で完結）     |
+| **適用例**         | CLIツール、デスクトップアプリ統合 | マイクロサービス、API連携    | ユニットテスト、統合テスト |
+| **認証方式**       | プロセス権限                      | HTTPヘッダー                 | 不要                       |
+| **SDK実装状態**    | 安定版                            | 実験的（API変更の可能性）    | 安定版                     |
 
 ### Transportの選択例
 
@@ -1488,6 +1516,7 @@ let transport = StdioTransport(logger: logger)
 ```
 
 **特徴:**
+
 - プロセスが起動されると自動的に通信開始
 - 追加の設定不要
 - セキュリティ: プロセス権限で制御
@@ -1504,6 +1533,7 @@ let transport = HTTPTransport(
 ```
 
 **特徴:**
+
 - ネットワーク越しの通信
 - 複数クライアントからの接続が可能
 - セキュリティ: HTTPヘッダーで認証
@@ -1517,6 +1547,7 @@ let transport = InMemoryTransport()
 ```
 
 **特徴:**
+
 - I/Oオーバーヘッドなし
 - 高速なテスト実行
 - 送受信履歴の確認が容易
@@ -1641,6 +1672,7 @@ public struct Initialize: RequestMethod {
 ```
 
 **自動処理:**
+
 - `Initialize`は自動的に処理される（ハンドラ登録不要）
 - サーバー初期化時の情報が自動的に返される
 

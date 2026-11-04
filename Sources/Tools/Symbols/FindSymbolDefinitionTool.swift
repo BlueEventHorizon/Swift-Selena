@@ -96,10 +96,10 @@ enum FindSymbolDefinitionTool: MCPTool {
         // 空文字列は無効入力として統一エラー応答（REQ-005 §4.7.2）
         guard !symbolName.isEmpty else {
             return CallTool.Result(content: [
-                .text(ResultEncoder.buildErrorResponse(
+                .text(text: ResultEncoder.buildErrorResponse(
                     cause: "symbol_name が空です。",
                     suggestion: "1 文字以上のシンボル名を指定してください。"
-                ))
+                ), annotations: nil, _meta: nil)
             ])
         }
 
@@ -113,7 +113,7 @@ enum FindSymbolDefinitionTool: MCPTool {
             )
         } catch let MCPError.invalidParams(message) {
             return CallTool.Result(content: [
-                .text(symbolKindsParameterErrorResponse(message))
+                .text(text: symbolKindsParameterErrorResponse(message), annotations: nil, _meta: nil)
             ])
         }
 
@@ -122,10 +122,10 @@ enum FindSymbolDefinitionTool: MCPTool {
             try SymbolKindMapper.validate(userInputKinds)
         } catch let MCPError.invalidParams(message) {
             return CallTool.Result(content: [
-                .text(ResultEncoder.buildErrorResponse(
+                .text(text: ResultEncoder.buildErrorResponse(
                     cause: ErrorMessages.symbolKindUndefinedCause,
                     suggestion: message ?? ErrorMessages.symbolKindUndefinedSuggestion
-                ))
+                ), annotations: nil, _meta: nil)
             ])
         } catch {
             // SymbolKindMapper.validate は InvalidParams のみスローする想定
@@ -231,7 +231,7 @@ enum FindSymbolDefinitionTool: MCPTool {
         // 6) 0 件時は構造化結果なしの簡易応答（既存挙動を維持）
         if foundSymbols.isEmpty {
             return CallTool.Result(content: [
-                .text("Symbol '\(symbolName)' not found in project")
+                .text(text: "Symbol '\(symbolName)' not found in project", annotations: nil, _meta: nil)
             ])
         }
 
@@ -254,7 +254,7 @@ enum FindSymbolDefinitionTool: MCPTool {
             finalText = ResultEncoder.buildFinalResponse(encoded.text, encoded.json)
         }
 
-        return CallTool.Result(content: [.text(finalText)])
+        return CallTool.Result(content: [.text(text: finalText, annotations: nil, _meta: nil)])
     }
 
     // MARK: - 入力検証ヘルパー

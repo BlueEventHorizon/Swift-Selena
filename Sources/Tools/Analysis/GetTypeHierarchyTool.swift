@@ -88,7 +88,7 @@ enum GetTypeHierarchyTool: MCPTool {
             projectMemory: memory,
             logger: logger
         ) else {
-            return CallTool.Result(content: [.text("Type '\(typeName)' not found in project")])
+            return CallTool.Result(content: [.text(text: "Type '\(typeName)' not found in project", annotations: nil, _meta: nil)])
         }
 
         var result = "Type Hierarchy for '\(typeName)':\n\n"
@@ -124,7 +124,7 @@ enum GetTypeHierarchyTool: MCPTool {
             result += "\n"
         }
 
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     }
 
     /// LSP強化版実行（v0.5.4）
@@ -148,7 +148,7 @@ enum GetTypeHierarchyTool: MCPTool {
             projectMemory: memory,
             logger: logger
         ) else {
-            return CallTool.Result(content: [.text("Type '\(typeName)' not found in project")])
+            return CallTool.Result(content: [.text(text: "Type '\(typeName)' not found in project", annotations: nil, _meta: nil)])
         }
 
         // LSP利用可能性チェック
@@ -221,6 +221,6 @@ enum GetTypeHierarchyTool: MCPTool {
             result += "\n"
         }
 
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     }
 }

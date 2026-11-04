@@ -74,7 +74,7 @@ enum ListExtensionsTool: MCPTool {
         let extensions = try SwiftSyntaxAnalyzer.listExtensions(filePath: filePath)
 
         if extensions.isEmpty {
-            return CallTool.Result(content: [.text("No extensions found in \(filePath)")])
+            return CallTool.Result(content: [.text(text: "No extensions found in \(filePath)", annotations: nil, _meta: nil)])
         }
 
         var result = "Extensions in \(filePath):\n\n"
@@ -95,6 +95,6 @@ enum ListExtensionsTool: MCPTool {
             result += "\n"
         }
 
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     }
 }

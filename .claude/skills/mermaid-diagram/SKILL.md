@@ -13,12 +13,14 @@ Creates syntactically correct mermaid diagrams following official specifications
 ## Overview
 
 This skill helps you create error-free mermaid diagrams by:
+
 - Following official mermaid syntax specifications
 - Avoiding common pitfalls (special characters, reserved words, wrong note syntax)
 - Providing correct structure for each diagram type
 - Based on real experience: 76 diagrams fixed, 20+ iterations avoided
 
 **When to use:**
+
 - Creating flowcharts, sequence diagrams, class diagrams, etc.
 - Editing existing mermaid diagrams
 - Converting design ideas into visual diagrams
@@ -83,6 +85,7 @@ classDiagram
 **Solutions:**
 
 **Option A: Use double quotes**
+
 ```mermaid
 flowchart LR
     A["Function: process()"]
@@ -90,6 +93,7 @@ flowchart LR
 ```
 
 **Option B: Use HTML entities**
+
 - `:` → `&#58;`
 - `(` → `&#40;`
 - `)` → `&#41;`
@@ -98,6 +102,7 @@ flowchart LR
 - `;` → `&#59;`
 
 **WRONG:**
+
 ```mermaid
 flowchart LR
     A[Function: process()]  ❌ Colon breaks syntax
@@ -108,6 +113,7 @@ flowchart LR
 ### Rule 2: Reserved Words
 
 **"end" (lowercase):**
+
 ```mermaid
 flowchart TD
     Start --> End   ✅ Capitalized OK
@@ -116,6 +122,7 @@ flowchart TD
 ```
 
 **"o" and "x" at edge start:**
+
 ```mermaid
 flowchart LR
     A --- oB  ❌ Creates circle edge
@@ -128,6 +135,7 @@ flowchart LR
 ### Rule 3: Subgraph Syntax
 
 **CORRECT:**
+
 ```mermaid
 flowchart TD
     subgraph ID["Subgraph Title"]
@@ -137,6 +145,7 @@ flowchart TD
 ```
 
 **WRONG:**
+
 ```mermaid
 flowchart TD
     subgraph "Subgraph Title"  ❌ Missing ID
@@ -149,6 +158,7 @@ flowchart TD
 ### Rule 4: Note Syntax (Diagram-Specific)
 
 **sequenceDiagram ONLY:**
+
 ```mermaid
 sequenceDiagram
     A->>B: Message
@@ -156,6 +166,7 @@ sequenceDiagram
 ```
 
 **flowchart/graph: NO note keyword**
+
 ```mermaid
 flowchart TD
     Note[Use regular node instead]  ✅
@@ -166,6 +177,7 @@ flowchart TD
 ### Rule 5: classDiagram Rules
 
 **Define before linking:**
+
 ```mermaid
 classDiagram
     class Animal {
@@ -177,6 +189,7 @@ classDiagram
 ```
 
 **Method syntax:**
+
 ```mermaid
 classDiagram
     class MyClass {
@@ -192,11 +205,13 @@ classDiagram
 ### Flowchart / Graph
 
 **Declaration:**
+
 - `flowchart TD` (Top-Down)
 - `flowchart LR` (Left-Right)
 - `graph TD` (alias)
 
 **Node shapes:**
+
 - `A[Rectangle]`
 - `B(Rounded)`
 - `C{Diamond}`
@@ -204,6 +219,7 @@ classDiagram
 - `E[[Subroutine]]`
 
 **Edges:**
+
 - `A --> B` (arrow)
 - `A --- B` (line)
 - `A -.-> B` (dotted arrow)
@@ -211,6 +227,7 @@ classDiagram
 - `A -->|label| B` (labeled edge)
 
 **Subgraph:**
+
 ```mermaid
 flowchart TD
     subgraph SG1["Group 1"]
@@ -230,6 +247,7 @@ flowchart TD
 ### sequenceDiagram
 
 **Participants:**
+
 ```mermaid
 sequenceDiagram
     participant A as Alice
@@ -237,16 +255,19 @@ sequenceDiagram
 ```
 
 **Messages:**
+
 - `A->>B: Solid arrow`
 - `A-->>B: Dotted arrow`
 - `A-)B: Async`
 
 **Notes:**
+
 - `Note right of A: Text`
 - `Note left of B: Text`
 - `Note over A,B: Text`
 
 **Blocks:**
+
 - `alt`, `opt`, `par`, `loop`, `rect`
 
 ---
@@ -254,6 +275,7 @@ sequenceDiagram
 ### classDiagram
 
 **Class definition:**
+
 ```mermaid
 classDiagram
     class ClassName {
@@ -264,6 +286,7 @@ classDiagram
 ```
 
 **Relationships:**
+
 - `A <|-- B` (inheritance)
 - `A *-- B` (composition)
 - `A o-- B` (aggregation)
@@ -272,6 +295,7 @@ classDiagram
 - `A ..|> B` (realization)
 
 **Edge labels:**
+
 ```mermaid
 classDiagram
     A --> B : label
@@ -344,6 +368,7 @@ mindmap
 **Cause:** Special characters in labels
 
 **Solution:** Use double quotes or HTML entities
+
 ```mermaid
 flowchart LR
     A["Method: process()"]  ✅
@@ -356,6 +381,7 @@ flowchart LR
 **Cause:** Missing ID in subgraph declaration
 
 **Solution:**
+
 ```mermaid
 flowchart TD
     subgraph ID["Title"]  ✅
@@ -386,6 +412,7 @@ flowchart TD
 **Cause:** "o" or "x" at edge start
 
 **Solution:**
+
 ```mermaid
 flowchart LR
     A --- B  ✅
@@ -398,6 +425,7 @@ flowchart LR
 ## Advanced Topics
 
 For detailed specifications on specific diagram types, see:
+
 - [flowchart-reference.md](flowchart-reference.md) - Complete flowchart syntax
 - [sequence-reference.md](sequence-reference.md) - Complete sequence diagram syntax
 - [class-reference.md](class-reference.md) - Complete class diagram syntax

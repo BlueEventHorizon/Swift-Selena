@@ -5,123 +5,116 @@
 metadata:
   name: Document Search Index (specs)
   key: specs
-  generated_at: 2026-10-30T07:27:53Z
+  generated_at: 2026-11-04T08:40:35Z
   file_count: 17
 
 docs:
   project/main/design/DES-004_swift_toc_generation_design.md:
-    title: Swift Code Index Generation Design
-    purpose: Defines architecture and implementation for automated Swift code index generation using AI inference on code structure without requiring DocC comments
+    title: Swift Code Index Generation System Design
+    purpose: Describes the design of an AI-inferred Swift code index (swift_toc.md) built from structural analysis of Swift sources; superseded by the Code Header approach in DES-005
     content_details:
-      - AI inference algorithm with type, protocol, method, and filename patterns
-      - FileStructure and FileMetadata data structures with SymbolInfo composition
-      - Five-phase execution flow (file scan, structure analysis, AI inference, index generation, output)
-      - swift_toc.md format with Quick Reference, layer index, keyword index, and tag index sections
-      - Module responsibilities for FileScanner, StructureAnalyzer, AIInferenceEngine, IndexGenerator, CommandController
-      - Swift-Selena MCP integration with regex-based fallback
-      - Error handling for file scan, analysis, inference, and output stages
-      - Performance targets of 200 files in ~2 minutes with phase-wise allocation
-      - Risk analysis for inference precision (85%+ expected), Claude limitations, and cost
-      - Success metrics including 90% search time reduction and 85% index accuracy
+      - Layer-based file scan of Tools, Library, Domain and App directories with test and mock exclusion
+      - Structure analysis via Swift-Selena list_symbols and list_protocol_conformances with Read and regex fallback
+      - Inference rules from type name, protocol conformance, method name and file name patterns
+      - FileStructure, SymbolInfo and FileMetadata Swift struct definitions
+      - swift_toc.md output format with Quick Reference, layer index, keyword index and tag index
+      - create-swift-toc command flow in five phases with per-phase error handling
+      - Expected inference accuracy per file kind, about 85% overall
+      - "Alternatives compared: DocC, README and structured metadata rejected in favor of auto-generated swift_toc.md"
+      - Phase 2 plan for a Swift-Selena internal DB and purpose-based search tools
     applicable_tasks:
-      - Swift code search infrastructure planning
-      - Code discovery and duplication prevention
-      - Existing code reuse validation
-      - Architecture review and layer violation detection
-      - New Swift file documentation generation
+      - Design review of the legacy swift_toc.md code index generation
+      - Understanding why the AI-inferred code index approach was replaced by Code Headers
+      - Comparison of code index alternatives during design decisions
+      - Historical reference for create-swift-toc command design
     keywords:
-      - code index
-      - AI inference
-      - Swift syntax analysis
-      - symbol extraction
-      - search optimization
       - swift_toc.md
-      - swiftselena
-      - documentation
+      - create-swift-toc
+      - DES-004
+      - code index
+      - FileStructure
+      - FileMetadata
+      - AI inference
+      - Quick Reference
+      - list_symbols
   project/main/design/DES-005_code_header_generation_design.md:
-    title: Code Header Generation System Design
-    purpose: Defines the architecture and implementation approach for generating AI-searchable Code Header Format metadata in Swift source files, replacing the previous swift_toc approach with higher accuracy.
+    title: Code Header Format Generation System Design
+    purpose: Describes the design for generating the Code Header Format comment block in each Swift source file through code-reading agents, as the foundation for a Swift-Selena searchable DB; supersedes DES-004
     content_details:
-      - Code Header Format specification with mandatory [Code Header Format] marker for identification
-      - System architecture with file scanning, parallel Agent execution, and completion reporting
-      - "Three operation modes: default (skip existing), --update (overwrite all), --changed (git diff only)"
-      - Agent design for single-file header generation with code understanding process
-      - "Field guidelines: purpose, main features, contained types, related types with conciseness requirements"
-      - Integration with Swift-Selena for future Phase 2 DB construction via header metadata
-      - "Performance requirements: 187 files with 10 parallel agents in 15-20 minutes"
-      - Error handling for file scanning, Agent execution, and git status operations
-      - Comparison with DES-004 showing 100% accuracy improvement and automatic sync benefits
-      - "Quality criteria: comprehensibility, searchability, conciseness, and completeness"
+      - Code Header Format template with purpose, main features, contained types and related types sections in Swift file comments
+      - Marker [Code Header Format] used to detect applied files and drive skip behavior
+      - "code-header-generator Agent steps: read file, check marker, choose skip or update mode, read tests, edit file"
+      - "Critical constraints: keep existing DocC triple-slash comments, keep double-slash implementation comments, leave Copyright header unchanged"
+      - "create-code-headers command modes: default, --update and --changed with git status filtering"
+      - Parallel Agent dispatch with 5 to 10 agents at a time
+      - "Principles: omit what generative AI already knows, omit function names and protocol conformances"
+      - Phase 1 search via search_code over header sections and Phase 2 Swift-Selena DB plan
+      - Performance estimate of about 15 to 20 minutes for 187 files
     applicable_tasks:
-      - Code Header Format generation and maintenance for Swift source files
-      - AI-searchable metadata creation for source code discovery
-      - Code base documentation automation and synchronization
-      - Swift-Selena MCP integration and future Phase 2 database construction
-      - File header update verification and quality assurance
+      - Implementation of the create-code-headers command and code-header-generator Agent
+      - Review of Code Header generation rules and format compliance
+      - Modification of Code Header skip, update or changed mode behavior
+      - Verification of Code Header coverage with search_code queries
     keywords:
       - Code Header Format
-      - metadata generation
-      - Swift
-      - source code documentation
-      - search indexing
-      - parallel processing
-      - marker identification
-      - phase migration
-      - DES-004 replacement
-      - Swift-Selena
+      - code-header-generator
+      - create-code-headers
+      - "[Code Header Format]"
+      - "--changed"
+      - "--update"
+      - DocC
+      - search_code
+      - DES-005
   project/main/design/DES-006_code_header_db_design_v2.md:
-    title: Code Header DB System Design (NLEmbedding Version)
-    purpose: Specifies the architecture, data structures, and implementation for building a semantic search database of code headers using Apple Intelligence NLEmbedding
+    title: Code Header DB Construction System Design (NLEmbedding Edition)
+    purpose: Describes the design of an in-memory semantic search DB built from Code Header comments with Apple NLEmbedding, including the search_code_headers and get_code_header_stats tools targeted for v0.6.0
     content_details:
-      - System architecture components including MCP tools and semantic search engine
-      - NLEmbedding integration with cosine similarity calculations
-      - Code Header data structure with embedding vectors (768 dimensions)
-      - ProjectMemory extension with codeHeaderCache and embeddingGeneratedAt
-      - SemanticSearchEngine implementation with natural language query processing and threshold filtering
-      - Database build flow with progress tracking and file modification detection
-      - Performance optimization with concurrent embedding generation
-      - Search tools (search_code_headers and get_code_header_stats) for querying and statistics
-      - Error handling and graceful degradation for systems without NLEmbedding support
-      - Test planning including unit tests for embedding generation and integration tests for search accuracy (80% target)
+      - CodeHeaderInfo struct with filePath, lastModified, purposes, features, containedTypes, relatedTypes and embeddingVector fields
+      - ProjectMemory Memory extensions codeHeaderCache, embeddingDimension and lastDBBuildDate
+      - SemanticSearchEngine using NLEmbedding wordEmbedding for Japanese with cosine similarity and 0.6 default threshold
+      - buildCodeHeaderDB and needsDBUpdate methods in a ProjectMemory extension
+      - search_code_headers tool with query, section, layer and threshold parameters
+      - get_code_header_stats tool reporting coverage, embedding dimension and cache size
+      - SearchEngineError and CodeHeaderDBError definitions with graceful degradation messages
+      - "Performance targets: DB build under 15 seconds for 200 files, search under 0.1 seconds, accuracy 80% or more"
+      - "Requirements: macOS 15 or later, Apple Silicon, Japanese text only in v0.6.0"
     applicable_tasks:
-      - NLEmbedding integration development
-      - Semantic search feature implementation and optimization
-      - Code Header database construction and automatic rebuild on file changes
-      - Search tool implementation and MCP tool registration
-      - Performance benchmarking and optimization
+      - Implementation of SemanticSearchEngine with NLEmbedding
+      - Implementation of search_code_headers and get_code_header_stats MCP tools
+      - Modification of ProjectMemory code header cache and DB build logic
+      - Creation of unit tests for embedding generation and cosine similarity
+      - Validation of search accuracy and performance targets for the v0.6.0 release
     keywords:
+      - SemanticSearchEngine
       - NLEmbedding
-      - semantic search
-      - Apple Intelligence
-      - Code Header
-      - ProjectMemory
-      - embedding vector
+      - CodeHeaderInfo
+      - search_code_headers
+      - get_code_header_stats
+      - buildCodeHeaderDB
       - cosine similarity
-      - natural language query
-      - database construction
-      - search engine
+      - embeddingVector
+      - DES-006
   project/main/design/DES-101_System_Architecture.md:
     title: "DES-101: Swift-Selena System Architecture Design"
-    purpose: Defines the overall system architecture of the Swift-Selena MCP server, including core components, tool layers, LSP integration, caching, data flows, error handling, security, and deployment design
+    purpose: Defines the overall system architecture of Swift-Selena including core components, MCP server structure, SourceKit-LSP integration, tool execution and cache flows, graceful degradation, local-only operation, deployment, and limitations
     content_details:
-      - SwiftMCPServer entry point and lifecycle with StdioTransport, ListTools and CallTool handlers
-      - Core components SwiftSyntaxAnalyzer, FileSearcher, ProjectMemory, LSPState actor, and LSPClient with their responsibility matrix
-      - ProjectMemory persistence at ~/.swift-selena/clients/{clientId}/projects/{projectName}-{hash}/memory.json with data structure ER diagram
-      - LSP integration architecture where LSPState connects to sourcekit-lsp via stdin/stdout pipes and enhances tools with type information
-      - Tool execution flow with LSP-available versus SwiftSyntax-only paths and graceful degradation fallback to SwiftSyntax
-      - Build-independence guarantee that SwiftSyntax parses syntactically valid source without building
-      - Cache strategy with fileIndex, symbolCache, importCache, and typeConformanceCache based on lastModified comparison
-      - Error classification into MCPError invalidParams, invalidRequest, internalError and LSPError with fallback handling
-      - File access control allowing only project directory and ~/.swift-selena/ paths
-      - Homebrew tap install flow and make register targets for Claude Code, Claude Desktop, Cursor, and Codex
+      - "Core component layout: SwiftMCPServer, ProjectMemory, LSPState, LSPClient, SwiftSyntaxAnalyzer, FileSearcher and their relations"
+      - Tool execution flow with LSP-assisted path versus SwiftSyntax-only path
+      - LSP connection flow running in background after initialize_project returns immediately
+      - ProjectMemory data structure with Memory, FileInfo, SymbolInfo, ImportInfo, TypeConformanceInfo and Note entities
+      - Cache flow comparing lastModified to invalidate cached analysis results
+      - Graceful degradation rule falling back to SwiftSyntax when LSP is unavailable or fails
+      - Local-only operation with no network communication and storage under the Swift-Selena home directory
+      - Source directory layout under Sources/Tools and Sources/Selena
+      - Responsibility matrix with concurrency model per component
+      - Homebrew tap installation and MCP client registration flow
     applicable_tasks:
-      - Architecture review of the Swift-Selena server
-      - Implementation of new components or tools aligned with the layered design
-      - Review of LSP integration and graceful degradation behavior
-      - Modification of ProjectMemory caching or persistence logic
-      - Investigation of tool execution flow and component responsibilities
-      - Review of error handling and file access security design
-      - Deployment or client registration setup review
+      - Architecture review of Swift-Selena components
+      - Layer violation detection between tools, analyzers, ProjectMemory and LSP
+      - Implementation of new MCP tools following the existing component structure
+      - Modification or extension of LSP integration and LSPState connection handling
+      - Modification of the ProjectMemory cache design and invalidation logic
+      - Review of error handling and LSP fallback design
     keywords:
       - SwiftMCPServer
       - ProjectMemory
@@ -129,404 +122,407 @@ docs:
       - LSPClient
       - SwiftSyntaxAnalyzer
       - FileSearcher
-      - sourcekit-lsp
       - graceful degradation
       - memory.json
-      - system architecture
+      - executeWithLSP
+      - StdioTransport
   project/main/design/DES-102_LSP_Integration_Design.md:
-    title: LSP Integration Design
-    purpose: Defines the hybrid architecture, protocol implementation, and error handling for SourceKit-LSP integration in the MCP server, covering v0.5.x development roadmap and graceful degradation patterns
+    title: "DES-102: LSP Integration Design"
+    purpose: Defines the LSP integration design for Swift-Selena covering the hybrid SwiftSyntax plus LSP approach, LSPClient and LSPState structure, JSON-RPC protocol flow with SourceKit-LSP, error handling, SIGPIPE handling, and known async notification issues
     content_details:
-      - Hybrid architecture combining SwiftSyntax and LSP with graceful degradation
-      - LSP protocol implementation details including initialize, initialized, didOpen, and textDocument requests
-      - LSPClient and LSPState design with messageId management and openedFiles caching
-      - SIGPIPE handling and error recovery strategies
-      - FileLogHandler for debugging and DebugRunner for automated testing
-      - v0.5.4 implementation plan for documentSymbol and typeHierarchy LSP APIs
-      - Async notification mixing problem in v0.5.4 and v0.5.5 resolution strategy
-      - Dynamic tool list design approach for runtime LSP availability checking
-      - Complete test results for find_symbol_references, documentSymbol, and typeHierarchy
-      - Lessons learned from v0.5.2/v0.5.3 development phases
+      - Hybrid architecture where SwiftSyntax is the baseline and LSP is an optional enhancement for buildable projects
+      - LSPClient class structure with findReferences, documentSymbol, typeHierarchy and disconnect methods
+      - LSPState actor managing tryConnect, isLSPAvailable, getClient and disconnect
+      - "LSP protocol flow: initialize request, required response discard, initialized notification, textDocument/didOpen, then requests"
+      - LSP API method table with textDocument/references, documentSymbol, prepareTypeHierarchy and prepareCallHierarchy versions
+      - "SIGPIPE countermeasures: signal SIG_IGN, process.isRunning check, and try-catch on pipe writes"
+      - Content-Length byte-exact calculation and per-file didOpen caching through openedFiles
+      - FileLogHandler and DebugRunner design for LSP debugging under DEBUG builds
+      - Known async notification mixing issue (publishDiagnostics) and planned ResponseBuffer fix in v0.5.5
+      - Error handling table mapping processTerminated and communicationFailed errors to fallback
     applicable_tasks:
-      - LSP integration implementation for MCP tools
-      - SourceKit-LSP protocol handling and error management
-      - Graceful degradation design for build-independent analysis
-      - Debug environment setup with logging and testing
-      - Type hierarchy and symbol reference analysis tool enhancement
-      - Error recovery and resilience pattern implementation
-      - Process communication and pipe-based protocol handling
-      - ResponseBuffer implementation for async notification handling
+      - Implementation or modification of LSPClient methods such as documentSymbol or typeHierarchy
+      - Debugging LSP communication failures or unparsable SourceKit-LSP responses
+      - Review of the executeWithLSP fallback pattern in LSP-enhanced tools
+      - Implementation of the ResponseBuffer fix for async notification handling
+      - Review of LSPState connection lifecycle and availability checks
+      - Analysis of JSON-RPC message framing and Content-Length handling
     keywords:
-      - LSP
-      - SourceKit-LSP
-      - MCP server
-      - hybrid architecture
-      - graceful degradation
       - LSPClient
-      - textDocument
-      - documentSymbol
+      - LSPState
+      - SourceKit-LSP
+      - JSON-RPC
+      - Content-Length
+      - didOpen
+      - SIGPIPE
+      - ResponseBuffer
+      - publishDiagnostics
       - typeHierarchy
-      - async notification
   project/main/design/DES-103_Tool_Implementation_Design.md:
     title: "DES-103: Tool Implementation Design"
-    purpose: Specifies implementation patterns, design architecture, and development workflow for 18 MCP tools including Visitor patterns, LSP integration, caching strategy, and tool helpers
+    purpose: Defines the implementation design for the MCP tools of Swift-Selena, covering the common tool flow, LSP-enhanced pattern, per-tool implementation details, ToolHelpers and constants structure, new tool and Visitor addition steps, and cache and error handling design
     content_details:
-      - Basic tool implementation flow with parameter parsing and validation
-      - LSP enhancement pattern with fallback to SwiftSyntax
-      - 18 tools classification across 8 categories (Project, FileSystem, Symbols, SwiftUI, Analysis, LSP, Notes, Prompts)
-      - 7 implemented SwiftSyntax Visitors (SymbolVisitor, PropertyWrapperVisitor, ExtensionVisitor, TypeConformanceVisitor, ImportVisitor, TypeUsageVisitor, XCTestVisitor)
-      - Tool-specific implementation details for initialize_project, list_symbols, list_property_wrappers, analyze_imports, get_type_hierarchy
-      - ToolHelpers enum for parameter processing and constants definition structure
-      - New tool and Visitor addition flowcharts with time estimates (15-30min per tool, 30-60min per Visitor)
-      - Cache structure and invalidation strategy based on FileInfo.lastModified
-      - Error handling levels (invalid parameters, invalid request, internal error) with messaging principles
+      - Common tool implementation flow of parameter parsing, validation, ProjectMemory requirement check, execution, caching and formatting
+      - LSP-enhanced pattern where LSP is tried first and SwiftSyntax is always the fallback
+      - Tool category layout across Project, FileSystem, Symbols, SwiftUI, Analysis and Notes groups with removed or unimplemented tools marked
+      - SwiftSyntax Visitor set including SymbolVisitor, PropertyWrapperVisitor, ExtensionVisitor, TypeConformanceVisitor, ImportVisitor and XCTestVisitor
+      - Per-tool flows for initialize_project non-blocking LSP connection, list_symbols, list_property_wrappers, analyze_imports and get_type_hierarchy
+      - ToolHelpers methods requireProjectMemory, getString, getInt and getBool
+      - Constants.swift structure with AppConstants, ToolNames, ParameterKeys and ErrorMessages
+      - Cache structure with fileIndex, symbolCache, importCache and typeConformanceCache plus lastModified invalidation rule
+      - Error level design for invalid parameters, invalid request and internal errors
+      - Performance targets for 340 files cold and cached analysis
     applicable_tasks:
-      - MCP tool implementation
-      - Swift code analysis tool development
-      - LSP integration implementation
-      - SwiftSyntax Visitor creation
-      - Tool parameter validation and error handling
-      - Cache management and invalidation strategy
-      - Performance optimization planning
-      - Testing strategy with DebugRunner and Xcode debugging
+      - Implementation of a new MCP tool conforming to MCPTool
+      - Implementation or modification of an individual existing tool such as list_symbols or analyze_imports
+      - Addition of a new SwiftSyntax Visitor and its integration into the analyzer
+      - Review of tool error handling and parameter validation via ToolHelpers
+      - Review of cache invalidation behavior for tool results
+      - Performance review of tool analysis against the 340-file targets
     keywords:
-      - MCP tool
-      - SwiftSyntax
-      - Visitor pattern
-      - LSP client
-      - ProjectMemory
-      - tool helpers
-      - ToolDefinition
-      - execute method
-      - cache invalidation
-      - error messages
+      - MCPTool
+      - ToolHelpers
+      - ToolNames
+      - SymbolVisitor
+      - PropertyWrapperVisitor
+      - analyze_imports
+      - get_type_hierarchy
+      - list_symbols
+      - requireProjectMemory
+      - ParameterKeys
   project/main/design/DES-104_search_symbol_tools_enhancement_design.md:
-    title: Search and Symbol Tools Enhancement Design
-    purpose: Design specification for enhancing search_code and find_symbol_definition tools with output modes, file pattern matching, symbol filtering, scope information, and capability registry.
+    title: DES-104 Search and Symbol Tools Enhancement Design
+    purpose: Describes the design for enhancing search_code and find_symbol_definition with output modes, result limits, glob include and exclude filters, structured results, symbol kind filters, and scope information while keeping backward compatibility
     content_details:
-      - TBD resolution (module naming precision, structured result format, symbol kind mapping, result limits)
-      - SearchCodeTool extensions (output modes, count limits, multiple file patterns)
-      - FindSymbolDefinitionTool enhancements (symbol kind filters, scope information)
-      - SymbolKindMapper for kind value conversion and validation
-      - FileSearcher support for include/exclude glob patterns
-      - SymbolVisitorV2 with scope tracking and module name resolution
-      - ResultEncoder for JSON encoding and text formatting
-      - CapabilityRegistry for available tools notification
-      - Error handling for input validation and cache corruption
-      - Backward compatibility with existing parameters and output formats
+      - Module name resolution by parsing Package.swift target blocks with longest-prefix path matching in a SymbolVisitorV2 helper
+      - Structured result as a JSON block appended after a structured output marker line
+      - SymbolKindMapper mapping of the 9 lowercase kinds (struct, class, enum, protocol, actor, function, variable, typealias, extension) to display kinds
+      - "Limits: limit range 1 to 10000 with clipping and truncated_to_max_limit flag; include and exclude patterns max 20 items; symbol_kinds max 9 items"
+      - FileSearcher.searchCode overload taking includePatterns, excludePatterns, limit, and SearchOutputMode (matchDetail, fileList, countOnly)
+      - Removal of the file_pattern parameter, which is ignored as an unknown key
+      - SymbolVisitorV2 scope stack with push in visit and pop in visitPost, deriving parentScope and extensionTarget
+      - ProjectMemory cacheVersion bump from 4 to 5 required in the same commit for any persisted SymbolInfo schema change
+      - Error handling for cache_warning flag, skipped_files up to 100 entries, structured output unavailable fallback, and glob syntax error suggestion
+      - CapabilityRegistry.availableTools minimal static implementation returning MetaToolRegistry.allTools
     applicable_tasks:
-      - SearchCodeTool implementation
-      - FindSymbolDefinitionTool implementation
-      - Architecture review for Search and Symbol tools
-      - Test case design and implementation
-      - Module integration testing
+      - Implementation of search_code output mode, limit, and glob filter enhancements
+      - Implementation of find_symbol_definition symbol kind filter and scope information
+      - Backward compatibility review of search_code and find_symbol_definition parameters
+      - Modification of ProjectMemory cache schema and cacheVersion bump
+      - Design review of SymbolVisitorV2 scope stack and module name resolution
+      - Error handling review for invalid parameters, cache corruption, and structured output failure
+      - Test case creation for search_code and find_symbol_definition enhancements
     keywords:
       - search_code
       - find_symbol_definition
-      - symbol kind
-      - file pattern
-      - scope information
-      - JSON structured result
-      - glob matching
+      - SymbolKindMapper
       - SymbolVisitorV2
-      - ProjectMemory
-      - backward compatibility
+      - SearchOutputMode
+      - include_patterns
+      - ResultEncoder
+      - cacheVersion
+      - CapabilityRegistry
+      - structured output
   project/main/mcp-guide/MCP-Best-Practices.md:
-    title: MCP Best Practices
-    purpose: Documents essential knowledge and best practices from MCP server development, covering server lifecycle, client management, tool design, debugging, and common failure patterns.
+    title: MCP Development Best Practices
+    purpose: Records reusable lessons from MCP server development covering StdioTransport lifecycle, client data isolation, dev and production separation, tool design, error messages, logging, common failure patterns, and testing procedure
     content_details:
-      - StdioTransport specification and server process lifecycle management
-      - Multiple client handling with MCP_CLIENT_ID and data isolation
-      - Development and production environment separation strategies
-      - Tool naming conventions and parameter schema design
-      - Error message formatting for clarity and debugging
-      - Logging design with file-based output to avoid MCP protocol interference
-      - Common failure patterns including infinite loops, async handling, and parameter validation
-      - Testing methodology using actual MCP tool invocation
+      - "StdioTransport lifecycle: server.start is non-blocking and server.waitUntilCompleted must wait for EOF, with no while-true loop"
+      - One client per stdio server process; MCP_CLIENT_ID isolates cache and memory data per client rather than enabling multi-client sharing
+      - Dev and production separation by registering the debug build under a different name such as your-server-debug
+      - Tool naming rules (snake_case, verb prefix) and input schema design with required list and descriptive examples
+      - Error message guidelines using MCPError.invalidParams and MCPError.invalidRequest with actionable text such as calling initialize_project first
+      - "Logging design: stdout reserved for MCP traffic, logs to stderr or FileLogHandler file, monitored with tail -f"
+      - "Common failure patterns: infinite loop zombie processes, un-awaited async initialization returning empty results, missing parameter validation"
+      - "Testing procedure: invoke the real MCP tool on a DEBUG build instead of re-implementing logic in bash or inspecting binary strings"
     applicable_tasks:
-      - MCP server lifecycle implementation
-      - Multi-client architecture design
-      - Tool interface design and parameter validation
-      - MCP debugging and logging setup
-      - Common issue prevention and error handling
+      - MCP server lifecycle implementation review for StdioTransport startup and shutdown
+      - MCP tool definition and input schema design
+      - MCP error message design and parameter validation implementation
+      - Client data isolation design using MCP_CLIENT_ID
+      - Dev and production MCP server registration setup
+      - MCP server debugging with file logging and MCP Inspector
+      - MCP tool verification testing procedure
     keywords:
       - StdioTransport
-      - server lifecycle
+      - waitUntilCompleted
       - MCP_CLIENT_ID
-      - tool design
-      - parameter schema
-      - logging
-      - debugging
-      - async handling
-      - process management
-      - MCP protocol
+      - MCPError
+      - FileLogHandler
+      - MCP Inspector
+      - zombie process
+      - your-server-debug
+      - tool naming
   project/main/mcp-guide/MCP-Implementation-Guide.md:
     title: MCP Implementation Guide - Swift Selena
-    purpose: Comprehensive guide for implementing MCP servers in Swift Selena, covering server initialization, tool registration, parameter handling, transport layer, and error handling patterns
+    purpose: Explains how Swift Selena implements its MCP server with the Swift MCP SDK, covering Package dependencies, Server initialization, ListTools and CallTool handlers, StdioTransport, error handling, and best practices
     content_details:
-      - MCP protocol overview and architecture
-      - Server initialization with logging and capabilities
-      - Tool registration with ListTools handler and inputSchema definition
-      - Tool implementation with CallTool handler and parameter parsing
-      - Transport layer using StdioTransport with JSON-RPC communication
-      - Error handling patterns including MCPError types and error responses
-      - Best practices for constants, state management, logging, validation, and memory management
-      - Implementation examples for simple tools, file operations, and project-wide symbol search
-      - Debugging methods including local execution, log inspection, and MCP Inspector
-      - Troubleshooting common issues and reference materials
+      - "Package.swift dependencies: MCP swift-sdk pinned at 0.10.2, swift-syntax 602.0.0, and swift-log, with the MCP product for the executable target"
+      - Server initialization with name, version, and tools-only capabilities, plus LoggingSystem bootstrap to stderr
+      - ListTools handler registration returning Tool definitions with inputSchema JSON Schema objects, required lists, and optional parameters
+      - CallTool handler switch on params.name with argument extraction via params.arguments and String(describing:) conversion
+      - StdioTransport startup with server.start and the caveat that stdout is reserved for MCP JSON-RPC messages
+      - MCPError cases invalidParams, invalidRequest, internalError, methodNotFound and their JSON-RPC error code mapping
+      - "Best practices: constant enums for tool names and parameter keys, project state held in a ProjectMemory optional, and file-by-file processing for large data"
+      - Implementation examples for hello, read_file, and find_symbol tools with their error handling
     applicable_tasks:
-      - MCP server implementation
-      - Swift MCP SDK usage
-      - Tool development for Claude integration
-      - Error handling design
-      - Transport protocol implementation
-      - Server architecture design
-      - Parameter validation and schema definition
+      - Implementation of new MCP tools in Swift Selena
+      - Modification of the Server initialization and handler registration code
+      - Input schema definition for MCP tool parameters
+      - Error handling design using MCPError in tool handlers
+      - Troubleshooting MCP server startup and tool recognition problems
+      - Review of MCP SDK version and dependency configuration in Package.swift
     keywords:
-      - MCP Protocol
-      - Model Context Protocol
-      - Swift SDK
-      - JSON-RPC
-      - Tool registration
-      - Server capabilities
-      - Parameter validation
-      - Error handling
+      - Server
       - StdioTransport
-      - Debugging
+      - ListTools
+      - CallTool
+      - MCPError
+      - inputSchema
+      - ProjectMemory
+      - swift-sdk 0.10.2
+      - withMethodHandler
   project/main/mcp-guide/MCP-SDK-Deep-Dive.md:
     title: MCP Swift SDK Complete Guide
-    purpose: Comprehensive reference guide for MCP Swift SDK architecture, core types, server implementation, transport mechanisms, request/response handling, and JSONValue type system for building MCP servers in Swift
+    purpose: Explains the internal structure and usage of the MCP Swift SDK, covering Server, Transport, RequestMethod, Capabilities, JSONValue, MCPError codes, Content and Tool types, logging, and InMemoryTransport testing
     content_details:
-      - SDK architecture and layering
-      - Server class initialization and lifecycle management
-      - Transport protocols and implementations (Stdio, HTTP, InMemory)
-      - RequestMethod handler registration with type-safe pattern matching
-      - JSONValue dynamic type system for request parameters and schema definition
-      - Capabilities negotiation between client and server
-      - Error handling and JSON-RPC error mapping
-      - Method routing and handler dispatch mechanisms
+      - Server class with init name version capabilities, start transport, and withMethodHandler registration, plus internal routing by method name
+      - Transport protocol with start send receive close, implemented by StdioTransport, HTTPTransport experimental, and InMemoryTransport with simulateRequest
+      - Capabilities struct with tools resources prompts logging optional fields and the rule that only the shared subset is enabled
+      - JSONValue enum with null bool number string array object cases and conversion from Codable types via JSONEncoder and JSONDecoder
+      - MCPError cases invalidParams invalidRequest internalError methodNotFound parseError mapped to JSON-RPC codes -32602 -32600 -32603 -32601 -32700
+      - Standard methods ListTools tools/list, CallTool tools/call with Params name and arguments, and Initialize handled automatically
+      - Tool struct with name description inputSchema and Content enum with text image resource cases
+      - swift-log bootstrap writing to stderr, and InMemoryTransport unit test pattern with XCTest
+      - "Advanced patterns: actor-based ServerState, async task handling, progress logging, and input schema validation helpers"
     applicable_tasks:
-      - Swift-Selena MCP server implementation and enhancement
-      - MCPTool development and integration
-      - Transport layer selection and configuration
-      - Request handler implementation for new methods
-      - Server initialization and capability setup
-      - Integration testing with InMemoryTransport
-      - Debugging MCP communication flows
+      - Investigation of MCP Swift SDK internal behavior and API usage
+      - Implementation of Server and Transport setup in Swift MCP code
+      - Implementation of CallTool and ListTools handler logic
+      - Creation of JSON Schema inputSchema for MCP tools
+      - Error code selection and MCPError handling review
+      - Unit test creation for MCP server with InMemoryTransport
     keywords:
-      - MCP Swift SDK
       - Server
       - Transport
-      - RequestMethod
-      - Capabilities
-      - JSONValue
       - StdioTransport
-      - Handler
-      - type-safe
-      - async/await
+      - InMemoryTransport
+      - RequestMethod
+      - JSONValue
+      - MCPError
+      - withMethodHandler
+      - Capabilities
   project/main/mcp-guide/README.md:
     title: MCP Development Guide
-    purpose: Generic MCP server development guide covering implementation, SDK deep dive, and best practices applicable to any MCP project
+    purpose: Index and quick start for general-purpose MCP (Model Context Protocol) server development that is not specific to Swift-Selena. Covers the guide list by target reader, a minimal Swift MCP server example, Package.swift setup with the Swift SDK, Claude Code registration, and FAQ on startup, logging, and debug builds.
     content_details:
-      - MCP server implementation quickstart with minimal example
-      - Package.swift configuration for MCP projects
-      - Claude Code MCP registration workflow
-      - References to MCP Implementation Guide for detailed setup
-      - References to SDK Deep Dive documentation
-      - References to Best Practices guide
-      - Server capabilities and method handler pattern
-      - Stdio transport configuration
-      - FAQ on waitUntilCompleted lifecycle and logging strategy
-      - Links to official MCP documentation and GitHub repositories
+      - Guide index table listing MCP-Implementation-Guide, MCP-SDK-Deep-Dive and MCP-Best-Practices with their target readers
+      - Minimal MCP server example using Server, withMethodHandler for ListTools and CallTool, and StdioTransport
+      - Package.swift example pinning the swift-sdk dependency to exact 0.10.2 with macOS 13 platform
+      - Registration procedure for a server with the claude mcp add command
+      - FAQ explaining why server.waitUntilCompleted() is required because start() is non-blocking
+      - FAQ stating that logs must go to stderr or a file because stdout is reserved for MCP communication
+      - FAQ on separating debug and production builds by registering them under different server names
+      - Reference links to the MCP official site, the MCP Swift SDK repository and Anthropic MCP documentation
     applicable_tasks:
-      - MCP server implementation
-      - Swift MCP development setup
-      - Tool definition and registration
-      - Server lifecycle management
-      - Integration with Claude Code
+      - Creation of a new general-purpose MCP server in Swift
+      - Initial setup of the Swift MCP SDK dependency in Package.swift
+      - Registration of an MCP server with Claude Code
+      - Troubleshooting MCP server startup exit and stdout logging problems
+      - Selecting which MCP guide document to read for an implementation question
     keywords:
       - MCP
-      - Model Context Protocol
-      - Swift SDK
-      - server implementation
-      - tools
+      - Server
+      - withMethodHandler
+      - ListTools
+      - CallTool
       - StdioTransport
-      - Package.swift
-      - Claude Code
-      - best practices
-      - development guide
+      - waitUntilCompleted
+      - swift-sdk
+      - claude mcp add
+      - MCP-Best-Practices
   project/main/plan/main_plan.md:
     title: Swift-Selena Development Plan
-    purpose: Defines development roadmap, versioning strategy, and implementation phases from v0.5.x through v1.0 for Swift-Selena MCP Server including LSP integration, Code Header DB, and feature prioritization
+    purpose: Development plan for Swift-Selena from v0.5.x to v1.0 covering the staged addition of LSP integration and Code Header DB, the status of each release, the feature-level plans, risks, and milestones for 2026
     content_details:
-      - Development phases v0.5.0 through v1.0 with completion dates
-      - LSP integration stages and SourceKit-LSP capabilities
-      - Code Header DB implementation with NaturalLanguage parsing
-      - Hybrid architecture design (SwiftSyntax + LSP with graceful degradation)
-      - Tool count evolution and meta-tool pattern implementation
-      - Search accuracy targets and vector search strategy
-      - Success metrics for each major version
-      - Risk management including CreateML precision validation and implementation delays
-      - Technical stack with planned framework additions
-      - Implementation priority matrix and milestone timeline
+      - "Design principles: build independence, local completeness, staged enhancement with SwiftSyntax as baseline and LSP as option, and maintenance-free operation"
+      - "v0.5.0 to v0.5.5 completed releases: five new tools, LSP foundation with LSPState and LSPClient, find_symbol_references removal decision, and six bug fixes in v0.5.5"
+      - "v0.6.0 Code Header DB: CodeHeaderParser, codeHeaderCache in ProjectMemory, search_code_headers and get_code_header_stats tools"
+      - v0.6.1 synonym dictionary and query expansion targeting 80-85 percent search accuracy
+      - v0.6.2 migration of set_analysis_mode and think_about_analysis to MCP Prompts capability
+      - v0.6.3 meta tool pattern exposing 4 public tools with SWIFT_SELENA_LEGACY switch (completed)
+      - v0.6.4 CommentVisitor and search_comments tool for TODO, FIXME and MARK search
+      - v0.7.0 vector search with NLEmbedding and cosine similarity, conditional on CreateML validation
+      - v0.8.0 statistics features including code quality metrics, dependency analysis, and deferred get_tool_usage_stats
+      - "v1.0.0 completion criteria: 80 percent unit test coverage, 1000-file project within 10 seconds, memory under 100MB, zero crashes"
     applicable_tasks:
-      - Development planning and roadmap management
-      - Version release coordination and tag management
-      - Feature implementation phasing and scheduling
-      - LSP integration verification and testing
-      - Code Header DB implementation and refinement
-      - Risk assessment and mitigation strategy
-      - Performance and quality metric tracking
-      - Architectural decision evaluation
+      - Version planning and roadmap review
+      - Release scoping and milestone progress check
+      - Feature prioritization decision for LSP integration or Code Header DB
+      - Verification of v1.0.0 completion criteria
+      - Review of risk countermeasures for vector search feasibility
     keywords:
-      - development roadmap
+      - Swift-Selena development plan
+      - roadmap
       - LSP integration
       - Code Header DB
-      - SwiftSyntax
-      - v0.5.x
-      - v0.6.x
-      - v1.0.0
-      - feature phases
-      - search accuracy
-      - tool implementation
+      - search_code_headers
+      - get_code_header_stats
+      - search_comments
+      - MCP Prompts
+      - meta tool pattern
+      - v1.0.0 completion criteria
   project/main/spec/README.md:
-    title: Swift-Selena Requirements Definition Index
-    purpose: Master index for all Swift-Selena feature requirements, defining project goals, scope, and success criteria across release phases
+    title: Swift-Selena Requirements Index
+    purpose: Index and overview of the Swift-Selena requirements documents REQ-001 to REQ-003, with reading order by audience, the FR/NFR requirement hierarchy, maintenance rules, and implementation status
     content_details:
-      - REQ-001 overall project requirements with use cases and competitive analysis
-      - REQ-002 LSP integration requirements for v0.5.1 through v0.5.5
-      - REQ-003 core features and tool requirements with implementation guidelines
-      - Requirement hierarchy and dependency mapping
-      - Version-specific success criteria and feature coverage
-      - Maintenance guidelines for requirement updates
+      - REQ-001 overall requirements covering project purpose, problems solved (no build needed, privacy, performance), target users, and competitor comparison with Serena, SourceKit-LSP and Xcode
+      - REQ-002 LSP integration requirements for v0.5.1 to v0.5.5 with FR-LSP-001 to FR-LSP-004 and NFR-LSP-001 to NFR-LSP-004
+      - REQ-003 core feature requirements covering tool categories, per-tool requirements, three typical workflows, and a tool selection guide
+      - Requirement hierarchy mapping FR-001 to FR-006 under REQ-001 to REQ-002 LSP items and REQ-003 tool groups
+      - Reading guides for developers, users and reviewers with the recommended document order for each audience
+      - Maintenance rules for updating REQ documents on feature addition, version release and design change
+      - Coverage status listing implemented v0.5.1 to v0.5.3 items versus planned v0.5.4 to v0.5.5 and v0.6.0 items
+      - Lessons learned from v0.5.2 and v0.5.3 development including the missing initialized notification causing LSP crash and debug environment priority
     applicable_tasks:
-      - Understanding project scope and design principles
-      - Planning feature implementation across versions
-      - Validating new feature requirements
-      - Architecture design review
-      - Tool integration planning
-      - Requirement verification during development
+      - Reviewing feature proposals against existing requirements
+      - Locating the requirement document to read before implementing a tool or LSP feature
+      - Checking whether a change conflicts with REQ-001 design principles or scope
+      - Onboarding review to understand overall Swift-Selena scope and target users
+      - Updating requirement documents after a version release or design change
     keywords:
-      - requirements
-      - feature scope
-      - LSP integration
-      - Swift analysis
-      - MCP server
-      - tool design
-      - use cases
-      - success criteria
+      - REQ-001
+      - REQ-002
+      - REQ-003
+      - requirements index
+      - FR-LSP-001
+      - NFR-LSP-001
+      - graceful degradation
+      - competitor comparison
+      - scope management
+      - reading order
   project/main/spec/REQ-001_Swift_Selena_Overall_Requirements.md:
     title: Swift-Selena Overall Requirements
-    purpose: Comprehensive requirements specification for Swift-Selena MCP server, covering business drivers, feature requirements, use cases, and success criteria for building a build-independent Swift code analysis tool for AI assistants
+    purpose: "Defines overall Swift-Selena requirements: background problems, target users, competitor comparison, functional and non-functional requirements, use cases, scope exclusions and release plan"
     content_details:
-      - "Problem context: build-independent analysis, privacy/security, large project support"
-      - "Functional requirements: FR-001 to FR-006 (build independence, Swift-specific analysis, local execution, MCP integration, caching, LSP integration)"
-      - "Non-functional requirements: performance <10s, zero crash rate, maintainability"
-      - "Six use cases: AI code understanding, refactoring impact, SwiftUI property wrappers, protocol conformance, test coverage, import dependencies"
-      - "Success criteria: 18 tools with 100% property wrapper/protocol detection, zero crashes, <5s performance"
-      - "Release roadmap: v0.5.x (LSP integration), v0.6.x (code header database), v1.0.0 (stable)"
-      - "Technical constraints: macOS 13.0+, Swift 5.9+, SwiftSyntax 602.0.0"
-      - "Risk assessment: LSP integration complexity, version dependencies, user education"
+      - Problem statement that SourceKit-LSP and Xcode cannot analyze code with build errors, requiring build-free analysis
+      - Competitor comparison table against Serena, SourceKit-LSP and Xcode on build requirement, Swift focus, MCP integration and SwiftUI analysis
+      - FR-001 to FR-006 covering build-independent SwiftSyntax analysis, Swift-specific analysis, fully local execution, MCP integration over stdio, persistence with cache invalidation, and LSP integration with graceful degradation
+      - NFR-001 performance targets such as 1000 files within 10 seconds and memory under 100MB, NFR-002 zero crash rate, NFR-003 maintainability
+      - UC-001 to UC-006 use cases for code understanding, refactoring impact, SwiftUI property wrapper tracking, protocol conformance, test coverage and import dependencies
+      - Design constraints requiring build independence, local completeness and SwiftSyntax as baseline with LSP as optional enhancement
+      - Scope exclusions for code modification, build execution, real-time file monitoring and GUI
+      - Release plan for v0.5.x LSP integration, v0.6.x Code Header DB intent search and v1.0.0 stable release
+      - Success criteria with v0.5.3 results such as 18 tools, 17 build-free tools and 100 percent property wrapper detection
+      - Risks LSP integration complexity and SwiftSyntax version pinned to 602.0.0 exact
     applicable_tasks:
-      - MCP server architecture design
-      - Swift code analysis tool implementation planning
-      - Feature scope and acceptance criteria definition
-      - Release roadmap planning
-      - Risk mitigation strategy development
+      - Reviewing new feature proposals against overall requirement principles
+      - Checking whether a change falls within the project scope or the excluded scope
+      - Confirming build-independence and local-only constraints before a design change
+      - Verifying v0.5.x release results against the defined success criteria
+      - Updating overall requirements during a version release
     keywords:
       - Swift-Selena
-      - MCP server
-      - SwiftSyntax analysis
-      - build-independent
-      - property wrapper
-      - protocol conformance
-      - LSP integration
-      - code analysis
-  project/main/spec/REQ-002_LSP_Integration_v0.5.x.md:
-    title: LSP Integration Requirements v0.5.x
-    purpose: Defines LSP integration requirements, hybrid architecture with SwiftSyntax, functional and non-functional requirements, use cases, and implementation phases for v0.5.1-v0.5.5
-    content_details:
-      - Hybrid architecture combining SwiftSyntax and LSP
-      - find_symbol_references for type-based reference search
-      - LSP integration phases v0.5.1 through v0.5.5
-      - Graceful degradation when LSP unavailable
-      - Type information enhancement for list_symbols and get_type_hierarchy
-      - "Non-functional requirements: protocol compliance, stability, debugging capability"
-      - Risk analysis and technical constraints
-      - Implementation strategy with confirmed API support
-      - Success criteria and acceptance criteria per version
-    applicable_tasks:
-      - LSP feature implementation
-      - Type-based code analysis
-      - Reference search implementation
-      - Hybrid architecture design review
-      - LSP stability and protocol compliance verification
-    keywords:
-      - LSP
-      - SourceKit-LSP
-      - type information
-      - SwiftSyntax
-      - find_symbol_references
-      - textDocument/references
-      - hybrid architecture
+      - build-independent analysis
       - graceful degradation
-      - protocol compliance
+      - FR-006
+      - NFR-001
+      - SwiftSyntax 602.0.0
+      - competitor comparison
+      - scope exclusion
+      - local execution
+      - SwiftUI analysis
+  project/main/spec/REQ-002_LSP_Integration_v0.5.x.md:
+    title: v0.5.x LSP Integration Requirements
+    purpose: "Defines requirements for the v0.5.x LSP integration phase: why LSP is needed, the hybrid SwiftSyntax and LSP architecture, FR-LSP and NFR-LSP items, use cases, per-version success criteria and LSP prerequisites"
+    content_details:
+      - Background on SwiftSyntax limits such as missing type information and string-based reference search, with concrete code examples
+      - Hybrid architecture decision with SwiftSyntax as baseline, LSP as enhancement, and graceful degradation, switching between 17 and 18 tools
+      - FR-LSP-001 find_symbol_references for v0.5.2, removed by commit f0a547f on 2025-10-27, with v0.5.3 results of 34 detected references
+      - FR-LSP-002 list_symbols enhancement using textDocument/documentSymbol for signatures and FR-LSP-003 get_type_hierarchy enhancement using prepareTypeHierarchy for Type Detail
+      - FR-LSP-004 get_call_hierarchy planned for v0.5.5 using prepareCallHierarchy, incomingCalls and outgoingCalls
+      - NFR-LSP-001 graceful degradation for build errors, missing SourceKit-LSP, connection failure and LSP crash
+      - NFR-LSP-002 dynamic tool list changing after initialize_project depending on LSP connection success
+      - NFR-LSP-003 protocol compliance fixes including missing initialized notification, missing didOpen, Content-Length error and SIGPIPE
+      - NFR-LSP-004 debuggability through FileLogHandler server.log and DebugRunner
+      - UC-LSP-001 to UC-LSP-003 use cases for reference completeness, typed code understanding and type hierarchy, each with a fallback flow
+      - Success criteria for v0.5.1 to v0.5.5 and LSP prerequisites that the project is a Swift Package, buildable, with SourceKit-LSP installed
+    applicable_tasks:
+      - Implementing or modifying LSP-enhanced tools such as list_symbols and get_type_hierarchy
+      - Designing fallback behavior to SwiftSyntax when LSP is unavailable
+      - Reviewing LSP protocol compliance such as initialized notification and didOpen handling
+      - Planning get_call_hierarchy implementation for v0.5.5
+      - Reviewing hybrid architecture decisions against build-independence principles
+    keywords:
+      - find_symbol_references
+      - list_symbols
+      - get_type_hierarchy
+      - get_call_hierarchy
+      - LSPState
+      - LSPClient
+      - graceful degradation
+      - initialized notification
+      - documentSymbol
+      - prepareTypeHierarchy
   project/main/spec/REQ-003_Core_Features_Requirements.md:
     title: "REQ-003: Swift-Selena Core Features Requirements"
-    purpose: "Defines complete specification for Swift-Selena MCP server's 18 tools across 9 categories, including tool functionality, input/output formats, acceptance criteria, and typical workflows."
+    purpose: "Defines requirements for the core Swift-Selena MCP tools (v0.5.3 baseline, later extended for v0.6.x): inputs, outputs, acceptance criteria, and use cases per tool category, plus integration success criteria and constraints."
     content_details:
-      - Project initialization and cache setup
-      - File search with wildcard patterns and code search with regex and output modes
-      - Symbol analysis including list_symbols, find_symbol_definition with scope filtering, and type hierarchy detection
-      - SwiftUI-specific analysis for property wrappers, protocol conformances, and extensions
-      - Import dependency analysis and test case detection with file metrics
-      - Tool selection guide and typical workflows for project understanding and refactoring
-      - Error handling with clear messages and fallback tool recommendations
-      - Acceptance criteria with detection rates and performance benchmarks
-      - Future extensions for code header database and comment search
+      - "initialize_project: ProjectMemory creation, project path setup, and background LSP connection attempt"
+      - "find_files: wildcard search with asterisk and question mark via NSRegularExpression, under 1 second for 1000 files"
+      - "search_code: include_patterns and exclude_patterns (max 20 each), output_mode match_detail / file_list / count_only, limit 1 to 10000, and trailing structured JSON block"
+      - "find_symbol_definition: symbol_kinds filter (9 lowercase kinds, OR-combined) and scope info (parent_scope, extension_target, module_name)"
+      - "list_symbols, list_property_wrappers, list_protocol_conformances, list_extensions: SwiftSyntax Visitor-based outputs such as @State and @Binding detection and superclass and protocol conformance"
+      - "get_type_hierarchy: full rescan per call, excluding .build, .git, DerivedData, Pods, Carthage"
+      - analyze_imports, find_test_cases, analyze_file_metrics (threshold_lines default 500, sort_by lines or size, limit default 20)
+      - set_analysis_mode, think_about_analysis, add_note and search_notes persisted to memory.json with tags and timestamps
+      - "Cross-cutting constraints: build-free SwiftSyntax baseline, LSP graceful degradation, zero crash rate, removed find_symbol_references and find_type_usages"
     applicable_tasks:
-      - Implement new MCP tools following this specification
-      - Understand Swift-Selena architecture and tool ecosystem
-      - Determine appropriate tool for specific analysis task
-      - Plan tool enhancement or new feature integration
-      - Review tool acceptance criteria and performance requirements
-      - Design workflow for multi-tool analysis patterns
+      - Implementation or modification of search_code and find_symbol_definition behavior
+      - Acceptance criteria verification for existing core analysis tools
+      - Review of tool input and output schema and error message design
+      - Confirmation of search and symbol analysis requirements before implementation
+      - Tool selection review for environments where build is unavailable
+      - Impact review when removing or replacing analysis tools
     keywords:
-      - MCP server
-      - Swift analysis
-      - symbol detection
-      - SwiftUI
-      - LSP integration
-      - refactoring
-      - code analysis
-      - type hierarchy
-      - test cases
+      - initialize_project
+      - search_code
+      - find_symbol_definition
+      - find_files
+      - analyze_file_metrics
+      - output_mode
+      - symbol_kinds
+      - ProjectMemory
+      - list_property_wrappers
+      - get_type_hierarchy
   project/main/spec/REQ-004_Code_Header_DB_v0.6.x.md:
-    title: Code Header DB Requirements (v0.6.x)
-    purpose: Specifies requirements for a semantic search database system that indexes Code Header Format metadata from Swift files using NLEmbedding for fast, high-precision search
+    title: "REQ-004: Code Header DB (v0.6.x) Requirements"
+    purpose: Defines requirements for the v0.6.0 Code Header DB, which parses Code Header Format blocks into a ProjectMemory-persisted DB with NLEmbedding semantic search, including performance, accuracy, compatibility, and constraint criteria.
     content_details:
-      - Code Header DB construction system with NLEmbedding-based indexing
-      - Semantic search tool (search_code_headers) with natural language queries and similarity scoring
-      - Statistics tool (get_code_header_stats) for coverage analysis and unapplied file reporting
-      - Automatic cache invalidation and incremental updates based on file modification timestamps
-      - "Performance requirements: 200-file DB build under 15 seconds, search under 0.1 seconds"
-      - "Semantic matching requirements: 80%+ accuracy, synonym understanding for related terms"
-      - NLEmbedding integration constraints for Japanese language and Apple Silicon macOS 15+
-      - "Constraint on applicable scope: Code Header Format marker required, non-applicable for English-only projects in v0.6.0"
+      - "FR-004-001 Code Header DB build: parse files marked with the Code Header Format marker into codeHeaderCache of CodeHeaderInfo with cached embedding vectors"
+      - "FR-004-002 semantic search tool search_code_headers: query, section (all, purpose, feature, type), layer filter, threshold default 0.6, results sorted by score"
+      - "FR-004-003 get_code_header_stats: coverage per layer, applied versus unapplied file list, embedding dimension and cache size"
+      - FR-004-004 automatic DB update by lastModified detection, re-parsing only changed files
+      - "NFR-004-001 performance targets: 200 files built under 15 seconds, search under 0.1 seconds, memory under 50MB"
+      - NFR-004-002 search accuracy of 80 percent or more measured by top-3 hits on test queries
+      - "NFR-004-004 compatibility: macOS 15 or later, Apple Silicon, Japanese NLEmbedding required via NLEmbedding.wordEmbedding for Japanese"
+      - "C-004-001 to C-004-003 constraints: NLEmbedding dependency, Code Header required for indexing, Japanese-only support in v0.6.0"
+      - Tool specifications for search_code_headers and get_code_header_stats with JSON parameter schema and output examples
     applicable_tasks:
-      - Code Header Format implementation verification
-      - Semantic search feature integration
-      - Project-wide file discovery and analysis
-      - Performance profiling for NLEmbedding operations
-      - Cache management strategy design
-      - AI-assisted code navigation tasks
+      - Implementation of Code Header DB construction and embedding cache in ProjectMemory
+      - Implementation or modification of the search_code_headers semantic search tool
+      - Implementation of the get_code_header_stats coverage statistics tool
+      - Performance and search accuracy verification for Code Header search
+      - Review of NLEmbedding compatibility and fallback handling
+      - Planning of v0.6.0 release criteria and test plan for Code Header DB
     keywords:
-      - Code Header
+      - search_code_headers
+      - get_code_header_stats
+      - Code Header DB
       - NLEmbedding
+      - codeHeaderCache
+      - CodeHeaderInfo
       - semantic search
-      - NLP
-      - database indexing
-      - caching
-      - performance
-      - similarity scoring
-      - search precision
+      - cosine similarity
+      - ProjectMemory
+      - lastModified

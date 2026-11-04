@@ -16,11 +16,13 @@ Swiftコードベース（Tools/Library/Domain/App/Infrastructure/DI）の全フ
 ### 1.2 背景
 
 **DES-004（swift_toc.md方式）の問題**:
+
 - AI推論精度40%（「推論困難」が多発）
 - list_symbolsだけでは情報不足
 - ToCファイルの更新忘れリスク
 
 **Code Headerフォーマット方式の優位性**:
+
 - コード全体を読んで正確に理解（精度100%）
 - ファイルとヘッダーが同期（更新忘れなし）
 - 標準的なファイルヘッダー形式（既存ヘッダーと互換）
@@ -54,11 +56,11 @@ Swiftコードベース（Tools/Library/Domain/App/Infrastructure/DI）の全フ
 
 ### 2.2 モジュール構成
 
-| モジュール | 責務 | ツール |
-|-----------|------|--------|
+| モジュール  | 責務                                  | ツール                |
+| ----------- | ------------------------------------- | --------------------- |
 | **Command** | ファイルスキャン、Agent起動、進捗管理 | Glob, Bash(git), Task |
-| **Agent** | 1ファイルのヘッダー生成 | Read, Edit |
-| **Format** | フォーマット仕様定義 | なし（ドキュメント） |
+| **Agent**   | 1ファイルのヘッダー生成               | Read, Edit            |
+| **Format**  | フォーマット仕様定義                  | なし（ドキュメント）  |
 
 ---
 
@@ -96,6 +98,7 @@ import Foundation
 ### 3.2 マーカーの役割
 
 **`[Code Header Format]` マーカー**:
+
 - フォーマット適用済み判定に使用
 - skipモード時の判定基準
 - Swift-Selena DB構築時の識別子
@@ -116,6 +119,7 @@ import Foundation
 **役割**: 1ファイルのCode Headerフォーマット生成
 
 **実行フロー**:
+
 1. ファイル読み込み
 2. `[Code Header Format]`マーカー確認
 3. モード判定（skip/update）
@@ -124,6 +128,7 @@ import Foundation
 6. Edit()でファイル更新
 
 **重要制約**:
+
 - [CRITICAL] 既存の関数・型のDocCコメント（`///`）は絶対に消さない
 - [CRITICAL] 既存の実装コメント（`//`）も保持する
 - Copyrightヘッダーは変更しない
@@ -135,6 +140,7 @@ import Foundation
 ### 5.1 /create-code-headers
 
 **モード**:
+
 ```
 /create-code-headers           # デフォルト（既存スキップ）
 /create-code-headers --update  # 全ファイル上書き
@@ -144,6 +150,7 @@ import Foundation
 ### 5.2 ファイルスキャン
 
 #### デフォルト・--update
+
 ```
 Glob("Tools/**/*.swift")
 Glob("Library/**/*.swift")
@@ -154,6 +161,7 @@ Glob("DI/**/*.swift")
 ```
 
 #### --changed
+
 ```bash
 git status --porcelain
 → .swiftファイルのみ抽出
@@ -177,11 +185,11 @@ Task(prompt="対象ファイル: MockAssertion.swift")
 
 ### 6.1 モード別動作
 
-| モード | スキャン対象 | マーカーあり | マーカーなし |
-|--------|------------|------------|------------|
-| デフォルト | 全ファイル | スキップ | 生成 |
-| --update | 全ファイル | 上書き生成 | 生成 |
-| --changed | git変更ファイル | スキップ | 生成 |
+| モード     | スキャン対象    | マーカーあり | マーカーなし |
+| ---------- | --------------- | ------------ | ------------ |
+| デフォルト | 全ファイル      | スキップ     | 生成         |
+| --update   | 全ファイル      | 上書き生成   | 生成         |
+| --changed  | git変更ファイル | スキップ     | 生成         |
 
 ### 6.2 モード指定方法の重要な注意
 
@@ -190,6 +198,7 @@ Task(prompt="対象ファイル: MockAssertion.swift")
 理由: Agentが「skip = 何もしない」と誤解する
 
 **正しい方法**:
+
 - デフォルト: モード指定なし（Agent内部でskipモード動作）
 - 更新: `モード: update` のみ明示
 
@@ -214,6 +223,7 @@ Task(prompt="対象ファイル: MockAssertion.swift")
 ### 8.1 Phase 1（現在）
 
 **検索方法**:
+
 ```typescript
 search_code("目的.*AsyncStream")
 → StreamManager.swift
@@ -225,12 +235,14 @@ search_code("主要機能.*検証")
 ### 8.2 Phase 2（将来）
 
 **Swift-Selena DB構築**:
+
 1. 全SwiftファイルのCode Headerを読み取り
 2. `[Code Header Format]`マーカーで識別
 3. 目的・主要機能・含まれる型・関連型を抽出
 4. 内部DB構築
 
 **新規MCP Tool**:
+
 ```typescript
 mcp__swift-selena__search_by_purpose(query: "電話番号フォーマット")
 → PhoneNumber+InternationalFormat.swift
@@ -245,10 +257,10 @@ mcp__swift-selena__search_by_feature(query: "バリデーション")
 
 ### 9.1 処理時間
 
-| ファイル数 | 並行Agent数 | 予想時間 |
-|-----------|-----------|---------|
-| 187件 | 10 | 約15-20分 |
-| 20件（--changed） | 5 | 約3-5分 |
+| ファイル数        | 並行Agent数 | 予想時間  |
+| ----------------- | ----------- | --------- |
+| 187件             | 10          | 約15-20分 |
+| 20件（--changed） | 5           | 約3-5分   |
 
 ### 9.2 品質基準
 
@@ -283,14 +295,17 @@ mcp__swift-selena__search_by_feature(query: "バリデーション")
 ### 11.1 更新タイミング
 
 **必須**:
+
 - 新規Swiftファイル追加時（`/create-code-headers --changed`）
 
 **推奨**:
+
 - 大規模リファクタリング後（`/create-code-headers --update`）
 
 ### 11.2 検証方法
 
 生成後の品質確認:
+
 ```
 search_code("\\[Code Header Format\\]")
 → フォーマット適用済みファイル数を確認
@@ -300,15 +315,15 @@ search_code("\\[Code Header Format\\]")
 
 ## 12. DES-004との比較
 
-| 項目 | DES-004（swift_toc.md） | DES-005（Code Header） |
-|------|----------------------|---------------------|
-| 生成物 | 1つのToCファイル | 各ファイルにヘッダー |
-| AI推論精度 | 40%（推論困難多発） | 100%（コード理解） |
-| メンテナンス | 月1回再生成必要 | ファイルと同期 |
-| 検索方法 | search_code(swift_toc.md) | search_code(各ファイル) |
-| 標準準拠 | 独自形式 | 既存ヘッダー互換 |
-| 更新忘れ | あり得る | なし |
-| 処理時間 | 約1分 | 約15-20分（初回のみ） |
+| 項目         | DES-004（swift_toc.md）   | DES-005（Code Header）  |
+| ------------ | ------------------------- | ----------------------- |
+| 生成物       | 1つのToCファイル          | 各ファイルにヘッダー    |
+| AI推論精度   | 40%（推論困難多発）       | 100%（コード理解）      |
+| メンテナンス | 月1回再生成必要           | ファイルと同期          |
+| 検索方法     | search_code(swift_toc.md) | search_code(各ファイル) |
+| 標準準拠     | 独自形式                  | 既存ヘッダー互換        |
+| 更新忘れ     | あり得る                  | なし                    |
+| 処理時間     | 約1分                     | 約15-20分（初回のみ）   |
 
 **結論**: DES-005の方が長期的に優れている
 
