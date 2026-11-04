@@ -83,7 +83,7 @@ enum ListSymbolsTool: MCPTool {
             result += "[\(symbol.kind)] \(symbol.name) (line \(symbol.line))\n"
         }
 
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     }
 
     /// LSP強化版実行（v0.5.4）
@@ -120,7 +120,7 @@ enum ListSymbolsTool: MCPTool {
                                 result += "[\(kindName)] \(symbol.name) (line \(symbol.line))\n"
                             }
                         }
-                        return CallTool.Result(content: [.text(result)])
+                        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
                     }
                 }
             } catch {
@@ -137,7 +137,7 @@ enum ListSymbolsTool: MCPTool {
             result += "[\(symbol.kind)] \(symbol.name) (line \(symbol.line))\n"
         }
 
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     }
 
     /// LSP SymbolKind を文字列に変換

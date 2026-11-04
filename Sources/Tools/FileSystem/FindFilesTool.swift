@@ -80,6 +80,6 @@ enum FindFilesTool: MCPTool {
         \(files.map { "  \($0)" }.joined(separator: "\n"))
         """
 
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     }
 }

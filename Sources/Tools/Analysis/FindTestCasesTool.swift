@@ -77,7 +77,7 @@ enum FindTestCasesTool: MCPTool {
         let swiftTests = try SwiftSyntaxAnalyzer.findSwiftTests(projectPath: memory.projectPath)
 
         if xcTestCases.isEmpty && swiftTests.isEmpty {
-            return CallTool.Result(content: [.text("No test cases found in project")])
+            return CallTool.Result(content: [.text(text: "No test cases found in project", annotations: nil, _meta: nil)])
         }
 
         // サマリー
@@ -147,6 +147,6 @@ enum FindTestCasesTool: MCPTool {
             }
         }
 
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     }
 }

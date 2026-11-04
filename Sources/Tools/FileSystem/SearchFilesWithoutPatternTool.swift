@@ -111,10 +111,10 @@ enum SearchFilesWithoutPatternTool: MCPTool {
             _ = try NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines])
         } catch {
             return CallTool.Result(content: [
-                .text(ResultEncoder.buildErrorResponse(
+                .text(text: ResultEncoder.buildErrorResponse(
                     cause: ErrorMessages.regexSyntaxErrorCause,
                     suggestion: ErrorMessages.regexSyntaxErrorSuggestion
-                ))
+                ), annotations: nil, _meta: nil)
             ])
         }
 
@@ -132,7 +132,7 @@ enum SearchFilesWithoutPatternTool: MCPTool {
                 maxCount: 20
             )
         } catch let MCPError.invalidParams(message) {
-            return CallTool.Result(content: [.text(stringArrayParameterErrorResponse(message))])
+            return CallTool.Result(content: [.text(text: stringArrayParameterErrorResponse(message), annotations: nil, _meta: nil)])
         }
 
         // include / exclude: glob 事前検証（wildcardToRegex + NSRegularExpression）
@@ -141,10 +141,10 @@ enum SearchFilesWithoutPatternTool: MCPTool {
             try validateGlobSyntax(excludePatterns)
         } catch {
             return CallTool.Result(content: [
-                .text(ResultEncoder.buildErrorResponse(
+                .text(text: ResultEncoder.buildErrorResponse(
                     cause: ErrorMessages.globSyntaxErrorCause,
                     suggestion: ErrorMessages.globSyntaxErrorSuggestion
-                ))
+                ), annotations: nil, _meta: nil)
             ])
         }
 
@@ -167,7 +167,7 @@ enum SearchFilesWithoutPatternTool: MCPTool {
         result += "\nFiles checked: \(totalFiles)\n"
         result += "Files without pattern: \(filesWithoutCount) (\(String(format: "%.1f%%", percentage)))\n"
 
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     }
 
     // MARK: - 入力検証ヘルパー

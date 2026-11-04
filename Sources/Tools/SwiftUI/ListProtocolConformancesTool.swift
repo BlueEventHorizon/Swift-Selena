@@ -74,7 +74,7 @@ enum ListProtocolConformancesTool: MCPTool {
         let conformances = try SwiftSyntaxAnalyzer.listTypeConformances(filePath: filePath)
 
         if conformances.isEmpty {
-            return CallTool.Result(content: [.text("No type conformances found in \(filePath)")])
+            return CallTool.Result(content: [.text(text: "No type conformances found in \(filePath)", annotations: nil, _meta: nil)])
         }
 
         var result = "Protocol Conformances in \(filePath):\n\n"
@@ -92,6 +92,6 @@ enum ListProtocolConformancesTool: MCPTool {
             result += "\n"
         }
 
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     }
 }

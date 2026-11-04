@@ -72,7 +72,7 @@ enum ListPropertyWrappersTool: MCPTool {
         let wrappers = try SwiftSyntaxAnalyzer.listPropertyWrappers(filePath: filePath)
 
         if wrappers.isEmpty {
-            return CallTool.Result(content: [.text("No property wrappers found in \(filePath)")])
+            return CallTool.Result(content: [.text(text: "No property wrappers found in \(filePath)", annotations: nil, _meta: nil)])
         }
 
         var result = "Property Wrappers in \(filePath):\n\n"
@@ -84,6 +84,6 @@ enum ListPropertyWrappersTool: MCPTool {
             result += " (line \(wrapper.line))\n"
         }
 
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     }
 }
