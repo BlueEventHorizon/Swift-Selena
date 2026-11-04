@@ -52,7 +52,7 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
   - **Phase 2 — merge into main + tag (on main)**:
     5. Merge the changes from `develop` into `main` and push (the merge method does not matter; squash / rebase are fine because nothing depends on the SHA)
     6. Check out `main`, confirm with `git branch --show-current`, then `git tag {version}` (head of main), then `git push <remote> {version}`. **Tag promptly after merging into main** (to minimize the period in which the Formula's `tag:` points to a tag that does not exist yet)
-    7. Verify with `scripts/verify_release_tag.sh {version}` that "the tag is on main's first-parent line", "the Constants version at the tag commit == {version}", "the Formula `tag:` == {version}", and "the Formula has no `revision:`" (`exit 1` on inconsistency). CI `release_tag_check.yml` also verifies this automatically when the tag is pushed
+    7. Verify with `scripts/verify_release_tag.sh {version}` that "the tag is on main's first-parent line", "the Constants version at the tag commit == {version}", "the Formula `tag:` == {version}", and "the Formula has no `revision:`" (`exit 1` on inconsistency). This check runs locally only (no CI workflow runs it)
     8. After the tap is updated, verify a real install with `brew install --build-from-source` (`serverInfo.version == {version}`)
   - **Phase 3 — bottle update (optional, after the tag push)**: the tag push makes `bottle.yml` build bottles and attach them to the Release (CI does not push to the repo)
     9. After confirming that bottles are attached to the Release, create a working branch from `develop`, run `scripts/merge_bottles.sh {version}`, and commit the changed Formula

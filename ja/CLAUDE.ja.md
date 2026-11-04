@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=CLAUDE.md sha256=4ea48ef268d3 -->
+<!-- bilingual-docs: source=CLAUDE.md sha256=d74180766170 -->
 
 # CLAUDE.md
 
@@ -54,7 +54,7 @@ Swift-Selena = MCP Server for Swift code analysis (Swift Package)
   - **Phase 2 — main マージ + tag（main 上）**:
     5. `develop` の変更を `main` にマージ → push（merge の方式は問わない。SHA に依存しないため squash / rebase も可）
     6. `main` に checkout し `git branch --show-current` で確認 → `git tag {version}`（main 先頭）→ `git push <remote> {version}`。**main へのマージ後、速やかに tag を打つ**（Formula の `tag:` が未作成の tag を指す期間を最小にする）
-    7. `scripts/verify_release_tag.sh {version}` で「tag が main の第1親ライン上」「tag commit の Constants version == {version}」「Formula `tag:` == {version}」「Formula に `revision:` が無い」を検証（不整合なら `exit 1`）。CI `release_tag_check.yml` でも tag push 時に自動検証される
+    7. `scripts/verify_release_tag.sh {version}` で「tag が main の第1親ライン上」「tag commit の Constants version == {version}」「Formula `tag:` == {version}」「Formula に `revision:` が無い」を検証（不整合なら `exit 1`）。この検証はローカルでのみ行う（CI のワークフローはない）
     8. tap 反映後、`brew install --build-from-source` で実 install 検証（`serverInfo.version == {version}`）
   - **Phase 3 — bottle 反映（任意・tag push 後）**: tag push で `bottle.yml` が bottle をビルドし Release へ添付する（CI は repo へ push しない）
     9. Release に bottle が添付されたことを確認後、`develop` から作業ブランチを作成し `scripts/merge_bottles.sh {version}` を実行 → 変更された Formula を commit
