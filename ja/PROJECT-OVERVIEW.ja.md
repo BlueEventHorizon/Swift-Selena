@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=PROJECT-OVERVIEW.md sha256=d1bcff0e9a24 -->
+<!-- bilingual-docs: source=PROJECT-OVERVIEW.md sha256=d6aea0c2dd0f -->
 
 [English](../PROJECT-OVERVIEW.md) | 日本語
 

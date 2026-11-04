@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=README.md sha256=f361905fd66d -->
+<!-- bilingual-docs: source=README.md sha256=5c19fab75014 -->
 
 [English](../README.md) | 日本語
 

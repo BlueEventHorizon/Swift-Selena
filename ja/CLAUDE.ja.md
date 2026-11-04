@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=CLAUDE.md sha256=1c83c65e7f6f -->
+<!-- bilingual-docs: source=CLAUDE.md sha256=4ea48ef268d3 -->
 
 # CLAUDE.md
 
