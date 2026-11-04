@@ -259,13 +259,12 @@ When you change a specification, update the corresponding documents too.
 
 ## CI
 
-| Workflow                                                | Trigger                           | What it does                                                                                                                                             |
-| ------------------------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `version_check.yml` (Version Consistency Check)         | PRs; pushes to `main` / `develop` | Treats `Sources/Constants.swift` as canonical and verifies that the CHANGELOG and `.version-config.yaml` agree (`scripts/verify_version_consistency.sh`) |
-| `release_tag_check.yml` (Release Tag Consistency Check) | Tag push                          | Verifies the tag is on `main`'s first-parent line and matches the version in Constants and the Formula (`scripts/verify_release_tag.sh`)                 |
-| `bottle.yml` (Build Bottles)                            | Tag push, manual run              | Builds Homebrew bottles for Apple Silicon (macOS 15 / macOS 26) and attaches them to the GitHub Release                                                  |
-| `close-issues-on-develop.yaml`                          | A PR merged into `develop`        | Closes the issues named by `Closes #N` in the PR body                                                                                                    |
-| `claude.yml` (Claude Code)                              | Issue / PR comments, etc.         | Claude Code assistance                                                                                                                                   |
+| Workflow                                        | Trigger                           | What it does                                                                                                                                             |
+| ----------------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version_check.yml` (Version Consistency Check) | PRs; pushes to `main` / `develop` | Treats `Sources/Constants.swift` as canonical and verifies that the CHANGELOG and `.version-config.yaml` agree (`scripts/verify_version_consistency.sh`) |
+| `bottle.yml` (Build Bottles)                    | Tag push, manual run              | Builds Homebrew bottles for Apple Silicon (macOS 15 / macOS 26) and attaches them to the GitHub Release                                                  |
+| `close-issues-on-develop.yaml`                  | A PR merged into `develop`        | Closes the issues named by `Closes #N` in the PR body                                                                                                    |
+| `claude.yml` (Claude Code)                      | Issue / PR comments, etc.         | Claude Code assistance                                                                                                                                   |
 
 Local checks:
 
