@@ -5,184 +5,186 @@
 metadata:
   name: Document Search Index (rules)
   key: rules
-  generated_at: 2026-10-30T06:12:39Z
+  generated_at: 2026-11-04T03:09:05Z
   file_count: 11
 
 docs:
   docs/format/code_header_format.md:
     title: Code Header Format Specification
-    purpose: Defines the standard format for AI-searchable Swift code documentation headers that enable consistent code understanding across the project
+    purpose: Defines the standard Code Header Format comment for Swift files so Swift-Selena MCP can search and build the DB from them; covers section structure, required marker, writing rules, and generation method.
     content_details:
-      - Code Header Format marker and structure
-      - Marker placement and syntax rules
-      - Purpose section guidelines (role and solutions)
-      - Main features section (functional capabilities without function names)
-      - Types section for multiple type definitions with descriptions
-      - Related types section for external and internal dependencies
-      - Metadata sections (file name, project name, creation date)
-      - Claude generation methodology (code understanding workflow)
-      - Compatibility with existing file headers
-      - Header format validation using [Code Header Format] marker
+      - "Section structure: Purpose, Main features, Contained types (only when multiple types exist), Related types (only when applicable)"
+      - Required marker [Code Header Format] placed after the Created by line and a blank line, used to detect formatted files
+      - "Header syntax: two spaces after the comment slashes, matching existing headers"
+      - Main features section lists capabilities without function or method names
+      - "Exclusion rules: no function names, protocol conformances, usage examples, usage locations, constraints, keywords, or layers"
+      - "Contained types format: type name followed by colon and a short description"
+      - "Related types format: comma-separated Swift type names with parenthetical usage for external framework types"
+      - "Generation method: read the whole file, understand implementation, consult tests and existing comments without trusting them blindly"
     applicable_tasks:
-      - Code header generation for Swift files
-      - File documentation creation and updates
-      - Code understanding and analysis
-      - Architecture and dependency mapping
-      - Automated header validation
+      - Creating Code Header Format comments for Swift files
+      - Converting existing Swift file headers to Code Header Format
+      - Reviewing Swift file headers for format compliance
+      - Automating header generation with create-code-headers
     keywords:
-      - code header
-      - Swift file documentation
-      - header format
+      - Code Header Format
       - "[Code Header Format] marker"
-      - type definitions
-      - file purpose
-      - main features
-      - related types
-      - code comments
+      - header comment
+      - Purpose section
+      - Main features
+      - Contained types
+      - Related types
+      - create-code-headers
+      - Created by header
   docs/format/design_format.md:
-    title: Design Format Rules
-    purpose: Defines the unified format specification for design documents, including structure, ID system, template, and metadata guidelines for architectural and implementation designs.
+    title: Design Document Format Rules
+    purpose: "Defines the unified format for design documents: DES-XXX ID scheme, file naming, template sections, metadata rules for implementation layers and modules, and the principle that design describes How rather than What."
     content_details:
-      - Design document template with metadata table
-      - Design ID system (DES- prefix with sequential numbering)
-      - File naming conventions (DES-XXX_{design_name}_design.md)
-      - "Mandatory content requirements: architecture overview, module design, data flow, process flow, state management, use cases, test cases"
-      - "Prohibited content: full source code (small examples 3-5 lines allowed)"
-      - Metadata guidelines for implementation layers, module types, and related requirements
-      - Traceability linking to requirements IDs
-      - Mermaid diagram usage for flowcharts, class diagrams, and sequence diagrams
-      - Version history management with revision table
-      - Related document cross-references
+      - Design ID scheme DES-001 assigned sequentially, IDs never changed, deleted IDs left as gaps
+      - "File naming: DES-XXX_{feature}_design.md in snake_case, written in English"
+      - Template metadata table with design ID, related requirement IDs, implementation layer, Entity, Service, DataStore, Repository, View, ViewModel, Component
+      - Implementation layer criteria for UI, Domain, Infrastructure, and DI layers
+      - Module listing excludes auxiliary enums, value objects, internal helpers, and extensions
+      - "Required sections: overview, architecture diagram, module design, data flow, processing flow, state management, use cases, test case design"
+      - "Principle: design describes How and requirements describe What; source code excluded except examples of 3-5 lines"
+      - Revision history table at the end of each document with date, version, author, and change
     applicable_tasks:
-      - Design document creation
-      - Design document review and validation
-      - Architecture design implementation
-      - Module structure specification
-      - Test case design planning
-      - Design traceability verification
+      - Design document creation for a new feature with DES-XXX ID
+      - Design document update after requirement or specification change
+      - Metadata table authoring for design documents
+      - Review of design documents against design format rules
+      - Assigning new design IDs and file names
     keywords:
-      - design format
-      - DES- ID system
-      - metadata table
-      - architecture diagram
-      - module design
-      - data flow
-      - test case design
-      - Mermaid diagram
-      - requirements traceability
+      - DES-XXX
+      - design document
+      - design ID
       - implementation layer
+      - related requirements
+      - metadata table
+      - revision history
+      - _design.md
   docs/format/plan_format.md:
-    title: Plan Format Rules
-    purpose: Defines the structure and guidelines for development plan documents, including requirement traceability matrices, design traceability matrices, task lists, and TDD-ordered task execution sequencing
+    title: Plan Document Format Rules
+    purpose: "Defines the format for development plan documents: requirement and design traceability matrices, task tables with per-layer priority scale, TDD task ordering for Domain services, and task granularity rules for single-agent execution."
     content_details:
-      - Requirement ID system (APP-, SCR-, CMP-, BL-, NF-, FNC-, DM-, EXT- prefixes)
-      - Design ID system (DES- prefix with sequential numbering)
-      - Requirement traceability matrix format (requirement ID to design ID mapping)
-      - Design traceability matrix format (design ID to task ID mapping)
-      - "Task categorization with priority ranges (0-99 scale: Urgent Fix 90-99, Requirement Definition 80-89, Design 70-79, Planning 60-69, Domain layer 50-59, Infrastructure layer 40-49, UI layer 30-39, DI layer 25-29)"
-      - TDD-ordered task execution sequence for new Service implementation
-      - Task granularity guidelines (single Agent execution unit, independent and testable)
-      - Task list management format per layer (Domain, Infrastructure, UI) with status and dependency tracking
+      - "Plan structure limited to four sections: requirement traceability matrix, design traceability matrix, task list, revision history"
+      - "Requirement traceability matrix columns: completion check, requirement ID, title, content, design ID"
+      - "Design traceability matrix columns: design ID, title, content, requirement IDs, task IDs"
+      - "Task table columns: completion check, priority, task ID, title, required content, notes, design ID, dependencies, required reading, completion date"
+      - Priority scale 0 to 99 with category ranges, for example bug fix 99, Domain layer 50-59, UI layer 30-39, DI layer 25-29
+      - "TDD order for new Service: Entity and Protocol definitions, Mock implementation, Unit Test creation before Service implementation, then refactoring"
+      - "Task granularity: one Agent execution per task, one Service or one View and ViewModel, Mock implementations as separate tasks"
+      - Task ID prefixes per layer such as D-xxx, UI-xxx, I-xxx
     applicable_tasks:
-      - Planning phase task creation
-      - Traceability matrix creation and maintenance
-      - Task decomposition and sequencing
-      - TDD workflow setup
-      - Development plan updates
-      - Task priority definition
-      - Agent-based task execution planning
+      - Creating a development plan document with traceability matrices
+      - Splitting features into layer-based tasks with priority assignment
+      - Ordering TDD tasks for new Domain service implementation
+      - Updating task status, dependencies, or priority in a plan
+      - Reviewing task granularity against the plan format
     keywords:
-      - Plan Format
-      - Traceability Matrix
-      - Task ID
-      - TDD
-      - Requirement ID
-      - Design ID
-      - Task Granularity
-      - Priority Range
-      - Dependency Management
+      - traceability matrix
+      - task table
+      - priority scale
+      - TDD task order
+      - task granularity
+      - plan document
+      - task ID
+      - requirement traceability
+      - DES-
   docs/format/spec_format.md:
-    title: Specification Format Rules
-    purpose: Defines unified format structure for specification documents to ensure consistent AI understanding, requirement traceability, and document maintenance across the project
+    title: Requirements Document Format Rules
+    purpose: Defines the unified format and writing rules for requirements documents (spec), including the What-only principle, the per-feature directory structure, the requirement ID scheme, file naming, and the document template.
     content_details:
-      - Directory structure for specifications by feature and category
-      - Requirement ID system with prefixes (SCR-, CMP-, FNC-, BL-, NF-, DM-, EXT-, NAV-, THEME-)
-      - File naming rules with requirement IDs in snake case format
-      - Category-specific content guidelines for screens, UI components, functions, business logic, non-functional requirements, data models, external interfaces, navigation, and theme
-      - Mandatory vs prohibited content distinctions with examples
-      - Specification document template structure with metadata and section patterns
-      - Change history and version management format
+      - "What-only principle: requirements describe user-visible behavior and rules, while How belongs in design documents"
+      - Allowed content (user-visible features, business rules, data content, screen layout, error display, screen transitions) and forbidden content (class names, code examples, layer placement, data flow, test details)
+      - "Decision criterion: write it only if it would appear in the user manual"
+      - Directory layout project/{feature}/spec/ with categories screens, ui_components, functions, business_logic, non_functional, data_models, external_interfaces, navigation, theme
+      - Required sections per category, e.g. screens need screen overview, layout, elements, functions, data needs, state needs and error handling
+      - Requirement ID prefixes SCR-, CMP-, FNC-, BL-, NF-, DM-, EXT-, NAV-, THEME-, numbered from 001, never renumbered, deleted IDs left as gaps
+      - File naming {ID}_{name}_spec.md in English snake_case, data_models uses _entity_spec.md
+      - Standard template with metadata table, numbered overview and sections, and an unresolved items table with TBD-XXX IDs
+      - "Diagram rules: ASCII for layout, Mermaid for screen and state transitions, lowercase end forbidden in flowcharts"
     applicable_tasks:
-      - Specification document creation
-      - Requirement ID assignment and validation
-      - Documentation structure and format compliance review
-      - Template adoption for new specifications
+      - Creation of a new requirements document for a feature
+      - Review of an existing requirements document against the format rules
+      - Modification of requirements content to remove implementation details
+      - Assignment of a requirement ID and file name for a new spec file
     keywords:
-      - specification format
-      - requirement ID system
-      - directory structure
-      - file naming rules
-      - content guidelines
-      - template structure
+      - spec_format
+      - requirements document format
+      - requirement ID
+      - SCR-XXX FNC-XXX BL-XXX
+      - _spec.md file naming
+      - What versus How separation
+      - TBD-XXX unresolved items
+      - Mermaid flowchart
+      - project/{feature}/spec
   docs/rules/base/coding_rule.md:
     title: Coding Rules
-    purpose: "Defines Swift coding rules for Swift-Selena: incremental implementation and refactoring steps, async init prohibition, API naming for acronyms and booleans, layer dependencies, DI and Mock policy, swift-log usage."
+    purpose: "Defines Swift coding rules: staged implementation and refactoring steps, async initialization prohibition, naming conventions, layer and DI rules, data flow patterns, and logging usage"
     content_details:
-      - "Incremental implementation rule: one task at a time, build after each task, start from low-dependency items"
-      - "Refactoring rule: present change list before implementation, keep each PR under about 300 lines, UI changes last, build and test at each stage"
-      - "Impact investigation: use Swift-Selena MCP to find all usages of types and symbols, fall back to Grep/Glob when unconnected"
-      - "Async init prohibition: no Task inside init, use init async or explicit initialization method, with a bad example"
-      - "Acronym naming: userID, URLSession, UTF8.CodeUnit, SMTPServer in all uppercase"
-      - Bool property naming with is/has/shows prefixes, make prefix for factory methods
-      - Non-mutating versus mutating method naming with past participle versus imperative verb, argument label omission and preposition rules
-      - Tuple limit of up to 3 elements and typealias reuse, switch return rules by line count
-      - ViewModel interacts only with Service and DataStore, ViewModel-Service connected by async/await or AsyncStream, App layer forbids import DI
-      - "Mock policy: no Service mocks, every Mock init calls MockAssertion.assertIfProductionOrStaging, logging via swift-log Logger with FileLogHandler"
+      - "Staged implementation: one task at a time, build after each task, start from the least-dependent items"
+      - "Refactoring procedure: list changes before implementing, keep each PR around 300 lines, verify build and tests at each stage"
+      - "Async initialization prohibition: no Task inside init, use init async or an explicit initialization method"
+      - "Acronym casing: uppercase acronyms such as userID, URLSession, UTF8, SMTPServer"
+      - "Naming rules: Bool is/has prefixes, make prefix for factory methods, past participle for non-mutating and imperative verb for mutating methods, argument label omission, protocol suffixes"
+      - "Tuple limit: at most 3 elements, use typealias when reused"
+      - "Layer rules: ViewModel interacts only with Service and DataStore, App layer must not import DI, @Observable for SwiftUI integration"
+      - "Data flow patterns: AsyncStream-based reactive update and direct-return pattern"
+      - "Mock policy: no Service mocks, every Mock init calls MockAssertion.assertIfProductionOrStaging()"
+      - "Logging: swift-log Logger with FileLogHandler in Sources/Logging and appropriate log level usage"
     applicable_tasks:
-      - Swift code implementation planning
-      - Refactoring change review and PR scoping
-      - Swift naming convention review for new types and methods
+      - Swift code implementation following the coding conventions
+      - Staged refactoring with reviewable changes
+      - Naming review for types, methods, properties, and protocols
+      - Async initialization design review
       - Layer dependency and DI design review
-      - Mock and test double implementation
-      - Logging implementation with swift-log
-      - Async initializer design review
+      - Mock and test double implementation review
+      - Logging implementation review
     keywords:
-      - coding rule
       - async init
-      - Acronym naming
-      - UPPERCASE acronyms
-      - Mutating and non-mutating naming
-      - Factory make prefix
+      - Task in init
+      - acronym uppercase
+      - mutating non-mutating naming
+      - argument label omission
       - MockAssertion
-      - swift-log Logger
       - FileLogHandler
+      - Factory DI
       - ViewModel Service DataStore
+      - staged refactoring
   docs/rules/base/develop_with_agent_rule.md:
-    title: Developing with Agent and MCP Integration
-    purpose: Defines best practices for code search and analysis using AI agents and MCP tools to prevent duplication, manage refactoring impacts, verify architecture, and accumulate knowledge
+    title: Using Agents and MCP in Development
+    purpose: Defines how to use Swift-Selena MCP, Grep and Glob, Gemini MCP, and Codex MCP for existing-code search, impact analysis during refactoring, architecture verification, and knowledge accumulation
     content_details:
-      - Swift-Selena MCP usage patterns and best practices
-      - Code duplication prevention through prior search
-      - Refactoring impact analysis and change tracking
-      - Architecture verification and layer violation detection
-      - Knowledge accumulation through symbol analysis
-      - Alternative methods (Grep, Glob) when MCP is unavailable
-      - Gemini MCP usage for OS framework and external API inquiries
-      - Codex MCP usage for deep analysis and complex reasoning
+      - Existing-code check before implementation to prevent duplication, with Tools and Library search as the first priority
+      - "Swift-Selena MCP usage: initialize_project first, then search_code, find_symbol_definition, list_symbols, list_protocol_conformances, analyze_imports"
+      - Fallback direct search with Grep and Glob when Swift-Selena MCP is not connected
+      - New-implementation patterns for Service, Entity, and ViewModel using search_code, list_symbols, list_protocol_conformances, and list_property_wrappers
+      - "Refactoring procedure for type and function changes: locate definition, check all references, check type hierarchy, change, then confirm zero old-name hits"
+      - Deletion only after confirming zero references with search_code
+      - "Verification patterns: analyze_imports for layer violations, search_code for MockAssertion, find_test_cases for test patterns"
+      - "Duplicate code detection: consider moving code to Tools or Library when it appears in three or more places"
+      - Gemini MCP for OS framework usage, external API usage, and web search
+      - Codex MCP for deep source analysis and token-heavy reasoning
     applicable_tasks:
-      - Code implementation planning before development
-      - Refactoring impact assessment and change verification
-      - Architecture review and layer violation detection
-      - Code reuse evaluation
-      - Test coverage analysis
+      - Pre-implementation duplication check
+      - Refactoring impact analysis for type or function changes
+      - Layer violation and architecture verification
+      - Entity or ViewModel implementation pattern lookup
+      - Mock and test pattern verification
+      - Deletion safety check before removing symbols
+      - Choosing between Swift-Selena MCP, Grep, Gemini, and Codex for a task
     keywords:
+      - search_code
+      - find_symbol_definition
+      - analyze_imports
+      - list_protocol_conformances
+      - list_property_wrappers
+      - get_type_hierarchy
+      - find_test_cases
       - Swift-Selena MCP
-      - code search
-      - refactoring
-      - architecture verification
-      - symbol analysis
-      - duplication prevention
-      - MCP integration
+      - Grep Glob fallback
+      - duplicate code Tools Library
   docs/rules/base/principles_of_software_development.md:
     title: Principles of Software Development
     purpose: Establishes fundamental software engineering principles including SOLID, DRY, KISS, and YAGNI that guide code quality and architecture decisions
@@ -213,120 +215,126 @@ docs:
       - principles
   docs/rules/base/project_rule.md:
     title: AI Interaction and Development Rules
-    purpose: "Defines project-wide AI dialogue and development rules for Swift-Selena: Japanese language, file header Created by, spec priority, Package.swift platform requirements, role split between humans and AI."
+    purpose: Defines project-wide rules for AI interaction language, document style, file header authorship, development prerequisites, document priority, platform requirements, role division, and basic development principles
     content_details:
-      - "Language rule: dialogue with generative AI in Japanese, technical terms may stay in English, source code comments in Japanese"
-      - "Document style rule: icons are basically not used in documents"
-      - "File header rule: Created by must be the git user.name value, not a generative AI name, obtained with git config user.name"
-      - "Development premise: unclear points must be confirmed with humans before proceeding"
-      - "Priority rule: project/{feature}/spec requirement documents take precedence over all other documents including implementation"
-      - "Platform requirements: macOS 13.0 or later, Swift 6.1 tools version with Swift 5 language mode via swiftLanguageModes v5, read from Package.swift"
-      - "Project structure: source code under Sources and test code under Tests in Swift Package layout"
-      - "Role split: humans decide and approve, generative AI creates and modifies requirements, designs, plans and code, and manages plan progress"
-      - "Basic principles: check official specifications before using new tools, small trial before large rollout, prioritize accuracy over speed, avoid complex regex bulk replacement"
+      - "Interaction language: Japanese for AI dialogue, technical terms and English words allowed as-is"
+      - Source code comments must be written in Japanese
+      - "Document style: no icons by default"
+      - File header Created by field uses the git config user.name author, not the generative AI
+      - Unclear points must be confirmed with a human before proceeding
+      - "Priority: requirements under project/{feature}/spec/ override all other documents including implementation"
+      - "Platform requirements from Package.swift: macOS 13.0+, swift-tools-version 6.1, Swift 5 language mode"
+      - "Role division: human decides and approves, generative AI creates and changes documents and code and manages plan progress"
+      - "Basic principles: verify specifications first, validate with one sample before expanding, prefer verification over guessing, avoid complex regex bulk replacement"
+      - "Project layout: source under Sources and tests under Tests in the Swift Package"
     applicable_tasks:
-      - Project-wide AI dialogue and language setup review
-      - New file header creation with Created by attribution
-      - Priority conflict check between spec documents and implementation
-      - Platform and Swift version verification against Package.swift
-      - Role and responsibility confirmation for AI-driven development
-      - Bulk code or text modification safety review
+      - Starting any development task under project rules
+      - Confirming language and comment rules before writing code or documents
+      - Creating new file headers with Created by authorship
+      - Checking document priority when requirements conflict with other documents
+      - Verifying platform and Swift version requirements
+      - Planning division of work between human and AI
+      - Applying bulk change safety rules in refactoring
     keywords:
-      - AI dialogue language
-      - Created by git user.name
-      - Package.swift platform
+      - Japanese interaction
+      - code comments Japanese
+      - Created by header
+      - git config user.name
+      - document priority
       - macOS 13.0
-      - Swift 6.1
-      - swiftLanguageModes v5
-      - spec priority
-      - role split
-      - bulk replacement
-      - base development rule
+      - swift-tools-version 6.1
+      - Swift 5 language mode
+      - human decides AI creates
+      - bulk replacement regex
   docs/rules/base/review_criteria.md:
     title: Review Criteria Definition
-    purpose: Defines review criteria and checklists for AI-driven code and document reviews across specifications, designs, plans, and code implementation phases
+    purpose: Defines review perspectives, severity categories, issue count limits, and the Subagent procedure for AI reviews of requirements, design, plan, and code documents
     content_details:
-      - Common review result format with critical/quality/improvement categorization
-      - Subagent execution method with advisor integration workflow
-      - Specification document review criteria (What/How mixing, ambiguous expressions, requirement gaps, conflicts)
-      - Design document review criteria (architecture rules, entity protocols, service design, datastore conformance)
-      - Plan document review criteria (requirement/design traceability, cyclic dependencies, task ID duplicates)
-      - Code review criteria (compilation errors, runtime exceptions, security vulnerabilities, architecture violations)
-      - Problem count limits per category to prevent excessive feedback
-      - Multi-phase review procedure with error correction cycles
+      - Severity categories critical quality and improvement with their handling rules
+      - Review result output format template with issue lists and summary counts
+      - Mandatory Subagent execution for AI reviews with the general-purpose invocation template
+      - Mapping of review target types to related documents to load via advisor Subagents
+      - Requirements spec review criteria covering What/How mixing, ambiguous expressions, missing requirements, and contradictions
+      - Design review criteria covering architecture rule violations, unreflected requirements, required Entity protocols, and Service design rules
+      - Plan review criteria covering traceability matrix omissions, circular task dependencies, and duplicate task IDs
+      - Code review criteria covering compile errors, runtime exceptions such as force unwraps, hardcoded credentials, and layer violations
+      - Issue count limits per severity category (critical 10, quality 10, improvement 5)
+      - Review procedure of fixing critical issues immediately and repeating review until zero critical issues remain
     applicable_tasks:
-      - Specification document review
-      - Design document review
-      - Plan document review
-      - Code review implementation
-      - AI subagent review orchestration
+      - AI review of requirements specification documents
+      - AI review of design documents
+      - AI review of development plan documents
+      - AI review of source code
+      - Setting up review Subagent launch with related document lookup
+      - Fixing critical review findings and repeating the review loop
     keywords:
+      - AI review
       - review criteria
-      - code review
-      - document review
-      - specification validation
-      - design review
-      - architecture violation
+      - review Subagent
+      - critical issue
+      - quality issue
+      - improvement proposal
       - traceability matrix
-      - task dependencies
-      - review rubric
+      - issue count limit
+      - review result format
+      - What/How mixing
   docs/workflow/plan/design_workflow.md:
     title: Design Document Creation Workflow
-    purpose: Defines the workflow, requirements, and quality standards for creating technical design documents in the product design phase.
+    purpose: "Defines the workflow for creating design documents after requirements are complete: identifying rules, specs and existing assets, applying the design format, mandatory AI review via subagent, human review, and running project-toc-update. Applies to new feature technical design."
     content_details:
-      - "Phase 1: Requirements analysis (requirement review, clarification of ambiguities, confirmation of existing requirements and resources)"
-      - "Phase 2: Design document creation (referencing design format, required sections, existing component usage)"
-      - "Phase 3: Quality assurance (completeness verification, AI review, human review, ToC update)"
-      - Design quality standards (consistency, traceability, implementation independence, readability)
-      - "Important principles: requirements and design for independent implementation, no code in design docs, existing asset confirmation"
-      - "Common failure patterns: insufficient tool search, writing source code, not confirming existing engines, ignoring similar implementations"
-      - Pre-writing confirmation checklist for design IDs, requirement mapping, scope coverage, module separation
-      - "Mandatory requirements: re-read documents, complete workflow, request review, no code implementation"
+      - "Phase 1 requirements analysis: checking project/{feature}/spec/ documents and resolving unclear specs before design"
+      - Pre-design checklist of REQ-type requirement IDs such as SCR, CMP, FNC, BL, DM, EXT, NAV and THEME and existing asset checks
+      - Mandatory reuse check of Sources/Tools/ subdirectories and Sources/Selena/ engine (FileSearcher, SwiftSyntaxAnalyzer, ProjectMemory) before new design
+      - "Design document rules: DES-XXX ID, one file per review, output under project/{feature}/design/ and reference to docs/format/design_format.md"
+      - Required design item Used existing components listing concrete file paths or reason for not reusing
+      - AI review subagent procedure and review result format with critical, quality and improvement counts
+      - Quality gate checklist for traceability from requirement IDs to design IDs and prohibition of duplicate or skipped design IDs
+      - Mandatory run of /project-toc-update after design creation or update
     applicable_tasks:
-      - Design document creation
-      - New feature technical design
-      - Architecture and module design
-      - Design quality assurance and review
-      - Existing asset confirmation
+      - Design document creation for a new feature
+      - Technical design of a feature after requirements definition
+      - Review of design document completeness and existing asset reuse
+      - Identification of existing Tools and Selena engine components before designing
+      - Running AI design review subagent before human review
     keywords:
       - design workflow
+      - DES-XXX
       - design document
-      - technical design
-      - requirements analysis
-      - quality assurance
-      - design format
-      - project advisor
-      - module design
-      - MCP tools
-      - existing assets
+      - reuse check
+      - Sources/Tools
+      - Sources/Selena
+      - existing components
+      - AI review
+      - project-toc-update
+      - traceability
   docs/workflow/plan/planning_workflow.md:
-    title: Planning Workflow
-    purpose: Defines workflow for creating development plans, task prioritization, and dependency management from design documents to implementation tasks.
+    title: Planning Document Creation Workflow
+    purpose: "Defines the workflow for creating and updating implementation plan documents under project/{feature}/plan/ after design is complete: task extraction, task ID and priority rules, traceability matrices, and AI review. Applies to bug fix, feature and refactoring task planning."
     content_details:
-      - Feature-based project document structure with spec, design, and plan directories
-      - Project status auto-detection workflow for existing vs. new plans
-      - Requirement/design traceability matrix creation and maintenance
-      - Task extraction methodology from design documents with prioritization rules
-      - Iterative design-review-plan loop for staged development approach
-      - Task ID naming conventions (D-, UI-, I-, DI-, FIX-) and priority bands
-      - Design dependency mapping to prevent circular dependencies
-      - Plan format validation checklist against plan_format.md specification
-      - AI subagent review procedure before human approval
-      - Integration with docs-advisor and project-advisor subagents
+      - Status check table deciding whether to create a new plan or update the existing {feature}_plan.md
+      - Requirement traceability matrix covering SCR, CMP, FNC, BL, NF, DM, EXT, NAV and THEME requirement IDs
+      - Design traceability matrix mapping DES-xxx design IDs to requirement IDs and task IDs
+      - Layer-based task tables with checkmark, priority, task ID, design ID and dependency columns
+      - Task ID numbering rules D-, UI-, I-, DI- and FIX- prefixes and priority bands 90-99, 50-59, 30-39, 40-49, 25-29
+      - Task granularity rule of one task per single agent execution with build and test success
+      - Implementation order and UI component dependency map without circular dependencies
+      - Human review after each plan file and AI review subagent with critical, quality and improvement counts
+      - Note that project_toc.md update is not required for plan documents
     applicable_tasks:
-      - Creating new development plans for features
-      - Planning task extraction from design documents
-      - Updating plans for bug fixes and new features
-      - Traceability matrix creation and maintenance
-      - Task prioritization and dependency analysis
-      - Development plan format validation
+      - Creation of a new implementation plan file for a feature
+      - Update of an existing feature plan after a new design is approved
+      - Task extraction and priority assignment from design documents
+      - Creation of requirement and design traceability matrices in a plan
+      - Review of plan completeness before human approval
+      - Planning of bug fix or refactoring tasks from existing plans
     keywords:
       - planning workflow
-      - task extraction
+      - _plan.md
       - traceability matrix
-      - design-plan loop
-      - task prioritization
-      - dependency management
-      - plan_format.md
-      - project structure
-      - task ID conventions
+      - task ID
+      - priority
+      - D-001
+      - task-executor
+      - dependency map
+      - plan_format
+      - AI review
