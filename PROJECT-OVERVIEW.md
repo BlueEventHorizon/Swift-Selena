@@ -53,7 +53,7 @@ The spec and design documents were written in stages, from v0.5.x to v0.6.x. Sev
 
 ### Release and versioning
 
-The canonical version is `AppConstants.version`. Git tags have no `v` prefix. Release tags go on the first-parent line of `main`, and the Formula uses `tag:` only (no `revision:`). The authoritative procedure is in `CLAUDE.md`; `DEVELOPMENT.md` gives diagrams. CI checks consistency (`scripts/verify_version_consistency.sh`, `scripts/verify_release_tag.sh`) and builds bottles on a tag push. No workflow runs `swift build` or `swift test`; tests are run locally.
+The canonical version is `AppConstants.version`. Git tags have no `v` prefix. Release tags go on the first-parent line of `main`, and the Formula uses `tag:` only (no `revision:`). The authoritative procedure is in `CLAUDE.md`; `DEVELOPMENT.md` gives diagrams. CI checks the version consistency on every PR (`scripts/verify_version_consistency.sh`) and builds bottles on a tag push. The tag position is verified locally with `scripts/verify_release_tag.sh` (no workflow runs it). No workflow runs `swift build` or `swift test`; tests are run locally.
 
 ## 3. Structure
 

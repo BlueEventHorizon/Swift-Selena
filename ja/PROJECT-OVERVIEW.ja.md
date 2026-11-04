@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=PROJECT-OVERVIEW.md sha256=d6aea0c2dd0f -->
+<!-- bilingual-docs: source=PROJECT-OVERVIEW.md sha256=9dccaed3c5fc -->
 
 [English](../PROJECT-OVERVIEW.md) | 日本語
 
@@ -55,7 +55,7 @@ spec と design の文書は v0.5.x から v0.6.x にかけて段階的に書か
 
 ### リリースとバージョン
 
-正となるバージョンは `AppConstants.version` です。git tag に `v` は付けません。リリースタグは `main` の第 1 親ライン上に打ち、Formula は `tag:` のみを使います（`revision:` は書きません）。正式な手順は `CLAUDE.md` にあり、`ja/DEVELOPMENT.ja.md` に図があります。CI は整合性の検証（`scripts/verify_version_consistency.sh`、`scripts/verify_release_tag.sh`）と、tag push 時の bottle ビルドを行います。`swift build` や `swift test` を実行するワークフローはなく、テストはローカルで実行します。
+正となるバージョンは `AppConstants.version` です。git tag に `v` は付けません。リリースタグは `main` の第 1 親ライン上に打ち、Formula は `tag:` のみを使います（`revision:` は書きません）。正式な手順は `CLAUDE.md` にあり、`ja/DEVELOPMENT.ja.md` に図があります。CI は PR ごとの version 整合性の検証（`scripts/verify_version_consistency.sh`）と、tag push 時の bottle ビルドを行います。tag の位置はローカルで `scripts/verify_release_tag.sh` により検証します（これを実行するワークフローはありません）。`swift build` や `swift test` を実行するワークフローはなく、テストはローカルで実行します。
 
 ## 3. 構成
 

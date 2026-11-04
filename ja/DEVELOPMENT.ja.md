@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=DEVELOPMENT.md sha256=0131f32036d5 -->
+<!-- bilingual-docs: source=DEVELOPMENT.md sha256=f080cba06230 -->
 
 # 開発ガイド
 
@@ -261,13 +261,12 @@ rm -rf ~/.swift-selena/
 
 ## CI
 
-| ワークフロー                                             | トリガー                         | 内容                                                                                                                                                 |
-| -------------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `version_check.yml`（Version Consistency Check）         | PR、`main` / `develop` への push | `Sources/Constants.swift` を正として、CHANGELOG・`.version-config.yaml` の version 表記の一致を検証します（`scripts/verify_version_consistency.sh`） |
-| `release_tag_check.yml`（Release Tag Consistency Check） | tag の push                      | tag が `main` の本流にあり、Constants・Formula の version と一致することを検証します（`scripts/verify_release_tag.sh`）                              |
-| `bottle.yml`（Build Bottles）                            | tag の push、手動実行            | Apple Silicon（macOS 15 / macOS 26）向けの Homebrew bottle をビルドし、GitHub Release に添付します                                                   |
-| `close-issues-on-develop.yaml`                           | `develop` への PR の merge       | PR 本文の `Closes #N` の Issue をクローズします                                                                                                      |
-| `claude.yml`（Claude Code）                              | Issue・PR のコメントなど         | Claude Code による支援です                                                                                                                           |
+| ワークフロー                                     | トリガー                         | 内容                                                                                                                                                 |
+| ------------------------------------------------ | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version_check.yml`（Version Consistency Check） | PR、`main` / `develop` への push | `Sources/Constants.swift` を正として、CHANGELOG・`.version-config.yaml` の version 表記の一致を検証します（`scripts/verify_version_consistency.sh`） |
+| `bottle.yml`（Build Bottles）                    | tag の push、手動実行            | Apple Silicon（macOS 15 / macOS 26）向けの Homebrew bottle をビルドし、GitHub Release に添付します                                                   |
+| `close-issues-on-develop.yaml`                   | `develop` への PR の merge       | PR 本文の `Closes #N` の Issue をクローズします                                                                                                      |
+| `claude.yml`（Claude Code）                      | Issue・PR のコメントなど         | Claude Code による支援です                                                                                                                           |
 
 ローカルでの検証:
 
