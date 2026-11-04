@@ -301,6 +301,30 @@ final class SearchCodeToolTests: XCTestCase {
         XCTAssertTrue(files.contains(where: { $0.hasSuffix("Bar.swift") }))
     }
 
+    /// `**/` はディレクトリ 0 個以上に一致する（直下のファイルも対象。回帰防止）
+    func testDoubleStarSlashMatchesZeroOrMoreDirectories() throws {
+        func matches(_ glob: String, _ path: String) throws -> Bool {
+            let regex = try NSRegularExpression(
+                pattern: FileSearcher.wildcardToRegex(glob),
+                options: [.caseInsensitive]
+            )
+            return regex.firstMatch(in: path, range: NSRange(path.startIndex..., in: path)) != nil
+        }
+
+        // ディレクトリ 0 個（直下）・1 個・複数個のいずれにも一致
+        XCTAssertTrue(try matches("Sources/**/*.swift", "Sources/Foo.swift"))
+        XCTAssertTrue(try matches("Sources/**/*.swift", "Sources/Tools/Foo.swift"))
+        XCTAssertTrue(try matches("Sources/**/*.swift", "Sources/Tools/FileSystem/Foo.swift"))
+        // 先頭の `**/` はルート直下のファイルにも一致
+        XCTAssertTrue(try matches("**/*.swift", "Package.swift"))
+        XCTAssertTrue(try matches("**/*.swift", "Sources/Foo.swift"))
+        // 別ディレクトリ・別拡張子には一致しない
+        XCTAssertFalse(try matches("Sources/**/*.swift", "Tests/Foo.swift"))
+        XCTAssertFalse(try matches("Sources/**/*.swift", "Sources/Foo.md"))
+        // 単独の `**`（`/` を伴わない）は従来どおり任意の文字列に一致
+        XCTAssertTrue(try matches("Sources/**", "Sources/Tools/Foo.swift"))
+    }
+
     /// 既定挙動: include / exclude を省略すると .swift のみ走査される
     func testDefaultBehaviorScansOnlySwiftFiles() async throws {
         let response = try await runSearchCode(arguments: [

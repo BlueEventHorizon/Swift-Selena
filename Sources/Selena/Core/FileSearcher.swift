@@ -66,6 +66,10 @@ enum FileSearcher {
     /// `**` を単独の `*` と区別するためのプライベート用途 Unicode（DES-104 §4.4）
     private static let doubleStarPlaceholder: Character = "\u{E000}"
 
+    /// `**/`（ディレクトリ 0 個以上に一致）を表すプライベート用途 Unicode。
+    /// `Sources/**/*.swift` が `Sources/Foo.swift` にも一致するよう、`/` を含めて 1 要素として扱う
+    private static let doubleStarSlashPlaceholder: Character = "\u{E001}"
+
     // MARK: - Public API
 
     /// ワイルドカードパターンでファイルを検索
@@ -316,12 +320,19 @@ enum FileSearcher {
     }
 
     /// ワイルドカードパターンを正規表現に変換（単一 `*`・`?`・`.` に加え `**` を再帰パス一致として扱う）
+    /// `**/` はディレクトリ 0 個以上に一致する（`Sources/**/*.swift` は `Sources/Foo.swift` にも一致）
     internal static func wildcardToRegex(_ pattern: String) -> String {
         var withPlaceholders = ""
         let chars = Array(pattern)
         var idx = 0
         while idx < chars.count {
             if idx + 1 < chars.count, chars[idx] == "*", chars[idx + 1] == "*" {
+                // `**/` はディレクトリ 0 個以上（直下のファイルにも一致させる）
+                if idx + 2 < chars.count, chars[idx + 2] == "/" {
+                    withPlaceholders.append(doubleStarSlashPlaceholder)
+                    idx += 3
+                    continue
+                }
                 withPlaceholders.append(doubleStarPlaceholder)
                 idx += 2
                 continue
@@ -332,6 +343,10 @@ enum FileSearcher {
 
         var result = "^"
         for char in withPlaceholders {
+            if char == doubleStarSlashPlaceholder {
+                result += "(?:.*/)?"
+                continue
+            }
             if char == doubleStarPlaceholder {
                 result += ".*"
                 continue
