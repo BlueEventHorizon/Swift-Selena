@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=CHANGELOG.md sha256=6a2f103cde64 -->
+<!-- bilingual-docs: source=CHANGELOG.md sha256=cd90e909be92 -->
 
 [English](../CHANGELOG.md) | 日本語
 
@@ -7,6 +7,21 @@
 Swift-Selenaのリリース履歴
 
 ---
+
+## 0.6.14 - 2026-11-04
+
+### ビルド警告の解消
+
+- **fix**: `ProjectMemory.init` が、nonisolated な初期化子から actor 隔離の `save()` を呼んだり `memory` / `cacheWarning` に触れたりしないようにした（Swift 6 言語モードではエラーになる箇所）。状態をローカル変数で組み立て、`static` ヘルパーで書き出してから代入する
+- **fix**: `FileLogHandler` が、swift-log 1.12 で非推奨になったデフォルト実装に頼らず、`log(event:)` を実装するようにした
+- **change**: MCP SDK の非推奨 `.text(_:metadata:)` を、13 のツールファイルと `SwiftMCPServer.swift` で `.text(text:annotations:_meta:)` に置き換えた。ツールの出力は変わらない
+- **change**: `SwiftMCPServer` が、並行実行されるハンドラにキャプチャされた `var` ではなく、`ProjectMemoryHolder` actor で `ProjectMemory` を保持するようにした。ビルドの警告は 0 件になり、これらのファイルに残っていた Swift 6 言語モードの障害も解消した
+
+### 開発ツール
+
+- **fix**: tap を URL 形式で登録している環境でも、`scripts/merge_bottles.sh` が作業ツリーの Formula を更新するようにした（従来は Homebrew 側のクローンだけが変わっていた）
+- **change**: `dprint.json` を削除し、dprint の設定を `dprint.jsonc` に一本化した。プラグインを更新し（markdown 0.28.2、json 0.25.2、toml 0.9.0、yaml 0.6.0）、`ruff` 0.11.3 を追加した。文書は統一した設定で整形した（体裁のみの変更）
+- **chore**: ルールと仕様の doc-advisor 索引（ToC）を更新
 
 ## 0.6.13 - 2026-10-30
 

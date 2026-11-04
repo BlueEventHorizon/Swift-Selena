@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=DEVELOPMENT.md sha256=eb556e68ae52 -->
+<!-- bilingual-docs: source=DEVELOPMENT.md sha256=0131f32036d5 -->
 
 # 開発ガイド
 

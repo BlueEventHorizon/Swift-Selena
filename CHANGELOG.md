@@ -6,6 +6,21 @@ Release history of Swift-Selena.
 
 ---
 
+## 0.6.14 - 2026-11-04
+
+### Build warnings
+
+- **fix**: `ProjectMemory.init` no longer calls the actor-isolated `save()` or touches `memory` / `cacheWarning` from a nonisolated initializer (an error in the Swift 6 language mode). The state is built in local variables, written by a `static` helper, and then assigned
+- **fix**: `FileLogHandler` implements `log(event:)` instead of relying on the deprecated default implementation of swift-log 1.12
+- **change**: Replaced the deprecated `.text(_:metadata:)` of the MCP SDK with `.text(text:annotations:_meta:)` in 13 tool files and `SwiftMCPServer.swift`. The tool output is unchanged
+- **change**: `SwiftMCPServer` keeps the `ProjectMemory` in a `ProjectMemoryHolder` actor instead of a `var` captured by concurrently executing handlers. The build now reports no warnings, which removes the remaining Swift 6 language mode blockers of these files
+
+### Development tooling
+
+- **fix**: `scripts/merge_bottles.sh` also updates the Formula in the working tree when the tap was registered by URL (it used to change only Homebrew's clone)
+- **change**: `dprint.json` was removed and `dprint.jsonc` is the only dprint configuration. The plugins were updated (markdown 0.28.2, json 0.25.2, toml 0.9.0, yaml 0.6.0) and `ruff` 0.11.3 was added. The documents were formatted with the unified configuration (formatting only)
+- **chore**: Refreshed the doc-advisor ToC indexes of the rules and the specifications
+
 ## 0.6.13 - 2026-10-30
 
 ### Cache invalidation fix
