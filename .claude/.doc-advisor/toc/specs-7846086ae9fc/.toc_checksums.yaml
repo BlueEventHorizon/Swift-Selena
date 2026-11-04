@@ -1,22 +1,22 @@
 # ToC checksums for key: specs
 # Auto-generated - do not edit
-generated_at: 2026-10-30T07:27:53Z
+generated_at: 2026-11-04T08:40:35Z
 file_count: 17
 checksums:
-  project/main/design/DES-004_swift_toc_generation_design.md: d863ce7363ef23ee3616b1e32aaabe0bbd9a0801bc7e81c4c2becebec2c618da
-  project/main/design/DES-005_code_header_generation_design.md: ab2712503ca33eeb62f71d2350d38b2123a54f69fa77b2dc5772f65d2f8ccac0
-  project/main/design/DES-006_code_header_db_design_v2.md: 8aa4b6bb6eee91b7172b441207bbeb95aa9896a49b041c6330dc07f3747b2dca
-  project/main/design/DES-101_System_Architecture.md: 7cedbbd3a287c4dac6b7859a5012c24371e7c57b58983a1aa70f23a430c3b5a2
-  project/main/design/DES-102_LSP_Integration_Design.md: a619e9b0c15478a1d32c0f9b6092fb1c2aa49ca67bcd20478024cdcc66e3e7a7
-  project/main/design/DES-103_Tool_Implementation_Design.md: 94e6837a5b92d4e940ff1ec00a767d80c1552f049cbe41567c6cd15ca8957cc1
-  project/main/design/DES-104_search_symbol_tools_enhancement_design.md: 6940b73cbeec18bd77a9945fbdd77db8d9900e823434c544e893a0175c9c0f16
-  project/main/mcp-guide/MCP-Best-Practices.md: 746afb937d36c0c8c5a98480a2ebebcd908ac0f8a015b8278ab2e43c58fe607e
-  project/main/mcp-guide/MCP-Implementation-Guide.md: c5d2659fdd81c462e99db70052fa9b280e1ce97fbdb5fb92851ec5a722c73bb0
-  project/main/mcp-guide/MCP-SDK-Deep-Dive.md: e1955431ca8b490e9d3af7479f838484ac8a00f518b4319f1c7ddde4b91fe7de
-  project/main/mcp-guide/README.md: 3ccab753610f1bc9648deea7ae46c3a2994a5907c1b9f9dbac0713094c7e0306
-  project/main/plan/main_plan.md: e2e6cd83d5b377248aebd17faa71dc0ed1ec65518a5ff96647a8e7651303669e
-  project/main/spec/README.md: 4cb3e0f98d3df6ac192eca66d38b153f0c6144389a96897059d4d735fa1aab9e
-  project/main/spec/REQ-001_Swift_Selena_Overall_Requirements.md: b66b1315b97a0c447bb4c8a522c52e3801445c2e880481499f8354be5098968a
-  project/main/spec/REQ-002_LSP_Integration_v0.5.x.md: 36c2a32ef92f3d4d6d160e3c0ee6a4d9ca5e1fbc3fa02895bf8f24be4a4bdda3
-  project/main/spec/REQ-003_Core_Features_Requirements.md: 8225df4e2a689185f61ad2103aed7b08cefde210c2151ecdea8776e3f60dd4b2
-  project/main/spec/REQ-004_Code_Header_DB_v0.6.x.md: ea033023d9b74679e52edc54a89957181da49cc45196e6088e5c7ed6bfd43cbb
+  project/main/design/DES-004_swift_toc_generation_design.md: c8195041ab781e12d0ff04ed12e89404f5cf19f9081689b2962dd7ae0276a48a
+  project/main/design/DES-005_code_header_generation_design.md: 875799cc670c2445d3ae6ddd17a284dc08ef706b94d8d92f47270743a09e46a6
+  project/main/design/DES-006_code_header_db_design_v2.md: 0d5ad3c4523d13bdec776d724f692c31abd94645fe8445d1f0e14e52c8858691
+  project/main/design/DES-101_System_Architecture.md: 69db7cf9379bd1098c74ddcf1cbebf716aaa31197650ecb2a2144e22b1ac5804
+  project/main/design/DES-102_LSP_Integration_Design.md: 0543307e082ed33a8ed099bca24c14fbe62bbf5134138b92a2988bc3cee0f7dc
+  project/main/design/DES-103_Tool_Implementation_Design.md: 9b82e5ae70fb4f6a24e604a457f1e43342bb37f277ec883f5d91e777af23e0f1
+  project/main/design/DES-104_search_symbol_tools_enhancement_design.md: e10713448712329284e3fc46c8119ee4ed60bfd23528966854d8d076f2460559
+  project/main/mcp-guide/MCP-Best-Practices.md: afdab6816713a40ccd9f6a5010b2e2faf4ffd506dc792b0005acaf9918f2ed45
+  project/main/mcp-guide/MCP-Implementation-Guide.md: 48a71c421f3909e3845a41ee1b3df25573174411e9d15354c4219f6497cbebcc
+  project/main/mcp-guide/MCP-SDK-Deep-Dive.md: 1e0c0ab56ae62d0850ad8b9b34effa3f7fa32ba4b29a5c5cf84f9fa1b0f2383c
+  project/main/mcp-guide/README.md: bca9de3f03884b35455aad22495ef1b5cdddcaf8054c1e722da6345226255757
+  project/main/plan/main_plan.md: d9f49fd61dda828b18aeaf2963db24e91445b0f78a007bed6669ac0a7f981071
+  project/main/spec/README.md: 3b76a85d782a812b049e9f3a863a11d982ff06f1f60fbd9786364e15459ed1bc
+  project/main/spec/REQ-001_Swift_Selena_Overall_Requirements.md: 2b57ad18f9b30dfba09f4069b556bd5b14e6178afd75b54c3f9abfb88ea2e27c
+  project/main/spec/REQ-002_LSP_Integration_v0.5.x.md: 3df8bf1f234440c229170ebd20c2afda130e6c9fbb41fe344eba89fb56f90665
+  project/main/spec/REQ-003_Core_Features_Requirements.md: 01921ac9c581b4245a362fef88b0e9cc76dc8a574b144aee963dc88efc18e764
+  project/main/spec/REQ-004_Code_Header_DB_v0.6.x.md: e5604f9261eb62b4fb222f359f5bf2461bdab660d43a9441c301e89b0e912660

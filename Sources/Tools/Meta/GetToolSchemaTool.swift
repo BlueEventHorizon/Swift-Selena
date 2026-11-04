@@ -70,7 +70,7 @@ enum GetToolSchemaTool: MCPTool {
 
         // Tool定義をJSON形式で出力
         let result = formatToolSchema(tool)
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     }
 
     /// Tool定義を人間が読みやすい形式でフォーマット

@@ -61,6 +61,6 @@ enum ListAvailableToolsTool: MCPTool {
         // 将来、前提条件を持つツールが追加された際は availableToolNames で絞り込まれる。
         let availableToolNames = Set(CapabilityRegistry.availableTools())
         let result = MetaToolRegistry.formatToolList(filter: availableToolNames)
-        return CallTool.Result(content: [.text(result)])
+        return CallTool.Result(content: [.text(text: result, annotations: nil, _meta: nil)])
     }
 }

@@ -4,6 +4,19 @@ import Logging
 import SwiftSyntax
 import SwiftParser
 
+/// initialize_project で作成した ProjectMemory を、並行実行されるハンドラ間で共有するための保持役
+private actor ProjectMemoryHolder {
+    private var memory: ProjectMemory?
+
+    func get() -> ProjectMemory? {
+        memory
+    }
+
+    func set(_ newValue: ProjectMemory) {
+        memory = newValue
+    }
+}
+
 @main
 struct SwiftMCPServer {
     static func main() async throws {
@@ -49,7 +62,8 @@ struct SwiftMCPServer {
         // v0.5.1: LSP状態管理
         let lspState = LSPState(logger: logger)
 
-        var projectMemory: ProjectMemory?
+        // ハンドラ（並行実行クロージャ）から安全に共有するため actor 経由で保持する
+        let projectMemoryHolder = ProjectMemoryHolder()
 
         #if DEBUG
         // v0.5.3: デバッグランナー起動（5秒後に自動実行）
@@ -112,21 +126,21 @@ struct SwiftMCPServer {
             case MetaToolNames.listAvailableTools:
                 return try await ListAvailableToolsTool.execute(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     logger: logger
                 )
 
             case MetaToolNames.getToolSchema:
                 return try await GetToolSchemaTool.execute(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     logger: logger
                 )
 
             case MetaToolNames.executeTool:
                 return try await ExecuteToolTool.execute(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     lspState: lspState,
                     logger: logger
                 )
@@ -149,7 +163,7 @@ struct SwiftMCPServer {
                 }
 
                 // ProjectMemory初期化
-                projectMemory = try ProjectMemory(projectPath: projectPath)
+                await projectMemoryHolder.set(try ProjectMemory(projectPath: projectPath))
 
                 // DES-103 §4.1: LSP接続はバックグラウンドで実行（即時応答優先）
                 Task {
@@ -163,31 +177,31 @@ struct SwiftMCPServer {
 
                 // ProjectMemory初期化完了後に即時レスポンスを返却
                 #if DEBUG
-                let stats = await projectMemory?.getStats() ?? ""
+                let stats = await projectMemoryHolder.get()?.getStats() ?? ""
                 let message = "✅ Project initialized: \(projectPath)\n\nℹ️ LSP connecting in background...\n\n\(stats)"
                 #else
                 let message = "✅ Project initialized: \(projectPath)\n\nℹ️ LSP connecting in background..."
                 #endif
-                return CallTool.Result(content: [.text(message)])
+                return CallTool.Result(content: [.text(text: message, annotations: nil, _meta: nil)])
 
             case ToolNames.findFiles:
                 return try await FindFilesTool.execute(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     logger: logger
                 )
 
             case ToolNames.searchCode:
                 return try await SearchCodeTool.execute(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     logger: logger
                 )
 
             case ToolNames.searchFilesWithoutPattern:
                 return try await SearchFilesWithoutPatternTool.execute(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     logger: logger
                 )
 
@@ -195,7 +209,7 @@ struct SwiftMCPServer {
                 // v0.5.4: LSP強化版
                 return try await ListSymbolsTool.executeWithLSP(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     lspState: lspState,
                     logger: logger
                 )
@@ -203,35 +217,35 @@ struct SwiftMCPServer {
             case ToolNames.findSymbolDefinition:
                 return try await FindSymbolDefinitionTool.execute(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     logger: logger
                 )
 
             case ToolNames.listPropertyWrappers:
                 return try await ListPropertyWrappersTool.execute(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     logger: logger
                 )
 
             case ToolNames.listProtocolConformances:
                 return try await ListProtocolConformancesTool.execute(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     logger: logger
                 )
 
             case ToolNames.listExtensions:
                 return try await ListExtensionsTool.execute(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     logger: logger
                 )
 
             case ToolNames.analyzeImports:
                 return try await AnalyzeImportsTool.execute(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     logger: logger
                 )
 
@@ -239,7 +253,7 @@ struct SwiftMCPServer {
                 // v0.5.4: LSP強化版
                 return try await GetTypeHierarchyTool.executeWithLSP(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     lspState: lspState,
                     logger: logger
                 )
@@ -247,7 +261,7 @@ struct SwiftMCPServer {
             case ToolNames.findTestCases:
                 return try await FindTestCasesTool.execute(
                     params: params,
-                    projectMemory: projectMemory,
+                    projectMemory: await projectMemoryHolder.get(),
                     logger: logger
                 )
 

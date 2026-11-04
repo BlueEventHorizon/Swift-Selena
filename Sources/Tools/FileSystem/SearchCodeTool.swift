@@ -91,10 +91,10 @@ enum SearchCodeTool: MCPTool {
             _ = try NSRegularExpression(pattern: pattern, options: [])
         } catch {
             return CallTool.Result(content: [
-                .text(ResultEncoder.buildErrorResponse(
+                .text(text: ResultEncoder.buildErrorResponse(
                     cause: ErrorMessages.regexSyntaxErrorCause,
                     suggestion: ErrorMessages.regexSyntaxErrorSuggestion
-                ))
+                ), annotations: nil, _meta: nil)
             ])
         }
 
@@ -107,19 +107,19 @@ enum SearchCodeTool: MCPTool {
             )
         } catch let MCPError.invalidParams(message) {
             return CallTool.Result(content: [
-                .text(ResultEncoder.buildErrorResponse(
+                .text(text: ResultEncoder.buildErrorResponse(
                     cause: ErrorMessages.limitBoundaryErrorCause,
                     suggestion: message ?? ErrorMessages.limitBoundaryErrorSuggestion
-                ))
+                ), annotations: nil, _meta: nil)
             ])
         }
 
         if let lim = limitOptional, lim <= 0 {
             return CallTool.Result(content: [
-                .text(ResultEncoder.buildErrorResponse(
+                .text(text: ResultEncoder.buildErrorResponse(
                     cause: ErrorMessages.limitBoundaryErrorCause,
                     suggestion: ErrorMessages.limitBoundaryErrorSuggestion
-                ))
+                ), annotations: nil, _meta: nil)
             ])
         }
 
@@ -137,7 +137,7 @@ enum SearchCodeTool: MCPTool {
                 maxCount: 20
             )
         } catch let MCPError.invalidParams(message) {
-            return CallTool.Result(content: [.text(stringArrayParameterErrorResponse(message))])
+            return CallTool.Result(content: [.text(text: stringArrayParameterErrorResponse(message), annotations: nil, _meta: nil)])
         }
 
         // 3) include / exclude: glob 事前検証（wildcardToRegex + NSRegularExpression）
@@ -146,10 +146,10 @@ enum SearchCodeTool: MCPTool {
             try validateGlobSyntax(excludePatterns)
         } catch {
             return CallTool.Result(content: [
-                .text(ResultEncoder.buildErrorResponse(
+                .text(text: ResultEncoder.buildErrorResponse(
                     cause: ErrorMessages.globSyntaxErrorCause,
                     suggestion: ErrorMessages.globSyntaxErrorSuggestion
-                ))
+                ), annotations: nil, _meta: nil)
             ])
         }
 
@@ -159,7 +159,7 @@ enum SearchCodeTool: MCPTool {
             outputMode = mode
         case .invalid(let cause, let suggestion):
             return CallTool.Result(content: [
-                .text(ResultEncoder.buildErrorResponse(cause: cause, suggestion: suggestion))
+                .text(text: ResultEncoder.buildErrorResponse(cause: cause, suggestion: suggestion), annotations: nil, _meta: nil)
             ])
         }
 
@@ -180,7 +180,7 @@ enum SearchCodeTool: MCPTool {
                let cause = localized.errorDescription,
                let suggestion = localized.recoverySuggestion {
                 return CallTool.Result(content: [
-                    .text(ResultEncoder.buildErrorResponse(cause: cause, suggestion: suggestion))
+                    .text(text: ResultEncoder.buildErrorResponse(cause: cause, suggestion: suggestion), annotations: nil, _meta: nil)
                 ])
             }
             throw error
@@ -199,7 +199,7 @@ enum SearchCodeTool: MCPTool {
             finalText = ResultEncoder.buildFinalResponse(encoded.text, encoded.json)
         }
 
-        return CallTool.Result(content: [.text(finalText)])
+        return CallTool.Result(content: [.text(text: finalText, annotations: nil, _meta: nil)])
     }
 
     // MARK: - 入力検証ヘルパー
