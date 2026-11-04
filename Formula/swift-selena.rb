@@ -18,6 +18,13 @@ class SwiftSelena < Formula
       tag: "0.6.14"
   license "MIT"
 
+  bottle do
+    root_url "https://github.com/BlueEventHorizon/Swift-Selena/releases/download/0.6.14"
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_tahoe:   "f6cee1aed1789596c5aea359410989cbe1e556f1b9e03a99ba92289e1d902522"
+    sha256 cellar: :any_skip_relocation, arm64_sequoia: "db90e7d13ea1c0d85866587efb3c8ceb6f573ef443e575e1608a9bf9bc2772cc"
+  end
+
   # macOS 13.0+ requirement matches Package.swift's .macOS(.v13).
   # `depends_on xcode` is intentionally omitted: the build is a plain SwiftPM
   # CLI build and Command Line Tools providing Swift 6.1+ (Package.swift's
