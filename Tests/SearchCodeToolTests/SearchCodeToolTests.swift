@@ -325,6 +325,31 @@ final class SearchCodeToolTests: XCTestCase {
         XCTAssertTrue(try matches("Sources/**", "Sources/Tools/Foo.swift"))
     }
 
+    /// `/` を含まないパターンは任意の深さのファイル名に一致し、`/` を含むパターンは相対パス全体に一致する
+    func testPatternWithoutSlashMatchesFileNameAtAnyDepth() throws {
+        func matches(_ glob: String, _ path: String) throws -> Bool {
+            let regex = try NSRegularExpression(
+                pattern: FileSearcher.wildcardToRegex(glob),
+                options: [.caseInsensitive]
+            )
+            return regex.firstMatch(in: path, range: NSRange(path.startIndex..., in: path)) != nil
+        }
+
+        // ファイル名だけのパターン: 直下・任意の深さのどちらにも一致
+        XCTAssertTrue(try matches("Foo.swift", "Foo.swift"))
+        XCTAssertTrue(try matches("Foo.swift", "Sources/Tools/Foo.swift"))
+        XCTAssertTrue(try matches("Foo*.swift", "Sources/Tools/FooBar.swift"))
+        // 別名のファイルには一致しない（接尾辞だけの一致も不可）
+        XCTAssertFalse(try matches("Foo.swift", "Sources/Tools/BarFoo.swift"))
+        XCTAssertFalse(try matches("Foo.swift", "Sources/Foo.swift.bak"))
+        // 従来から一致していたパターンは変わらず一致する
+        XCTAssertTrue(try matches("*.swift", "Sources/Tools/Foo.swift"))
+        XCTAssertTrue(try matches("*Tests*", "Tests/FooTests.swift"))
+        // `/` を含むパターンはルートからの相対パス全体に一致する（任意の深さには広がらない）
+        XCTAssertTrue(try matches("Sources/Foo.swift", "Sources/Foo.swift"))
+        XCTAssertFalse(try matches("Sources/Foo.swift", "Other/Sources/Foo.swift"))
+    }
+
     /// 既定挙動: include / exclude を省略すると .swift のみ走査される
     func testDefaultBehaviorScansOnlySwiftFiles() async throws {
         let response = try await runSearchCode(arguments: [

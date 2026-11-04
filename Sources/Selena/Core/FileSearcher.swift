@@ -341,7 +341,9 @@ enum FileSearcher {
             idx += 1
         }
 
-        var result = "^"
+        // `/` を含まないパターン（`*.swift`・`Foo.swift` など）は、gitignore / ripgrep と同様に
+        // 任意の深さのファイル名に一致させる。`/` を含むパターンはルートからの相対パス全体に一致する
+        var result = pattern.contains("/") ? "^" : "^(?:.*/)?"
         for char in withPlaceholders {
             if char == doubleStarSlashPlaceholder {
                 result += "(?:.*/)?"
