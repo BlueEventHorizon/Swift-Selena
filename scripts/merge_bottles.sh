@@ -23,7 +23,7 @@ TAP_DIR="$(brew --repo blueeventhorizon/swift-selena)"
 brew bottle --merge --write --no-commit "$WORK"/*.bottle.json
 
 if [ "$(cd "$TAP_DIR" && pwd -P)" != "$(cd "$ROOT" && pwd -P)" ]; then
-  echo "tap は別クローン（$TAP_DIR）のため、差分を $ROOT に適用します"
+  echo "tap は別クローン（${TAP_DIR}）のため、差分を ${ROOT} に適用します"
   git -C "$TAP_DIR" diff -- Formula/swift-selena.rb | git -C "$ROOT" apply
   git -C "$TAP_DIR" checkout -- Formula/swift-selena.rb
 fi
