@@ -20,6 +20,14 @@ private actor ProjectMemoryHolder {
 @main
 struct SwiftMCPServer {
     static func main() async throws {
+        // --version / -v: バージョンを標準出力へ出して終了する（MCP サーバーは起動しない）
+        // 標準出力は通常起動時には JSON-RPC 専用のため、ここでのみ書き込む
+        let arguments = CommandLine.arguments.dropFirst()
+        if arguments.contains("--version") || arguments.contains("-v") {
+            print("\(AppConstants.name) \(AppConstants.version)")
+            return
+        }
+
         // v0.5.3: ファイルログ設定
         let logFilePath = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".swift-selena/logs/server.log")
