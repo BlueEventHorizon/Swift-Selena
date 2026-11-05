@@ -301,6 +301,106 @@ final class SearchCodeToolTests: XCTestCase {
         XCTAssertTrue(files.contains(where: { $0.hasSuffix("Bar.swift") }))
     }
 
+    // MARK: - 既定の件数上限（DES-104 TBD-006）
+
+    /// 既定の上限を超えるマッチを持つ fixture を追加する（150 行 × 1 ファイル）
+    private func writeManyMatchesFixture() throws {
+        let body = (1...150).map { "let needle\($0) = \"needle\"" }.joined(separator: "\n")
+        try writeFile(relativePath: "Sources/Many.swift", content: body)
+    }
+
+    /// limit 未指定でも既定の件数上限（100 件）で切り詰められ、その旨が通知される
+    func testDefaultLimitAppliesWhenLimitOmitted() async throws {
+        try writeManyMatchesFixture()
+        let response = try await runSearchCode(arguments: [
+            ParameterKeys.pattern: .string("needle"),
+        ])
+        let parts = splitStructured(response)
+
+        guard let json = parts.json.flatMap(parseJSON),
+              let matches = json["matches"] as? [[String: Any]] else {
+            return XCTFail("structured JSON / matches が取得できない")
+        }
+        XCTAssertEqual(matches.count, FileSearcher.defaultMatchLimit, "既定の件数上限で切り詰められる")
+        XCTAssertEqual(json["total_match_count"] as? Int, 150, "total_match_count は上限適用前の総数")
+        XCTAssertEqual(json["truncated"] as? Bool, true)
+        XCTAssertEqual(json["truncated_by_default_limit"] as? Bool, true)
+        XCTAssertEqual(json["truncated_to_max_limit"] as? Bool, false)
+        XCTAssertEqual(json["applied_limit"] as? Int, FileSearcher.defaultMatchLimit)
+        XCTAssertTrue(parts.text.contains("default limit \(FileSearcher.defaultMatchLimit) applied"),
+                      "テキストにも既定上限が掛かった旨と次の手段が出る")
+    }
+
+    /// 既定の上限以内ならそのまま全件返り、切り詰め通知は出ない
+    func testDefaultLimitDoesNotTruncateWhenUnderLimit() async throws {
+        let response = try await runSearchCode(arguments: [
+            ParameterKeys.pattern: .string("hello"),
+        ])
+        let parts = splitStructured(response)
+
+        guard let json = parts.json.flatMap(parseJSON) else {
+            return XCTFail("structured JSON が取得できない")
+        }
+        XCTAssertEqual(json["truncated"] as? Bool, false)
+        XCTAssertEqual(json["truncated_by_default_limit"] as? Bool, false)
+        XCTAssertFalse(parts.text.contains("[Truncated"))
+    }
+
+    /// limit を明示すれば既定の上限は適用されず、利用者指定の上限が使われる
+    func testExplicitLimitOverridesDefaultLimit() async throws {
+        try writeManyMatchesFixture()
+        let response = try await runSearchCode(arguments: [
+            ParameterKeys.pattern: .string("needle"),
+            ParameterKeys.limit: .int(150),
+        ])
+        let parts = splitStructured(response)
+
+        guard let json = parts.json.flatMap(parseJSON),
+              let matches = json["matches"] as? [[String: Any]] else {
+            return XCTFail("structured JSON / matches が取得できない")
+        }
+        XCTAssertEqual(matches.count, 150, "明示した limit まで返る（既定の 100 件では切られない）")
+        XCTAssertEqual(json["truncated"] as? Bool, false)
+        XCTAssertEqual(json["truncated_by_default_limit"] as? Bool, false)
+    }
+
+    /// count_only は limit の対象外で、既定の上限も適用されない
+    func testDefaultLimitDoesNotApplyToCountOnly() async throws {
+        try writeManyMatchesFixture()
+        let response = try await runSearchCode(arguments: [
+            ParameterKeys.pattern: .string("needle"),
+            ParameterKeys.outputMode: .string("count_only"),
+        ])
+        let parts = splitStructured(response)
+
+        guard let json = parts.json.flatMap(parseJSON) else {
+            return XCTFail("structured JSON が取得できない")
+        }
+        XCTAssertEqual(json["total_match_count"] as? Int, 150)
+        XCTAssertEqual(json["truncated"] as? Bool, false)
+        XCTAssertNil(json["applied_limit"], "count_only では上限を適用しない")
+    }
+
+    /// file_list でも既定の上限（ファイル数）が適用される
+    func testDefaultLimitAppliesToFileList() async throws {
+        for index in 1...120 {
+            try writeFile(relativePath: "Sources/Gen/File\(index).swift", content: "let needle = 1")
+        }
+        let response = try await runSearchCode(arguments: [
+            ParameterKeys.pattern: .string("needle"),
+            ParameterKeys.outputMode: .string("file_list"),
+        ])
+        let parts = splitStructured(response)
+
+        guard let json = parts.json.flatMap(parseJSON),
+              let files = json["files"] as? [String] else {
+            return XCTFail("structured JSON / files が取得できない")
+        }
+        XCTAssertEqual(files.count, FileSearcher.defaultMatchLimit)
+        XCTAssertEqual(json["total_file_count"] as? Int, 120)
+        XCTAssertEqual(json["truncated_by_default_limit"] as? Bool, true)
+    }
+
     /// 既定挙動: include / exclude を省略すると .swift のみ走査される
     func testDefaultBehaviorScansOnlySwiftFiles() async throws {
         let response = try await runSearchCode(arguments: [

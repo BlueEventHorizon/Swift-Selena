@@ -171,7 +171,7 @@ UC: テストファイルを列挙
 - `include_patterns`: 対象に含める glob 配列（オプション、最大 20 件）
 - `exclude_patterns`: 対象から除外する glob 配列（オプション、最大 20 件、include に勝つ）
 - `output_mode`: 出力モード（`match_detail`（既定・後方互換、ファイル/行番号/該当行）/ `file_list`（マッチを含むファイル一覧、重複排除）/ `count_only`（マッチ数とファイル数））（v0.6.8、REQ-005 §4.1）
-- `limit`: 件数上限（1〜10,000 の整数。超過分は切り詰め、省略があった旨を通知。`count_only` では対象外）（v0.6.8、REQ-005 §4.1）
+- `limit`: 件数上限（1〜10,000 の整数。超過分は切り詰め、省略があった旨を通知。`count_only` では対象外）（v0.6.8、REQ-005 §4.1）。**未指定時は既定 100 件**で切り詰め、既定値で切り詰めたことを通知する（v0.6.15。応答が MCP クライアントの出力上限を超えて読めなくなることを防ぐ）
 
 > v0.6.8 (REQ-005 / DES-104 §5.1) で `file_pattern` 単独パラメータを廃止し、`search_files_without_pattern` と共通の `include_patterns` / `exclude_patterns` 配列に統一した。
 
@@ -198,6 +198,7 @@ Found 12 matches:
 - ✅ grep並みの速度
 - ✅ 出力モード（`match_detail` / `file_list` / `count_only`）を選択でき、既定は `match_detail`（後方互換）（v0.6.8）
 - ✅ 件数上限を 1〜10,000 で指定でき、超過時はテキスト・構造化結果の双方で省略を明示（v0.6.8）
+- ✅ `limit` 未指定時は既定 100 件（`match_detail` はマッチ数、`file_list` はファイル数。`count_only` は対象外）で切り詰め、既定値による切り詰めであること（`truncated_by_default_limit`）と適用した上限（`applied_limit`）を構造化結果に、`limit` 指定または絞り込みの案内をテキストに明示（v0.6.15）
 - ✅ テキスト出力の末尾に構造化結果（`--- structured ---` JSON、ファイルパス・行番号・マッチ行内容・総数・省略フラグ）を併記（v0.6.8）
 - ✅ 正規表現・glob の構文エラーは原因と修正案を含むエラーメッセージで明示（v0.6.8、REQ-005 §4.8）
 

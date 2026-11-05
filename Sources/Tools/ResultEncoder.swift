@@ -103,7 +103,7 @@ enum ResultEncoder {
                 lines.append("\(m.file):\(m.line): \(trimmed)")
             }
             if result.truncated {
-                lines.append("[Truncated: showing \(result.matches.count) of \(result.totalMatchCount) matches]")
+                lines.append("[Truncated: showing \(result.matches.count) of \(result.totalMatchCount) matches\(defaultLimitHint(result))]")
             }
             return lines.joined(separator: "\n")
 
@@ -113,13 +113,19 @@ enum ResultEncoder {
             lines.append("")
             lines.append(contentsOf: result.files)
             if result.truncated {
-                lines.append("[Truncated: showing \(result.files.count) of \(result.totalFileCount) files]")
+                lines.append("[Truncated: showing \(result.files.count) of \(result.totalFileCount) files\(defaultLimitHint(result))]")
             }
             return lines.joined(separator: "\n")
 
         case .countOnly:
             return "Matches: \(result.totalMatchCount)\nFiles: \(result.totalFileCount)"
         }
+    }
+
+    /// `limit` 未指定で既定の件数上限が掛かったときの案内（利用者が次に取れる手段を示す）
+    private static func defaultLimitHint(_ result: SearchCodeResult) -> String {
+        guard result.truncatedByDefaultLimit, let applied = result.appliedLimit else { return "" }
+        return "; default limit \(applied) applied. Pass `limit` (up to \(10_000)) or narrow `pattern` / `include_patterns`"
     }
 
     // MARK: - search_code JSON
@@ -134,8 +140,12 @@ enum ResultEncoder {
             "total_file_count": result.totalFileCount,
             "truncated": result.truncated,
             "truncated_to_max_limit": result.truncatedToMaxLimit,
+            "truncated_by_default_limit": result.truncatedByDefaultLimit,
             "cache_warning": cacheWarning,
         ]
+        if let applied = result.appliedLimit {
+            root["applied_limit"] = applied
+        }
 
         switch mode {
         case .matchDetail:

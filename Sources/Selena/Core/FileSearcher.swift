@@ -56,12 +56,20 @@ struct SearchCodeResult: Sendable {
     let truncated: Bool
     /// 内部上限（10000）へ切り詰めた場合 true（DES-104 TBD-010）
     let truncatedToMaxLimit: Bool
+    /// `limit` 未指定のため既定の件数上限（`FileSearcher.defaultMatchLimit`）で切り詰めた場合 true（DES-104 TBD-006）
+    let truncatedByDefaultLimit: Bool
+    /// 実際に適用した件数上限（`count_only` や上限未適用のときは nil）
+    let appliedLimit: Int?
 }
 
 /// ファイルシステムベースの検索機能
 enum FileSearcher {
     /// 内部での件数上限の上限（DES-104 TBD-010）
     private static let maxMatchLimit = 10_000
+
+    /// `limit` 未指定時の既定の件数上限（DES-104 TBD-006）。
+    /// 一般語の検索で応答が MCP クライアントの出力上限を超えないようにする（1 件あたり約 300 文字、100 件で約 30,000 文字）
+    static let defaultMatchLimit = 100
 
     /// `**` を単独の `*` と区別するためのプライベート用途 Unicode（DES-104 §4.4）
     private static let doubleStarPlaceholder: Character = "\u{E000}"
@@ -182,16 +190,22 @@ enum FileSearcher {
         let totalFileCount = uniqueFilePaths.count
 
         // count_only では limit が結果に適用されない（DES-104 §5.1）ため上限クリップ通知も不要
+        // limit 未指定のときは既定の件数上限を適用する（DES-104 TBD-006）
         var truncatedToMaxLimit = false
         var effectiveLimit: Int?
-        if outputMode != .countOnly, let lim = limit {
-            if lim > maxMatchLimit {
-                effectiveLimit = maxMatchLimit
-                truncatedToMaxLimit = true
+        if outputMode != .countOnly {
+            if let lim = limit {
+                if lim > maxMatchLimit {
+                    effectiveLimit = maxMatchLimit
+                    truncatedToMaxLimit = true
+                } else {
+                    effectiveLimit = lim
+                }
             } else {
-                effectiveLimit = lim
+                effectiveLimit = defaultMatchLimit
             }
         }
+        let limitWasDefaulted = (limit == nil)
 
         switch outputMode {
         case .matchDetail:
@@ -210,7 +224,9 @@ enum FileSearcher {
                 totalMatchCount: totalMatchCount,
                 totalFileCount: totalFileCount,
                 truncated: truncated,
-                truncatedToMaxLimit: truncatedToMaxLimit
+                truncatedToMaxLimit: truncatedToMaxLimit,
+                truncatedByDefaultLimit: truncated && limitWasDefaulted,
+                appliedLimit: effectiveLimit
             )
 
         case .fileList:
@@ -230,7 +246,9 @@ enum FileSearcher {
                 totalMatchCount: totalMatchCount,
                 totalFileCount: totalFileCount,
                 truncated: truncated,
-                truncatedToMaxLimit: truncatedToMaxLimit
+                truncatedToMaxLimit: truncatedToMaxLimit,
+                truncatedByDefaultLimit: truncated && limitWasDefaulted,
+                appliedLimit: effectiveLimit
             )
 
         case .countOnly:
@@ -240,7 +258,9 @@ enum FileSearcher {
                 totalMatchCount: totalMatchCount,
                 totalFileCount: totalFileCount,
                 truncated: false,
-                truncatedToMaxLimit: false
+                truncatedToMaxLimit: false,
+                truncatedByDefaultLimit: false,
+                appliedLimit: nil
             )
         }
     }

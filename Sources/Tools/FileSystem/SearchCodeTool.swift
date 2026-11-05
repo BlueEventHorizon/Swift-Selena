@@ -44,7 +44,7 @@ enum SearchCodeTool: MCPTool {
                     ParameterKeys.limit: .object([
                         "type": .string("integer"),
                         "description": .string(
-                            "Optional max results (1–10000). Values above 10000 are clamped with notification. Ignored when output_mode is count_only."
+                            "Optional max results (1–10000). Defaults to 100 when omitted (the response reports truncation). Values above 10000 are clamped with notification. Ignored when output_mode is count_only."
                         )
                     ]),
                     ParameterKeys.includePatterns: .object([
