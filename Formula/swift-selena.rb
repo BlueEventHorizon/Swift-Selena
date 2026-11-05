@@ -15,15 +15,8 @@ class SwiftSelena < Formula
   desc "MCP Server for Swift code analysis"
   homepage "https://github.com/BlueEventHorizon/Swift-Selena"
   url "https://github.com/BlueEventHorizon/Swift-Selena.git",
-      tag: "0.6.14"
+      tag: "0.6.15"
   license "MIT"
-
-  bottle do
-    root_url "https://github.com/BlueEventHorizon/Swift-Selena/releases/download/0.6.14"
-    rebuild 1
-    sha256 cellar: :any_skip_relocation, arm64_tahoe:   "f6cee1aed1789596c5aea359410989cbe1e556f1b9e03a99ba92289e1d902522"
-    sha256 cellar: :any_skip_relocation, arm64_sequoia: "db90e7d13ea1c0d85866587efb3c8ceb6f573ef443e575e1608a9bf9bc2772cc"
-  end
 
   # macOS 13.0+ requirement matches Package.swift's .macOS(.v13).
   # `depends_on xcode` is intentionally omitted: the build is a plain SwiftPM
@@ -89,6 +82,9 @@ class SwiftSelena < Formula
   test do
     require "open3"
     require "json"
+
+    # `--version` prints the version and exits without starting the server.
+    assert_match version.to_s, shell_output("#{bin}/swift-selena --version")
 
     # The server speaks MCP JSON-RPC 2.0 over stdio. We send a single
     # `initialize` request, then read stdout until the response with id==1

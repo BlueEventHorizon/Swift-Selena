@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=README.md sha256=5c19fab75014 -->
+<!-- bilingual-docs: source=README.md sha256=56b8b59777a5 -->
 
 [English](../README.md) | 日本語
 
@@ -303,8 +303,8 @@ Swift-Selena は**メタツールモード**を採用しており、クライア
 ### ツール仕様の補足
 
 - `search_code` の `output_mode` は `match_detail`（既定）、`file_list`、`count_only` です
-- `search_code` の `limit` は 1〜10,000 です。10,000 を超える値は内部上限に切り詰められ、結果に通知されます
-- `search_code` と `search_files_without_pattern` は `include_patterns` / `exclude_patterns` を使用します。旧 `file_pattern` は意図的に廃止済みで、指定されても無視されます
+- `search_code` の `limit` は 1〜10,000 で、**省略すると 100 件**になります（`count_only` は対象外）。既定の上限で切り詰めたときは、応答にその旨（`truncated_by_default_limit`）と、`limit` の指定またはパターンの絞り込みを促す案内が出ます。10,000 を超える値は内部上限に切り詰められ、結果に通知されます
+- `search_code` と `search_files_without_pattern` は `include_patterns` / `exclude_patterns` を使用します。旧 `file_pattern` は意図的に廃止済みで、指定されても無視されます。`/` を含まないパターン（`Foo.swift`、`*.swift` など）は任意の深さのファイル名に一致し、`/` を含むパターンはプロジェクトルートからの相対パスに一致します。`**/` はディレクトリ 0 個以上に一致します（`Sources/**/*.swift`）
 - `find_symbol_definition` の `symbol_kinds` には、`struct`・`class`・`enum`・`protocol`・`actor`・`function`・`variable`・`typealias`・`extension` を指定できます
 - `search_code` と `find_symbol_definition` は、人間向けテキスト出力の末尾に `--- structured ---` の JSON ブロックを付加します
 - LSP 強化はベストエフォートです。`.xcodeproj` を含む Xcode プロジェクトのディレクトリでは現在 LSP を無効化し、SwiftSyntax 解析にフォールバックします
