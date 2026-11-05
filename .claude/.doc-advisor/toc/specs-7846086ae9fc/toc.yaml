@@ -5,7 +5,7 @@
 metadata:
   name: Document Search Index (specs)
   key: specs
-  generated_at: 2026-11-04T08:40:35Z
+  generated_at: 2026-11-05T05:21:37Z
   file_count: 17
 
 docs:
@@ -192,37 +192,36 @@ docs:
       - ParameterKeys
   project/main/design/DES-104_search_symbol_tools_enhancement_design.md:
     title: DES-104 Search and Symbol Tools Enhancement Design
-    purpose: Describes the design for enhancing search_code and find_symbol_definition with output modes, result limits, glob include and exclude filters, structured results, symbol kind filters, and scope information while keeping backward compatibility
+    purpose: Describes design for enhancing search_code and find_symbol_definition with output modes, result limits, include and exclude globs, structured results, kind filters, and scope info while keeping backward compatibility
     content_details:
-      - Module name resolution by parsing Package.swift target blocks with longest-prefix path matching in a SymbolVisitorV2 helper
-      - Structured result as a JSON block appended after a structured output marker line
-      - SymbolKindMapper mapping of the 9 lowercase kinds (struct, class, enum, protocol, actor, function, variable, typealias, extension) to display kinds
-      - "Limits: limit range 1 to 10000 with clipping and truncated_to_max_limit flag; include and exclude patterns max 20 items; symbol_kinds max 9 items"
-      - FileSearcher.searchCode overload taking includePatterns, excludePatterns, limit, and SearchOutputMode (matchDetail, fileList, countOnly)
-      - Removal of the file_pattern parameter, which is ignored as an unknown key
-      - SymbolVisitorV2 scope stack with push in visit and pop in visitPost, deriving parentScope and extensionTarget
-      - ProjectMemory cacheVersion bump from 4 to 5 required in the same commit for any persisted SymbolInfo schema change
-      - Error handling for cache_warning flag, skipped_files up to 100 entries, structured output unavailable fallback, and glob syntax error suggestion
-      - CapabilityRegistry.availableTools minimal static implementation returning MetaToolRegistry.allTools
+      - SymbolKindMapper mapping of 9 lowercase kinds (struct, class, enum, protocol, actor, function, variable, typealias, extension) to display kinds
+      - search_code parameters output_mode, limit, include_patterns and exclude_patterns, with legacy file_pattern ignored
+      - Default limit of 100 for match_detail and file_list with truncated_by_default_limit and applied_limit flags, explicit limit up to 10000
+      - SearchOutputMode match_detail, file_list and count_only with SearchCodeResult fields
+      - "Glob evaluation: include patterns OR-combined, exclude takes priority, recursive ** support via wildcardToRegex change"
+      - SymbolInfoV2 fields name, kind, line, parentScope, extensionTarget, moduleName and SymbolVisitorV2 scope stack pushed in visit and popped in visitPost
+      - ProjectMemory cacheVersion bumped to 5 for SymbolInfo schema change
+      - Text output lines plus appended structured JSON block with fallback note on failure
+      - InvalidParams error format via buildErrorResponse with cause and suggestion, skipped_files capped at 100
+      - Best-effort SwiftPM module name resolution from Package.swift target blocks with path support
     applicable_tasks:
-      - Implementation of search_code output mode, limit, and glob filter enhancements
-      - Implementation of find_symbol_definition symbol kind filter and scope information
-      - Backward compatibility review of search_code and find_symbol_definition parameters
-      - Modification of ProjectMemory cache schema and cacheVersion bump
-      - Design review of SymbolVisitorV2 scope stack and module name resolution
-      - Error handling review for invalid parameters, cache corruption, and structured output failure
-      - Test case creation for search_code and find_symbol_definition enhancements
+      - Implementation of search_code output modes, limit and glob filtering
+      - Implementation of find_symbol_definition kind filter and scope output
+      - Backward compatibility review of search_code and find_symbol_definition changes
+      - Design review of SymbolVisitorV2 scope tracking and module name resolution
+      - Modification of ProjectMemory cache schema or cacheVersion
+      - Troubleshooting of search result truncation and default limit behavior
     keywords:
       - search_code
       - find_symbol_definition
       - SymbolKindMapper
       - SymbolVisitorV2
-      - SearchOutputMode
+      - SymbolInfoV2
       - include_patterns
-      - ResultEncoder
+      - exclude_patterns
+      - truncated_by_default_limit
       - cacheVersion
-      - CapabilityRegistry
-      - structured output
+      - ResultEncoder
   project/main/mcp-guide/MCP-Best-Practices.md:
     title: MCP Development Best Practices
     purpose: Records reusable lessons from MCP server development covering StdioTransport lifecycle, client data isolation, dev and production separation, tool design, error messages, logging, common failure patterns, and testing procedure
@@ -465,36 +464,36 @@ docs:
       - documentSymbol
       - prepareTypeHierarchy
   project/main/spec/REQ-003_Core_Features_Requirements.md:
-    title: "REQ-003: Swift-Selena Core Features Requirements"
-    purpose: "Defines requirements for the core Swift-Selena MCP tools (v0.5.3 baseline, later extended for v0.6.x): inputs, outputs, acceptance criteria, and use cases per tool category, plus integration success criteria and constraints."
+    title: "REQ-003: Swift-Selena Core Feature Requirements"
+    purpose: Defines requirements for the core Swift-Selena MCP tools covering file search, symbol analysis, SwiftUI analysis, dependency analysis, analysis modes and notes, with inputs, outputs, acceptance criteria, use cases and constraints; search_code and find_symbol_definition sections reflect the integrated REQ-005 spec
     content_details:
-      - "initialize_project: ProjectMemory creation, project path setup, and background LSP connection attempt"
-      - "find_files: wildcard search with asterisk and question mark via NSRegularExpression, under 1 second for 1000 files"
-      - "search_code: include_patterns and exclude_patterns (max 20 each), output_mode match_detail / file_list / count_only, limit 1 to 10000, and trailing structured JSON block"
-      - "find_symbol_definition: symbol_kinds filter (9 lowercase kinds, OR-combined) and scope info (parent_scope, extension_target, module_name)"
-      - "list_symbols, list_property_wrappers, list_protocol_conformances, list_extensions: SwiftSyntax Visitor-based outputs such as @State and @Binding detection and superclass and protocol conformance"
-      - "get_type_hierarchy: full rescan per call, excluding .build, .git, DerivedData, Pods, Carthage"
-      - analyze_imports, find_test_cases, analyze_file_metrics (threshold_lines default 500, sort_by lines or size, limit default 20)
-      - set_analysis_mode, think_about_analysis, add_note and search_notes persisted to memory.json with tags and timestamps
-      - "Cross-cutting constraints: build-free SwiftSyntax baseline, LSP graceful degradation, zero crash rate, removed find_symbol_references and find_type_usages"
+      - Tool catalog and categories (18 tools as of v0.5.3, current public tools defined in Sources/Constants.swift ToolNames and MetaToolRegistry)
+      - "initialize_project: project initialization, ProjectMemory creation, non-blocking background LSP connection attempt"
+      - "search_code: regex search with include_patterns and exclude_patterns (max 20 globs each), output_mode match_detail / file_list / count_only, limit 1 to 10000 with default 100 and truncated_by_default_limit flag"
+      - "find_symbol_definition: symbol_kinds filter with 9 lowercase kinds combined by OR, parent_scope / extension_target / module_name scope info, text plus structured JSON output"
+      - "list_symbols, list_property_wrappers, list_protocol_conformances, list_extensions: SwiftSyntax-based structure analysis with LSP-enhanced list_symbols variant"
+      - analyze_imports, get_type_hierarchy (full rescan, excludes .build, DerivedData, Pods, Carthage), find_test_cases, analyze_file_metrics (threshold 500 lines, sort by lines or size, default limit 20)
+      - "Removed or unimplemented tools recorded as history: read_symbol (planned), find_references (unimplemented), find_symbol_references and find_type_usages (deleted)"
+      - set_analysis_mode, think_about_analysis, add_note and search_notes persisted to memory.json
+      - "Constraints: SwiftSyntax tools are build-free, LSP tools degrade gracefully to SwiftSyntax, crash rate 0 percent as success criterion"
     applicable_tasks:
-      - Implementation or modification of search_code and find_symbol_definition behavior
-      - Acceptance criteria verification for existing core analysis tools
-      - Review of tool input and output schema and error message design
-      - Confirmation of search and symbol analysis requirements before implementation
-      - Tool selection review for environments where build is unavailable
-      - Impact review when removing or replacing analysis tools
+      - Implementation of search_code output mode and default limit behavior
+      - Review of tool input and output specifications against acceptance criteria
+      - Verification of core MCP tool behavior against REQ-003 requirements
+      - Impact analysis when a core tool is removed, renamed or changed
+      - Planning of find_symbol_definition or search_code enhancements
+      - Confirmation of supported tool set and categories before development
     keywords:
-      - initialize_project
       - search_code
       - find_symbol_definition
-      - find_files
-      - analyze_file_metrics
-      - output_mode
       - symbol_kinds
-      - ProjectMemory
-      - list_property_wrappers
+      - output_mode
+      - truncated_by_default_limit
+      - analyze_file_metrics
       - get_type_hierarchy
+      - initialize_project
+      - ProjectMemory
+      - graceful degradation
   project/main/spec/REQ-004_Code_Header_DB_v0.6.x.md:
     title: "REQ-004: Code Header DB (v0.6.x) Requirements"
     purpose: Defines requirements for the v0.6.0 Code Header DB, which parses Code Header Format blocks into a ProjectMemory-persisted DB with NLEmbedding semantic search, including performance, accuracy, compatibility, and constraint criteria.

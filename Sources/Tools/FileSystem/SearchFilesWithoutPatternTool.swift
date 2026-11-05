@@ -72,7 +72,7 @@ enum SearchFilesWithoutPatternTool: MCPTool {
                     ParameterKeys.includePatterns: .object([
                         "type": .string("array"),
                         "description": .string(
-                            "Optional glob patterns to include (OR). Empty means default *.swift behavior. Max 20 entries."
+                            "Optional glob patterns to include (OR). Empty means default *.swift behavior. A pattern without '/' matches the file name at any depth (e.g. Foo.swift, *.swift); a pattern with '/' matches the project-relative path ('**/' matches zero or more directories, e.g. Sources/**/*.swift). Max 20 entries."
                         ),
                         "items": .object([
                             "type": .string("string")
