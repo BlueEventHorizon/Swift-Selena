@@ -1,6 +1,6 @@
 # ToC checksums for key: specs
 # Auto-generated - do not edit
-generated_at: 2026-11-04T08:40:35Z
+generated_at: 2026-11-05T05:21:37Z
 file_count: 17
 checksums:
   project/main/design/DES-004_swift_toc_generation_design.md: c8195041ab781e12d0ff04ed12e89404f5cf19f9081689b2962dd7ae0276a48a
@@ -9,7 +9,7 @@ checksums:
   project/main/design/DES-101_System_Architecture.md: 69db7cf9379bd1098c74ddcf1cbebf716aaa31197650ecb2a2144e22b1ac5804
   project/main/design/DES-102_LSP_Integration_Design.md: 0543307e082ed33a8ed099bca24c14fbe62bbf5134138b92a2988bc3cee0f7dc
   project/main/design/DES-103_Tool_Implementation_Design.md: 9b82e5ae70fb4f6a24e604a457f1e43342bb37f277ec883f5d91e777af23e0f1
-  project/main/design/DES-104_search_symbol_tools_enhancement_design.md: e10713448712329284e3fc46c8119ee4ed60bfd23528966854d8d076f2460559
+  project/main/design/DES-104_search_symbol_tools_enhancement_design.md: 34d3a9cb62c6a1d9cce6bfc373f6612d469ead84952d37d5dc140406470a676b
   project/main/mcp-guide/MCP-Best-Practices.md: afdab6816713a40ccd9f6a5010b2e2faf4ffd506dc792b0005acaf9918f2ed45
   project/main/mcp-guide/MCP-Implementation-Guide.md: 48a71c421f3909e3845a41ee1b3df25573174411e9d15354c4219f6497cbebcc
   project/main/mcp-guide/MCP-SDK-Deep-Dive.md: 1e0c0ab56ae62d0850ad8b9b34effa3f7fa32ba4b29a5c5cf84f9fa1b0f2383c
@@ -18,5 +18,5 @@ checksums:
   project/main/spec/README.md: 3b76a85d782a812b049e9f3a863a11d982ff06f1f60fbd9786364e15459ed1bc
   project/main/spec/REQ-001_Swift_Selena_Overall_Requirements.md: 2b57ad18f9b30dfba09f4069b556bd5b14e6178afd75b54c3f9abfb88ea2e27c
   project/main/spec/REQ-002_LSP_Integration_v0.5.x.md: 3df8bf1f234440c229170ebd20c2afda130e6c9fbb41fe344eba89fb56f90665
-  project/main/spec/REQ-003_Core_Features_Requirements.md: 01921ac9c581b4245a362fef88b0e9cc76dc8a574b144aee963dc88efc18e764
+  project/main/spec/REQ-003_Core_Features_Requirements.md: b11504d6b51840da19138442c26ba877ad7b7eaac7db01c156ac8cce44cb6709
   project/main/spec/REQ-004_Code_Header_DB_v0.6.x.md: e5604f9261eb62b4fb222f359f5bf2461bdab660d43a9441c301e89b0e912660
