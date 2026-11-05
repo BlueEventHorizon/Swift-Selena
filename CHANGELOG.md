@@ -6,6 +6,25 @@ Release history of Swift-Selena.
 
 ---
 
+## 0.6.15 - 2026-11-05
+
+### Search
+
+- **change (behavior)**: `search_code` now returns at most **100 results when `limit` is omitted** (it used to return everything). This applies to `match_detail` (matches) and `file_list` (files); `count_only` is unaffected. A broad pattern such as `import` returned 181 matches (about 53,800 characters), which exceeded the output limit of the MCP client and was redirected to a temporary file the AI could not read directly. When the default limit cuts the result, the structured result carries `truncated_by_default_limit: true` and `applied_limit`, and the text tells how to continue (pass `limit`, up to 10,000, or narrow `pattern` / `include_patterns`). A call that needs more than 100 results must now pass `limit` explicitly. See DES-104 TBD-006 and REQ-003
+- **fix**: `**/` in `include_patterns` / `exclude_patterns` now matches zero or more directories. `Sources/**/*.swift` used to miss the files directly under `Sources/`, and `**/*.swift` used to miss the files in the project root
+- **fix**: A pattern without `/` now matches the file name at any depth, as in gitignore and ripgrep. `Foo.swift` used to match only a file in the project root. A pattern with `/` still matches the project-relative path. Everything that matched before still matches
+- **docs**: The `limit` and `include_patterns` descriptions of `search_code` / `search_files_without_pattern` state the default and the matching rules
+
+### Command line
+
+- **feat**: `swift-selena --version` (or `-v`) prints `Swift-Selena <version>` and exits without starting the MCP server. The Formula test checks it
+
+### Development tooling
+
+- **fix**: `scripts/merge_bottles.sh` no longer stops with an unbound variable when a full-width parenthesis follows a variable name in its message
+- **change**: Removed the `release_tag_check.yml` workflow (Release Tag Consistency Check). It failed once on a tag that `scripts/verify_release_tag.sh` accepted locally and in a fresh clone, and the cause was not found. The tag position is verified locally with `scripts/verify_release_tag.sh`, as step 7 of the release procedure in CLAUDE.md says
+- **chore**: Refreshed the doc-advisor ToC index of the specifications
+
 ## 0.6.14 - 2026-11-04
 
 ### Build warnings

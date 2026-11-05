@@ -301,8 +301,8 @@ Swift-Selena uses **meta tool mode**: only the following 4 tools are exposed to 
 ### Tool specification notes
 
 - `search_code`'s `output_mode` is `match_detail` (default), `file_list`, or `count_only`
-- `search_code`'s `limit` is 1–10,000. Values above 10,000 are clamped to the internal maximum and the result says so
-- `search_code` and `search_files_without_pattern` use `include_patterns` / `exclude_patterns`. The old `file_pattern` was intentionally removed and is ignored if passed
+- `search_code`'s `limit` is 1–10,000, and **defaults to 100 when omitted** (`count_only` is exempt). When the default cuts the result, the response says so (`truncated_by_default_limit`) and tells you to pass `limit` or narrow the pattern. Values above 10,000 are clamped to the internal maximum and the result says so
+- `search_code` and `search_files_without_pattern` use `include_patterns` / `exclude_patterns`. The old `file_pattern` was intentionally removed and is ignored if passed. A pattern without `/` (such as `Foo.swift` or `*.swift`) matches the file name at any depth; a pattern with `/` matches the project-relative path, and `**/` matches zero or more directories (`Sources/**/*.swift`)
 - `find_symbol_definition`'s `symbol_kinds` accepts `struct`, `class`, `enum`, `protocol`, `actor`, `function`, `variable`, `typealias`, and `extension`
 - `search_code` and `find_symbol_definition` append a `--- structured ---` JSON block to the end of their human-readable text output
 - LSP enhancement is best-effort. Xcode project directories containing `.xcodeproj` currently disable LSP, and SwiftSyntax analysis is used instead

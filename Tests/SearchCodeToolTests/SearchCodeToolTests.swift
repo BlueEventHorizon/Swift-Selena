@@ -301,6 +301,155 @@ final class SearchCodeToolTests: XCTestCase {
         XCTAssertTrue(files.contains(where: { $0.hasSuffix("Bar.swift") }))
     }
 
+    // MARK: - 既定の件数上限（DES-104 TBD-006）
+
+    /// 既定の上限を超えるマッチを持つ fixture を追加する（150 行 × 1 ファイル）
+    private func writeManyMatchesFixture() throws {
+        let body = (1...150).map { "let needle\($0) = \"needle\"" }.joined(separator: "\n")
+        try writeFile(relativePath: "Sources/Many.swift", content: body)
+    }
+
+    /// limit 未指定でも既定の件数上限（100 件）で切り詰められ、その旨が通知される
+    func testDefaultLimitAppliesWhenLimitOmitted() async throws {
+        try writeManyMatchesFixture()
+        let response = try await runSearchCode(arguments: [
+            ParameterKeys.pattern: .string("needle"),
+        ])
+        let parts = splitStructured(response)
+
+        guard let json = parts.json.flatMap(parseJSON),
+              let matches = json["matches"] as? [[String: Any]] else {
+            return XCTFail("structured JSON / matches が取得できない")
+        }
+        XCTAssertEqual(matches.count, FileSearcher.defaultMatchLimit, "既定の件数上限で切り詰められる")
+        XCTAssertEqual(json["total_match_count"] as? Int, 150, "total_match_count は上限適用前の総数")
+        XCTAssertEqual(json["truncated"] as? Bool, true)
+        XCTAssertEqual(json["truncated_by_default_limit"] as? Bool, true)
+        XCTAssertEqual(json["truncated_to_max_limit"] as? Bool, false)
+        XCTAssertEqual(json["applied_limit"] as? Int, FileSearcher.defaultMatchLimit)
+        XCTAssertTrue(parts.text.contains("default limit \(FileSearcher.defaultMatchLimit) applied"),
+                      "テキストにも既定上限が掛かった旨と次の手段が出る")
+    }
+
+    /// 既定の上限以内ならそのまま全件返り、切り詰め通知は出ない
+    func testDefaultLimitDoesNotTruncateWhenUnderLimit() async throws {
+        let response = try await runSearchCode(arguments: [
+            ParameterKeys.pattern: .string("hello"),
+        ])
+        let parts = splitStructured(response)
+
+        guard let json = parts.json.flatMap(parseJSON) else {
+            return XCTFail("structured JSON が取得できない")
+        }
+        XCTAssertEqual(json["truncated"] as? Bool, false)
+        XCTAssertEqual(json["truncated_by_default_limit"] as? Bool, false)
+        XCTAssertFalse(parts.text.contains("[Truncated"))
+    }
+
+    /// limit を明示すれば既定の上限は適用されず、利用者指定の上限が使われる
+    func testExplicitLimitOverridesDefaultLimit() async throws {
+        try writeManyMatchesFixture()
+        let response = try await runSearchCode(arguments: [
+            ParameterKeys.pattern: .string("needle"),
+            ParameterKeys.limit: .int(150),
+        ])
+        let parts = splitStructured(response)
+
+        guard let json = parts.json.flatMap(parseJSON),
+              let matches = json["matches"] as? [[String: Any]] else {
+            return XCTFail("structured JSON / matches が取得できない")
+        }
+        XCTAssertEqual(matches.count, 150, "明示した limit まで返る（既定の 100 件では切られない）")
+        XCTAssertEqual(json["truncated"] as? Bool, false)
+        XCTAssertEqual(json["truncated_by_default_limit"] as? Bool, false)
+    }
+
+    /// count_only は limit の対象外で、既定の上限も適用されない
+    func testDefaultLimitDoesNotApplyToCountOnly() async throws {
+        try writeManyMatchesFixture()
+        let response = try await runSearchCode(arguments: [
+            ParameterKeys.pattern: .string("needle"),
+            ParameterKeys.outputMode: .string("count_only"),
+        ])
+        let parts = splitStructured(response)
+
+        guard let json = parts.json.flatMap(parseJSON) else {
+            return XCTFail("structured JSON が取得できない")
+        }
+        XCTAssertEqual(json["total_match_count"] as? Int, 150)
+        XCTAssertEqual(json["truncated"] as? Bool, false)
+        XCTAssertNil(json["applied_limit"], "count_only では上限を適用しない")
+    }
+
+    /// file_list でも既定の上限（ファイル数）が適用される
+    func testDefaultLimitAppliesToFileList() async throws {
+        for index in 1...120 {
+            try writeFile(relativePath: "Sources/Gen/File\(index).swift", content: "let needle = 1")
+        }
+        let response = try await runSearchCode(arguments: [
+            ParameterKeys.pattern: .string("needle"),
+            ParameterKeys.outputMode: .string("file_list"),
+        ])
+        let parts = splitStructured(response)
+
+        guard let json = parts.json.flatMap(parseJSON),
+              let files = json["files"] as? [String] else {
+            return XCTFail("structured JSON / files が取得できない")
+        }
+        XCTAssertEqual(files.count, FileSearcher.defaultMatchLimit)
+        XCTAssertEqual(json["total_file_count"] as? Int, 120)
+        XCTAssertEqual(json["truncated_by_default_limit"] as? Bool, true)
+    }
+
+    /// `**/` はディレクトリ 0 個以上に一致する（直下のファイルも対象。回帰防止）
+    func testDoubleStarSlashMatchesZeroOrMoreDirectories() throws {
+        func matches(_ glob: String, _ path: String) throws -> Bool {
+            let regex = try NSRegularExpression(
+                pattern: FileSearcher.wildcardToRegex(glob),
+                options: [.caseInsensitive]
+            )
+            return regex.firstMatch(in: path, range: NSRange(path.startIndex..., in: path)) != nil
+        }
+
+        // ディレクトリ 0 個（直下）・1 個・複数個のいずれにも一致
+        XCTAssertTrue(try matches("Sources/**/*.swift", "Sources/Foo.swift"))
+        XCTAssertTrue(try matches("Sources/**/*.swift", "Sources/Tools/Foo.swift"))
+        XCTAssertTrue(try matches("Sources/**/*.swift", "Sources/Tools/FileSystem/Foo.swift"))
+        // 先頭の `**/` はルート直下のファイルにも一致
+        XCTAssertTrue(try matches("**/*.swift", "Package.swift"))
+        XCTAssertTrue(try matches("**/*.swift", "Sources/Foo.swift"))
+        // 別ディレクトリ・別拡張子には一致しない
+        XCTAssertFalse(try matches("Sources/**/*.swift", "Tests/Foo.swift"))
+        XCTAssertFalse(try matches("Sources/**/*.swift", "Sources/Foo.md"))
+        // 単独の `**`（`/` を伴わない）は従来どおり任意の文字列に一致
+        XCTAssertTrue(try matches("Sources/**", "Sources/Tools/Foo.swift"))
+    }
+
+    /// `/` を含まないパターンは任意の深さのファイル名に一致し、`/` を含むパターンは相対パス全体に一致する
+    func testPatternWithoutSlashMatchesFileNameAtAnyDepth() throws {
+        func matches(_ glob: String, _ path: String) throws -> Bool {
+            let regex = try NSRegularExpression(
+                pattern: FileSearcher.wildcardToRegex(glob),
+                options: [.caseInsensitive]
+            )
+            return regex.firstMatch(in: path, range: NSRange(path.startIndex..., in: path)) != nil
+        }
+
+        // ファイル名だけのパターン: 直下・任意の深さのどちらにも一致
+        XCTAssertTrue(try matches("Foo.swift", "Foo.swift"))
+        XCTAssertTrue(try matches("Foo.swift", "Sources/Tools/Foo.swift"))
+        XCTAssertTrue(try matches("Foo*.swift", "Sources/Tools/FooBar.swift"))
+        // 別名のファイルには一致しない（接尾辞だけの一致も不可）
+        XCTAssertFalse(try matches("Foo.swift", "Sources/Tools/BarFoo.swift"))
+        XCTAssertFalse(try matches("Foo.swift", "Sources/Foo.swift.bak"))
+        // 従来から一致していたパターンは変わらず一致する
+        XCTAssertTrue(try matches("*.swift", "Sources/Tools/Foo.swift"))
+        XCTAssertTrue(try matches("*Tests*", "Tests/FooTests.swift"))
+        // `/` を含むパターンはルートからの相対パス全体に一致する（任意の深さには広がらない）
+        XCTAssertTrue(try matches("Sources/Foo.swift", "Sources/Foo.swift"))
+        XCTAssertFalse(try matches("Sources/Foo.swift", "Other/Sources/Foo.swift"))
+    }
+
     /// 既定挙動: include / exclude を省略すると .swift のみ走査される
     func testDefaultBehaviorScansOnlySwiftFiles() async throws {
         let response = try await runSearchCode(arguments: [

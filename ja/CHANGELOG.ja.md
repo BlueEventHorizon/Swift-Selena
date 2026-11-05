@@ -1,4 +1,4 @@
-<!-- bilingual-docs: source=CHANGELOG.md sha256=cd90e909be92 -->
+<!-- bilingual-docs: source=CHANGELOG.md sha256=012f880e4ed1 -->
 
 [English](../CHANGELOG.md) | 日本語
 
@@ -7,6 +7,25 @@
 Swift-Selenaのリリース履歴
 
 ---
+
+## 0.6.15 - 2026-11-05
+
+### 検索
+
+- **change（挙動の変更）**: `search_code` は、`limit` を省略すると **最大 100 件**で切り詰めて返すようになった（従来は全件を返していた）。`match_detail`（マッチ数）と `file_list`（ファイル数）が対象で、`count_only` は対象外。`import` のような一般語では 181 件（約 53,800 文字）が返り、MCP クライアントの出力上限を超えて、AI が直接読めない一時ファイルに退避されていた。既定の上限で切ったときは、構造化結果に `truncated_by_default_limit: true` と `applied_limit` が入り、テキストにも次の手段（`limit` を指定する、最大 10,000。または `pattern` / `include_patterns` を絞る）が出る。100 件を超える結果が必要な呼び出しは、`limit` を明示する必要がある。DES-104 の TBD-006 と REQ-003 を参照
+- **fix**: `include_patterns` / `exclude_patterns` の `**/` が、ディレクトリ 0 個以上に一致するようにした。従来は、`Sources/**/*.swift` が `Sources/` 直下のファイルに、`**/*.swift` がプロジェクトルート直下のファイルに、一致しなかった
+- **fix**: `/` を含まないパターンが、gitignore や ripgrep と同様に、任意の深さのファイル名に一致するようにした。従来は、`Foo.swift` がプロジェクトルート直下のファイルにしか一致しなかった。`/` を含むパターンは、これまでどおりプロジェクトルートからの相対パスに一致する。従来一致していたものは、変わらず一致する
+- **docs**: `search_code` / `search_files_without_pattern` の `limit` と `include_patterns` の説明に、既定値と一致規則を記載
+
+### コマンドライン
+
+- **feat**: `swift-selena --version`（または `-v`）が、MCP サーバーを起動せずに `Swift-Selena <version>` を出力して終了するようにした。Formula のテストでも確認する
+
+### 開発ツール
+
+- **fix**: `scripts/merge_bottles.sh` が、メッセージ中の変数名の直後に全角括弧が続くと、未定義の変数エラーで止まる問題を修正
+- **change**: ワークフロー `release_tag_check.yml`（Release Tag Consistency Check）を廃止した。ローカルと新規クローンでは `scripts/verify_release_tag.sh` が通るタグで 1 回失敗し、原因を特定できなかったため。タグの位置は、CLAUDE.md のリリース手順 7 のとおり、`scripts/verify_release_tag.sh` でローカルから検証する
+- **chore**: 仕様の doc-advisor 索引（ToC）を更新
 
 ## 0.6.14 - 2026-11-04
 

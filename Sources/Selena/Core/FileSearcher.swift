@@ -56,6 +56,10 @@ struct SearchCodeResult: Sendable {
     let truncated: Bool
     /// 内部上限（10000）へ切り詰めた場合 true（DES-104 TBD-010）
     let truncatedToMaxLimit: Bool
+    /// `limit` 未指定のため既定の件数上限（`FileSearcher.defaultMatchLimit`）で切り詰めた場合 true（DES-104 TBD-006）
+    let truncatedByDefaultLimit: Bool
+    /// 実際に適用した件数上限（`count_only` や上限未適用のときは nil）
+    let appliedLimit: Int?
 }
 
 /// ファイルシステムベースの検索機能
@@ -63,8 +67,16 @@ enum FileSearcher {
     /// 内部での件数上限の上限（DES-104 TBD-010）
     private static let maxMatchLimit = 10_000
 
+    /// `limit` 未指定時の既定の件数上限（DES-104 TBD-006）。
+    /// 一般語の検索で応答が MCP クライアントの出力上限を超えないようにする（1 件あたり約 300 文字、100 件で約 30,000 文字）
+    static let defaultMatchLimit = 100
+
     /// `**` を単独の `*` と区別するためのプライベート用途 Unicode（DES-104 §4.4）
     private static let doubleStarPlaceholder: Character = "\u{E000}"
+
+    /// `**/`（ディレクトリ 0 個以上に一致）を表すプライベート用途 Unicode。
+    /// `Sources/**/*.swift` が `Sources/Foo.swift` にも一致するよう、`/` を含めて 1 要素として扱う
+    private static let doubleStarSlashPlaceholder: Character = "\u{E001}"
 
     // MARK: - Public API
 
@@ -182,16 +194,22 @@ enum FileSearcher {
         let totalFileCount = uniqueFilePaths.count
 
         // count_only では limit が結果に適用されない（DES-104 §5.1）ため上限クリップ通知も不要
+        // limit 未指定のときは既定の件数上限を適用する（DES-104 TBD-006）
         var truncatedToMaxLimit = false
         var effectiveLimit: Int?
-        if outputMode != .countOnly, let lim = limit {
-            if lim > maxMatchLimit {
-                effectiveLimit = maxMatchLimit
-                truncatedToMaxLimit = true
+        if outputMode != .countOnly {
+            if let lim = limit {
+                if lim > maxMatchLimit {
+                    effectiveLimit = maxMatchLimit
+                    truncatedToMaxLimit = true
+                } else {
+                    effectiveLimit = lim
+                }
             } else {
-                effectiveLimit = lim
+                effectiveLimit = defaultMatchLimit
             }
         }
+        let limitWasDefaulted = (limit == nil)
 
         switch outputMode {
         case .matchDetail:
@@ -210,7 +228,9 @@ enum FileSearcher {
                 totalMatchCount: totalMatchCount,
                 totalFileCount: totalFileCount,
                 truncated: truncated,
-                truncatedToMaxLimit: truncatedToMaxLimit
+                truncatedToMaxLimit: truncatedToMaxLimit,
+                truncatedByDefaultLimit: truncated && limitWasDefaulted,
+                appliedLimit: effectiveLimit
             )
 
         case .fileList:
@@ -230,7 +250,9 @@ enum FileSearcher {
                 totalMatchCount: totalMatchCount,
                 totalFileCount: totalFileCount,
                 truncated: truncated,
-                truncatedToMaxLimit: truncatedToMaxLimit
+                truncatedToMaxLimit: truncatedToMaxLimit,
+                truncatedByDefaultLimit: truncated && limitWasDefaulted,
+                appliedLimit: effectiveLimit
             )
 
         case .countOnly:
@@ -240,7 +262,9 @@ enum FileSearcher {
                 totalMatchCount: totalMatchCount,
                 totalFileCount: totalFileCount,
                 truncated: false,
-                truncatedToMaxLimit: false
+                truncatedToMaxLimit: false,
+                truncatedByDefaultLimit: false,
+                appliedLimit: nil
             )
         }
     }
@@ -316,12 +340,19 @@ enum FileSearcher {
     }
 
     /// ワイルドカードパターンを正規表現に変換（単一 `*`・`?`・`.` に加え `**` を再帰パス一致として扱う）
+    /// `**/` はディレクトリ 0 個以上に一致する（`Sources/**/*.swift` は `Sources/Foo.swift` にも一致）
     internal static func wildcardToRegex(_ pattern: String) -> String {
         var withPlaceholders = ""
         let chars = Array(pattern)
         var idx = 0
         while idx < chars.count {
             if idx + 1 < chars.count, chars[idx] == "*", chars[idx + 1] == "*" {
+                // `**/` はディレクトリ 0 個以上（直下のファイルにも一致させる）
+                if idx + 2 < chars.count, chars[idx + 2] == "/" {
+                    withPlaceholders.append(doubleStarSlashPlaceholder)
+                    idx += 3
+                    continue
+                }
                 withPlaceholders.append(doubleStarPlaceholder)
                 idx += 2
                 continue
@@ -330,8 +361,14 @@ enum FileSearcher {
             idx += 1
         }
 
-        var result = "^"
+        // `/` を含まないパターン（`*.swift`・`Foo.swift` など）は、gitignore / ripgrep と同様に
+        // 任意の深さのファイル名に一致させる。`/` を含むパターンはルートからの相対パス全体に一致する
+        var result = pattern.contains("/") ? "^" : "^(?:.*/)?"
         for char in withPlaceholders {
+            if char == doubleStarSlashPlaceholder {
+                result += "(?:.*/)?"
+                continue
+            }
             if char == doubleStarPlaceholder {
                 result += ".*"
                 continue

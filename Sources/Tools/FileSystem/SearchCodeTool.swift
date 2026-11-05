@@ -44,13 +44,13 @@ enum SearchCodeTool: MCPTool {
                     ParameterKeys.limit: .object([
                         "type": .string("integer"),
                         "description": .string(
-                            "Optional max results (1–10000). Values above 10000 are clamped with notification. Ignored when output_mode is count_only."
+                            "Optional max results (1–10000). Defaults to 100 when omitted (the response reports truncation). Values above 10000 are clamped with notification. Ignored when output_mode is count_only."
                         )
                     ]),
                     ParameterKeys.includePatterns: .object([
                         "type": .string("array"),
                         "description": .string(
-                            "Optional glob patterns to include (OR). Empty means default *.swift behavior. Max 20 entries."
+                            "Optional glob patterns to include (OR). Empty means default *.swift behavior. A pattern without '/' matches the file name at any depth (e.g. Foo.swift, *.swift); a pattern with '/' matches the project-relative path ('**/' matches zero or more directories, e.g. Sources/**/*.swift). Max 20 entries."
                         ),
                         "items": .object([
                             "type": .string("string")
