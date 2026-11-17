@@ -2,7 +2,7 @@ English | [日本語](ja/README.ja.md)
 
 # Swift Selena - Swift Analyzer MCP Server with respect to Serena
 
-<img width="400" src="selena.png">
+<img width="600" src="selena.png">
 
 **Swift Selena** is an MCP (Model Context Protocol) server that gives AI agents Swift code analysis capabilities. It works even when the code has build errors, and provides strong support for SwiftUI app development. It runs with any MCP-capable client, including Claude Code, Claude Desktop, Cursor, and Codex.
 
